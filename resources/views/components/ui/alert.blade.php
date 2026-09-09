@@ -10,7 +10,7 @@
         'info' => 'raven-alert raven-alert-info',
         default => 'raven-alert raven-alert-info',
     };
-@endendphp
+@endphp
 
 <div
     role="alert"
