@@ -1,9 +1,548 @@
-@import 'tailwindcss';
+@import '@fontsource-variable/manrope';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+/* =========================================================
+   RAVEN UI
+   Sistema visual base
+   ========================================================= */
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+:root {
+    /* Brand */
+    --raven-green: #2E5742;
+    --raven-green-dark: #234536;
+    --raven-green-soft: #E4ECE5;
+
+    --raven-blue: #7B9EAE;
+    --raven-blue-soft: #E7F0F4;
+
+    --raven-rose: #D8A4AF;
+    --raven-rose-soft: #F5E6E9;
+
+    --raven-yellow: #EFE6C7;
+    --raven-yellow-soft: #F8F2DE;
+
+    /* Surfaces */
+    --raven-background: #F8F6F1;
+    --raven-surface: #FFFDFC;
+    --raven-surface-muted: #F3F0EA;
+
+    /* Text */
+    --raven-text: #1E2832;
+    --raven-text-secondary: #53616C;
+    --raven-text-muted: #7B858D;
+
+    /* Border */
+    --raven-border: #DDD8CE;
+    --raven-border-strong: #C7C0B4;
+
+    /* Functional */
+    --raven-success: #667F60;
+    --raven-success-soft: #E5ECE2;
+
+    --raven-info: #7EA6BE;
+    --raven-info-soft: #E4EEF5;
+
+    --raven-warning: #C58A62;
+    --raven-warning-soft: #F5E7DC;
+
+    --raven-danger: #A94A34;
+    --raven-danger-soft: #F4E0DA;
+
+    /* Effects */
+    --raven-radius-sm: 10px;
+    --raven-radius-md: 16px;
+    --raven-radius-lg: 22px;
+
+    --raven-shadow-sm:
+        0 1px 2px rgba(30, 40, 50, 0.04),
+        0 4px 16px rgba(30, 40, 50, 0.04);
+
+    --raven-shadow-md:
+        0 8px 30px rgba(30, 40, 50, 0.07);
+
+    --raven-transition: 180ms ease;
+}
+
+
+/* =========================================================
+   RESET / BASE
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    font-family:
+        'Manrope Variable',
+        'Manrope',
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        sans-serif;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--raven-background);
+    color: var(--raven-text);
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+
+/* =========================================================
+   APP SHELL
+   ========================================================= */
+
+.raven-app {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.raven-sidebar {
+    position: sticky;
+    top: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    height: 100vh;
+    padding: 28px 20px;
+
+    background: rgba(255, 253, 252, 0.92);
+    border-right: 1px solid var(--raven-border);
+}
+
+.raven-brand {
+    display: flex;
+    align-items: center;
+
+    min-height: 56px;
+    padding: 0 10px 28px;
+}
+
+.raven-brand img {
+    display: block;
+    width: 145px;
+    max-width: 100%;
+    height: auto;
+}
+
+.raven-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.raven-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    min-height: 46px;
+    padding: 11px 14px;
+
+    border-radius: 13px;
+
+    color: var(--raven-text-secondary);
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition:
+        background var(--raven-transition),
+        color var(--raven-transition),
+        transform var(--raven-transition);
+}
+
+.raven-nav-link:hover {
+    background: var(--raven-green-soft);
+    color: var(--raven-green-dark);
+}
+
+.raven-nav-link.is-active {
+    background: var(--raven-green);
+    color: white;
+    box-shadow: 0 8px 18px rgba(46, 87, 66, 0.18);
+}
+
+.raven-nav-icon {
+    display: grid;
+    place-items: center;
+
+    width: 22px;
+    height: 22px;
+
+    flex: 0 0 22px;
+}
+
+.raven-nav-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.raven-sidebar-footer {
+    margin-top: auto;
+    padding-top: 24px;
+}
+
+
+/* =========================================================
+   MAIN
+   ========================================================= */
+
+.raven-main {
+    min-width: 0;
+}
+
+.raven-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    min-height: 82px;
+    padding: 16px 34px;
+
+    background: rgba(248, 246, 241, 0.88);
+    border-bottom: 1px solid rgba(221, 216, 206, 0.7);
+
+    backdrop-filter: blur(14px);
+}
+
+.raven-topbar-context {
+    min-width: 0;
+}
+
+.raven-topbar-title {
+    margin: 0;
+
+    color: var(--raven-text);
+
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.raven-topbar-subtitle {
+    margin: 3px 0 0;
+
+    color: var(--raven-text-muted);
+
+    font-size: 12px;
+}
+
+.raven-user {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+}
+
+.raven-avatar {
+    display: grid;
+    place-items: center;
+
+    width: 40px;
+    height: 40px;
+
+    flex: 0 0 40px;
+
+    border-radius: 50%;
+
+    background: var(--raven-yellow);
+    color: var(--raven-green-dark);
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.raven-user-copy {
+    line-height: 1.25;
+}
+
+.raven-user-name {
+    display: block;
+
+    color: var(--raven-text);
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.raven-user-role {
+    display: block;
+    margin-top: 2px;
+
+    color: var(--raven-text-muted);
+
+    font-size: 11px;
+}
+
+.raven-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 38px;
+    margin-left: 6px;
+    padding: 8px 13px;
+
+    border: 1px solid var(--raven-border);
+    border-radius: 11px;
+
+    background: var(--raven-surface);
+    color: var(--raven-text-secondary);
+
+    cursor: pointer;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    transition:
+        border var(--raven-transition),
+        background var(--raven-transition),
+        color var(--raven-transition);
+}
+
+.raven-logout:hover {
+    border-color: var(--raven-border-strong);
+    background: var(--raven-surface-muted);
+    color: var(--raven-text);
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.raven-content {
+    width: 100%;
+    max-width: 1500px;
+
+    margin: 0 auto;
+    padding: 36px;
+}
+
+.raven-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+
+    margin-bottom: 28px;
+}
+
+.raven-page-title {
+    margin: 0;
+
+    color: var(--raven-text);
+
+    font-size: clamp(26px, 3vw, 38px);
+    font-weight: 750;
+    letter-spacing: -0.035em;
+}
+
+.raven-page-description {
+    max-width: 680px;
+
+    margin: 8px 0 0;
+
+    color: var(--raven-text-secondary);
+
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.raven-card {
+    padding: 24px;
+
+    border: 1px solid var(--raven-border);
+    border-radius: var(--raven-radius-md);
+
+    background: var(--raven-surface);
+    box-shadow: var(--raven-shadow-sm);
+}
+
+.raven-card-title {
+    margin: 0;
+
+    font-size: 17px;
+    font-weight: 750;
+}
+
+.raven-card-description {
+    margin: 6px 0 0;
+
+    color: var(--raven-text-secondary);
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+.raven-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 42px;
+    padding: 10px 16px;
+
+    border: 1px solid transparent;
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    transition:
+        background var(--raven-transition),
+        border var(--raven-transition),
+        color var(--raven-transition),
+        transform var(--raven-transition),
+        box-shadow var(--raven-transition);
+}
+
+.raven-button:hover {
+    transform: translateY(-1px);
+}
+
+.raven-button-primary {
+    background: var(--raven-green);
+    color: white;
+    box-shadow: 0 7px 16px rgba(46, 87, 66, 0.16);
+}
+
+.raven-button-primary:hover {
+    background: var(--raven-green-dark);
+}
+
+.raven-button-secondary {
+    border-color: var(--raven-border);
+    background: var(--raven-surface);
+    color: var(--raven-text);
+}
+
+.raven-button-secondary:hover {
+    background: var(--raven-surface-muted);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .raven-app {
+        grid-template-columns: 1fr;
+    }
+
+    .raven-sidebar {
+        position: static;
+
+        height: auto;
+
+        padding: 16px 20px;
+
+        border-right: 0;
+        border-bottom: 1px solid var(--raven-border);
+    }
+
+    .raven-brand {
+        min-height: auto;
+        padding: 0 4px 15px;
+    }
+
+    .raven-brand img {
+        width: 120px;
+    }
+
+    .raven-nav {
+        flex-direction: row;
+        overflow-x: auto;
+
+        padding-bottom: 2px;
+    }
+
+    .raven-nav-link {
+        white-space: nowrap;
+    }
+
+    .raven-sidebar-footer {
+        display: none;
+    }
+
+    .raven-topbar {
+        padding: 14px 20px;
+    }
+
+    .raven-topbar-context {
+        display: none;
+    }
+
+    .raven-user-copy {
+        display: none;
+    }
+
+    .raven-content {
+        padding: 24px 18px 40px;
+    }
+
+}
+
+@media (max-width: 560px) {
+
+    .raven-nav-link {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .raven-page-header {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .raven-user {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
 }
