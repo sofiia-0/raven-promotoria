@@ -92,6 +92,90 @@
     </section>
 
 
+    @if ($editingUserId)
+
+        <section>
+
+            <h2>Editar usuario</h2>
+
+            <form wire:submit="updateUser">
+
+                <div>
+                    <label for="editName">
+                        Nombre
+                    </label>
+
+                    <input
+                        id="editName"
+                        type="text"
+                        wire:model="editName"
+                    >
+
+                    @error('editName')
+                        <small>{{ $message }}</small>
+                    @enderror
+                </div>
+
+
+                <div>
+                    <label for="editEmail">
+                        Correo electrónico
+                    </label>
+
+                    <input
+                        id="editEmail"
+                        type="email"
+                        wire:model="editEmail"
+                    >
+
+                    @error('editEmail')
+                        <small>{{ $message }}</small>
+                    @enderror
+                </div>
+
+
+                <div>
+                    <label for="editRole">
+                        Tipo de cuenta
+                    </label>
+
+                    <select
+                        id="editRole"
+                        wire:model="editRole"
+                    >
+                        <option value="promoter">
+                            Promotora
+                        </option>
+
+                        <option value="coordinator">
+                            Coordinadora
+                        </option>
+                    </select>
+
+                    @error('editRole')
+                        <small>{{ $message }}</small>
+                    @enderror
+                </div>
+
+
+                <button type="submit">
+                    Guardar cambios
+                </button>
+
+                <button
+                    type="button"
+                    wire:click="cancelEdit"
+                >
+                    Cancelar
+                </button>
+
+            </form>
+
+        </section>
+
+    @endif
+
+
     <hr>
 
 
@@ -162,7 +246,15 @@
 
                                 <button
                                     type="button"
+                                    wire:click="editUser({{ $user->id }})"
+                                >
+                                    Editar
+                                </button>
+
+                                <button
+                                    type="button"
                                     wire:click="toggleActive({{ $user->id }})"
+                                    wire:confirm="¿Seguro que deseas cambiar el estado de esta cuenta?"
                                 >
                                     {{ $user->is_active ? 'Desactivar' : 'Activar' }}
                                 </button>
