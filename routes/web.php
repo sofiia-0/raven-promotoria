@@ -1,10 +1,19 @@
 <?php
 
+use App\Enums\UserRole;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
-});
+    if (! auth()->check()) {
+        return redirect()->route('login');
+    }
+
+    return match (auth()->user()->role) {
+        UserRole::ADMIN => redirect()->route('admin.dashboard'),
+        UserRole::COORDINATOR => redirect()->route('coordinator.dashboard'),
+        UserRole::PROMOTER => redirect()->route('promoter.dashboard'),
+    };
+})->name('home');
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin', function () {
