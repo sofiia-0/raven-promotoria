@@ -15,19 +15,35 @@ Route::get('/', function () {
     };
 })->name('home');
 
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::get('/admin', function () {
-        return 'Panel de Administrador';
-    })->name('admin.dashboard');
-});
+Route::middleware([
+    'auth',
+    'role:admin',
+])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('/', function () {
+            return view('admin.dashboard');
+        })->name('dashboard');
 
-Route::middleware(['auth', 'role:coordinator'])->group(function () {
+        Route::get('/users', function () {
+            return view('admin.users');
+        })->name('users.index');
+    });
+
+Route::middleware([
+    'auth',
+    'role:coordinator',
+])->group(function () {
     Route::get('/coordinator', function () {
         return 'Panel de Coordinadora';
     })->name('coordinator.dashboard');
 });
 
-Route::middleware(['auth', 'role:promoter'])->group(function () {
+Route::middleware([
+    'auth',
+    'role:promoter',
+])->group(function () {
     Route::get('/promoter', function () {
         return 'Panel de Promotora';
     })->name('promoter.dashboard');
