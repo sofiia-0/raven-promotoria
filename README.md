@@ -1,58 +1,335 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
-
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <img src="public/images/banner-raven.png"
+       alt="Raven Promotoría"
+       width="820">
 </p>
 
-## About Laravel
+<h1 align="center">Raven Promotoría</h1>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+<p align="center">
+  Sistema web para la planificación, ejecución y seguimiento del proceso de promotoría farmacéutica de Laboratorio Raven.
+</p>
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+<p align="center">
+  <strong>Laravel 13</strong> · <strong>PHP 8.4</strong> · <strong>Livewire</strong> · <strong>MySQL 8.4</strong> · <strong>Laravel Cloud</strong>
+</p>
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 📌 Contenido
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- [Sobre el proyecto](#-sobre-el-proyecto)
+- [Roles del sistema](#-roles-del-sistema)
+- [Tecnologías](#-tecnologías)
+- [Estado del proyecto](#-estado-del-proyecto)
+- [Instalación local](#-instalación-local)
+- [Ejecutar el proyecto](#️-ejecutar-el-proyecto)
+- [Flujo de trabajo con Git](#-flujo-de-trabajo-con-git)
+- [Staging y seguridad](#️-staging-y-seguridad)
+- [Trabajo colaborativo](#-trabajo-colaborativo)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## ✨ Sobre el proyecto
 
-## Agentic Development
+**Raven Promotoría** centraliza en una sola plataforma la gestión operativa del equipo de promotoría farmacéutica.
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+La aplicación está pensada para organizar el trabajo desde la planificación hasta el seguimiento, evitando que la información quede dispersa entre archivos, mensajes o controles independientes.
+
+### ¿Qué permitirá gestionar?
+
+- 🏥 Fichero y asignación de farmacias.
+- 📅 Planificación de visitas.
+- 📍 Registro de visitas y ejecución en campo.
+- 🔄 Solicitudes de altas y bajas.
+- ✅ Checklist operativo.
+- 📊 Indicadores de cobertura, cumplimiento y reportería.
+
+> **Estado actual:** el proyecto ya cuenta con autenticación, roles, gestión de usuarios, protección de rutas, interfaz visual Raven y un ambiente de staging en Laravel Cloud.
+
+---
+
+## 👥 Roles del sistema
+
+| Rol | Alcance principal |
+|---|---|
+| **Administrador** | Gestiona cuentas, roles y estados de acceso al sistema. |
+| **Coordinadora** | Supervisa planificación, farmacias, visitas, solicitudes e indicadores. |
+| **Promotora** | Consulta su información asignada y registra planificación, visitas e histórico operativo. |
+
+---
+
+## 🧩 Tecnologías
+
+| Área | Tecnología |
+|---|---|
+| Backend | Laravel 13 |
+| Lenguaje | PHP 8.4 |
+| Interfaz | Blade + Livewire |
+| Base de datos | MySQL 8.4 |
+| Frontend | Vite + CSS |
+| Node.js | Node 24 |
+| Control de versiones | Git + GitHub |
+| Staging | Laravel Cloud |
+
+---
+
+## ✅ Estado del proyecto
+
+### Implementado
+
+- [x] Autenticación
+- [x] Recuperación de contraseña
+- [x] Configuración y restablecimiento de contraseña
+- [x] Roles y permisos
+- [x] Protección de rutas
+- [x] Gestión administrativa de usuarios
+- [x] Activación y desactivación de cuentas
+- [x] Interfaz visual Raven
+- [x] Páginas 403 y 404
+- [x] Base MySQL local
+- [x] Staging en Laravel Cloud
+
+### Próximos módulos
+
+- [ ] Fichero de farmacias
+- [ ] Asignación de farmacias
+- [ ] Importación inicial de datos
+- [ ] Planificación de visitas
+- [ ] Registro de visitas en campo
+- [ ] Checklist operativo
+- [ ] Altas y bajas de farmacias
+- [ ] Georreferenciación
+- [ ] Indicadores y dashboard
+- [ ] Reportería
+
+---
+
+## 🚀 Instalación local
+
+Esta sección deja el proyecto listo en una computadora nueva.
+
+### Antes de comenzar
+
+Asegúrate de tener instalados:
+
+- PHP compatible con el proyecto.
+- Composer.
+- Node.js 24 y npm.
+- MySQL 8.4.
+- Git.
+
+### 1. Clonar el repositorio
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone https://github.com/sofiia-0/raven-promotoria.git
+cd raven-promotoria
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Instalar dependencias
 
-## Contributing
+Dependencias de PHP:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer install
+```
 
-## Code of Conduct
+Dependencias del frontend:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+npm ci
+```
 
-## Security Vulnerabilities
+### 3. Crear el archivo `.env`
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+**PowerShell**
 
-## License
+```powershell
+Copy-Item .env.example .env
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+**CMD**
+
+```cmd
+copy .env.example .env
+```
+
+### 4. Generar la llave de Laravel
+
+```bash
+php artisan key:generate
+```
+
+### 5. Crear y configurar la base de datos
+
+Crear una base de datos MySQL local, por ejemplo:
+
+```text
+raven_promotoria
+```
+
+Luego configurar las credenciales correspondientes en `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=raven_promotoria
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+> Cada desarrollador utiliza sus propias credenciales locales. El archivo `.env` no se comparte ni se sube a GitHub.
+
+### 6. Ejecutar migraciones
+
+```bash
+php artisan migrate
+```
+
+### 7. Limpiar la configuración
+
+```bash
+php artisan optimize:clear
+```
+
+Con esto, la instalación local queda preparada. ✨
+
+---
+
+## ▶️ Ejecutar el proyecto
+
+Para desarrollo se utilizan **dos terminales** abiertas dentro de la carpeta del proyecto.
+
+| Terminal | Comando | Función |
+|---|---|---|
+| **1 · Laravel** | `php artisan serve` | Ejecuta el backend de Laravel. |
+| **2 · Vite** | `npm run dev` | Compila y actualiza los recursos del frontend. |
+
+La aplicación estará disponible normalmente en:
+
+```text
+http://127.0.0.1:8000
+```
+
+---
+
+## 🌿 Flujo de trabajo con Git
+
+La rama `main` representa siempre una **versión estable y presentable** del sistema.
+
+> ⚠️ No desarrollar directamente sobre `main`.
+
+### Crear una nueva funcionalidad
+
+Primero actualizar la rama principal:
+
+```bash
+git switch main
+git pull
+```
+
+Después crear una rama nueva:
+
+```bash
+git switch -c feature/nombre-funcionalidad
+```
+
+Ejemplos:
+
+```text
+feature/pharmacy-import
+feature/pharmacy-assignments
+feature/promoter-visits
+feature/coordinator-dashboard
+```
+
+### Guardar y publicar cambios
+
+```bash
+git add .
+git commit -m "Descripción clara del cambio"
+git push -u origin feature/nombre-funcionalidad
+```
+
+Después, la funcionalidad se integra mediante un **Pull Request hacia `main`**.
+
+### Flujo resumido
+
+```text
+feature/nueva-funcionalidad
+          │
+          ▼
+     Pull Request
+          │
+          ▼
+        main
+          │
+          ▼
+Laravel Cloud · Staging
+```
+
+---
+
+## ☁️ Staging y seguridad
+
+### Staging
+
+La rama `main` está conectada a **Laravel Cloud**. Los cambios integrados pueden desplegarse al ambiente de staging para validación antes de continuar con el desarrollo.
+
+🔗 **Acceso al staging:**  
+https://raven-promotoria-staging-npdlua.laravel.cloud/login
+
+El staging utiliza:
+
+- base de datos independiente de las bases locales;
+- usuarios y datos de prueba;
+- variables de entorno propias;
+- despliegue desde GitHub.
+
+> Los datos reales de producción no deben utilizarse en staging.
+
+### Seguridad
+
+Nunca subir al repositorio:
+
+```text
+.env
+contraseñas
+APP_KEY
+credenciales MySQL
+credenciales de Laravel Cloud
+tokens o secretos de servicios externos
+```
+
+El archivo `.env` debe permanecer excluido mediante `.gitignore`.
+
+---
+
+## 🤝 Trabajo colaborativo
+
+Cada desarrollador trabaja en un entorno local independiente:
+
+```text
+PC propia
+  + .env propio
+  + base MySQL local propia
+  + rama feature independiente
+```
+
+Lo que ambos comparten es el código versionado y el ambiente de validación:
+
+```text
+Desarrollador A ─┐
+                 ├── GitHub ── main ── Laravel Cloud
+Desarrollador B ─┘
+```
+
+Así pueden trabajar en paralelo sin mezclar configuraciones personales, bases de datos locales ni cambios incompletos.
+
+---
+
+<p align="center">
+  <strong>Raven Promotoría</strong><br>
+  <sub>Promotoría organizada · Seguimiento claro · Información centralizada</sub>
+</p>
