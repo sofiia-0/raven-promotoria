@@ -1,64 +1,81 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@extends('layouts.auth')
 
-    <title>Recuperar contraseña | Raven</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
+@section('title', 'Recuperar contraseña | Raven')
 
-<body>
 
-<main>
+@section('content')
 
-    <h1>Recuperar contraseña</h1>
+    <header class="raven-auth-heading">
 
-    <p>
-        Ingresa tu correo electrónico para recibir un enlace de recuperación.
-    </p>
+        <p
+            class="raven-auth-eyebrow"
+            style="color: var(--raven-primary);"
+        >
+            Recuperación de acceso
+        </p>
+
+        <h1 class="raven-auth-title">
+            ¿Olvidaste tu contraseña?
+        </h1>
+
+        <p class="raven-auth-description">
+            Ingresa el correo asociado a tu cuenta.
+            Te enviaremos un enlace seguro para establecer una nueva contraseña.
+        </p>
+
+    </header>
+
 
     @if (session('status'))
-        <div>
+
+        <x-ui.alert tone="success">
             {{ session('status') }}
-        </div>
+        </x-ui.alert>
+
     @endif
 
-    @if ($errors->any())
-        <div>
-            @foreach ($errors->all() as $error)
-                <p>{{ $error }}</p>
-            @endforeach
-        </div>
-    @endif
 
-    <form method="POST" action="{{ route('password.email') }}">
+    <form
+        method="POST"
+        action="{{ route('password.email') }}"
+        class="raven-auth-form"
+    >
+
         @csrf
 
-        <label for="email">
-            Correo electrónico
-        </label>
 
-        <input
-            id="email"
-            type="email"
+        <x-ui.input
+            label="Correo electrónico"
             name="email"
+            type="email"
             value="{{ old('email') }}"
+            placeholder="nombre@correo.com"
             required
             autofocus
-        >
+            autocomplete="email"
+        />
 
-        <button type="submit">
-            Enviar enlace
-        </button>
+
+        <x-ui.button
+            type="submit"
+            class="raven-auth-submit"
+        >
+            Enviar enlace de recuperación
+        </x-ui.button>
+
+
+        <div style="text-align: center;">
+
+            <a
+                href="{{ route('login') }}"
+                class="raven-auth-link"
+            >
+                ← Volver al inicio de sesión
+            </a>
+
+        </div>
+
     </form>
 
-    <a href="{{ route('login') }}">
-        Volver al inicio de sesión
-    </a>
-
-</main>
-
-</body>
-</html>
+@endsection

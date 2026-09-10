@@ -1,82 +1,105 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@extends('layouts.auth')
 
-    <title>Iniciar sesión | Raven</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
+@section('title', 'Iniciar sesión | Raven')
 
-<body>
 
-    <main>
-        <h1>Raven</h1>
+@section('content')
 
-        <h2>Iniciar sesión</h2>
+    <header class="raven-auth-heading">
 
-        <p>
-            Ingresa con las credenciales asignadas a tu cuenta.
+        <p class="raven-auth-eyebrow"
+           style="color: var(--raven-primary);">
+            Bienvenido
         </p>
 
-        @if ($errors->any())
-            <div>
-                @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
-            </div>
-        @endif
+        <h1 class="raven-auth-title">
+            Iniciar sesión
+        </h1>
 
-        <form method="POST" action="{{ route('login.store') }}">
-            @csrf
+        <p class="raven-auth-description">
+            Ingresa con las credenciales asociadas a tu cuenta.
+        </p>
 
-            <div>
-                <label for="email">Correo electrónico</label>
+    </header>
+
+
+    @if ($errors->any())
+
+        <x-ui.alert tone="danger">
+
+            Los datos ingresados no son correctos.
+            Verifica tu correo y contraseña.
+
+        </x-ui.alert>
+
+    @endif
+
+
+    <form
+        method="POST"
+        action="{{ route('login.store') }}"
+        class="raven-auth-form"
+    >
+
+        @csrf
+
+
+        <x-ui.input
+            label="Correo electrónico"
+            name="email"
+            type="email"
+            value="{{ old('email') }}"
+            placeholder="nombre@correo.com"
+            required
+            autofocus
+            autocomplete="email"
+        />
+
+
+        <x-ui.input
+            label="Contraseña"
+            name="password"
+            type="password"
+            placeholder="Ingresa tu contraseña"
+            required
+            autocomplete="current-password"
+        />
+
+
+        <div class="raven-auth-options">
+
+            <label class="raven-checkbox">
 
                 <input
-                    id="email"
-                    type="email"
-                    name="email"
-                    value="{{ old('email') }}"
-                    required
-                    autofocus
-                    autocomplete="email"
+                    type="checkbox"
+                    name="remember"
                 >
-            </div>
 
-            <div>
-                <label for="password">Contraseña</label>
-
-                <input
-                    id="password"
-                    type="password"
-                    name="password"
-                    required
-                    autocomplete="current-password"
-                >
-            </div>
-
-            <div>
-                <label>
-                    <input
-                        type="checkbox"
-                        name="remember"
-                    >
-
+                <span>
                     Recordarme
-                </label>
-            </div>
+                </span>
 
-            <button type="submit">
-                Iniciar sesión
-            </button>
+            </label>
 
-            <a href="{{ route('password.request') }}">
+
+            <a
+                href="{{ route('password.request') }}"
+                class="raven-auth-link"
+            >
                 ¿Olvidaste tu contraseña?
             </a>
-        </form>
-    </main>
 
-</body>
-</html>
+        </div>
+
+
+        <x-ui.button
+            type="submit"
+            class="raven-auth-submit"
+        >
+            Iniciar sesión
+        </x-ui.button>
+
+    </form>
+
+@endsection

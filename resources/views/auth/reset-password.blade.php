@@ -1,34 +1,50 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@extends('layouts.auth')
 
-    <title>Crear contraseña | Raven</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
+@section('title', 'Configurar contraseña | Raven')
 
-<body>
 
-<main>
+@section('content')
 
-    <h1>Configurar contraseña</h1>
+    <header class="raven-auth-heading">
 
-    <p>
-        Establece la contraseña que utilizarás para acceder a Raven.
-    </p>
+        <p
+            class="raven-auth-eyebrow"
+            style="color: var(--raven-primary);"
+        >
+            Seguridad de la cuenta
+        </p>
 
-    @if ($errors->any())
-        <div>
-            @foreach ($errors->all() as $error)
-                <p>{{ $error }}</p>
-            @endforeach
-        </div>
+        <h1 class="raven-auth-title">
+            Configurar contraseña
+        </h1>
+
+        <p class="raven-auth-description">
+            Crea una nueva contraseña para acceder de forma segura
+            al sistema de promotoría.
+        </p>
+
+    </header>
+
+
+    @if ($errors->has('token'))
+
+        <x-ui.alert tone="danger">
+            El enlace de recuperación no es válido o ha expirado.
+            Solicita uno nuevo para continuar.
+        </x-ui.alert>
+
     @endif
 
-    <form method="POST" action="{{ route('password.update') }}">
+
+    <form
+        method="POST"
+        action="{{ route('password.update') }}"
+        class="raven-auth-form"
+    >
+
         @csrf
+
 
         <input
             type="hidden"
@@ -36,55 +52,45 @@
             value="{{ request()->route('token') }}"
         >
 
-        <div>
-            <label for="email">
-                Correo electrónico
-            </label>
 
-            <input
-                id="email"
-                type="email"
-                name="email"
-                value="{{ old('email', request('email')) }}"
-                required
-                readonly
-            >
-        </div>
+        <x-ui.input
+            label="Correo electrónico"
+            name="email"
+            type="email"
+            value="{{ old('email', request('email')) }}"
+            required
+            readonly
+            autocomplete="email"
+        />
 
-        <div>
-            <label for="password">
-                Nueva contraseña
-            </label>
 
-            <input
-                id="password"
-                type="password"
-                name="password"
-                required
-                autocomplete="new-password"
-            >
-        </div>
+        <x-ui.input
+            label="Nueva contraseña"
+            name="password"
+            type="password"
+            placeholder="Ingresa tu nueva contraseña"
+            required
+            autocomplete="new-password"
+        />
 
-        <div>
-            <label for="password_confirmation">
-                Confirmar contraseña
-            </label>
 
-            <input
-                id="password_confirmation"
-                type="password"
-                name="password_confirmation"
-                required
-                autocomplete="new-password"
-            >
-        </div>
+        <x-ui.input
+            label="Confirmar contraseña"
+            name="password_confirmation"
+            type="password"
+            placeholder="Repite tu nueva contraseña"
+            required
+            autocomplete="new-password"
+        />
 
-        <button type="submit">
+
+        <x-ui.button
+            type="submit"
+            class="raven-auth-submit"
+        >
             Guardar contraseña
-        </button>
+        </x-ui.button>
+
     </form>
 
-</main>
-
-</body>
-</html>
+@endsection
