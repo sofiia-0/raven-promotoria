@@ -6,58 +6,109 @@
    ========================================================= */
 
 :root {
-    /* Brand */
-    --raven-green: #2E5742;
-    --raven-green-dark: #234536;
-    --raven-green-soft: #E4ECE5;
 
-    --raven-blue: #7B9EAE;
-    --raven-blue-soft: #E7F0F4;
+    /* =====================================================
+       RAVEN BRAND
+       Identidad visual adaptada para interfaz
+       ===================================================== */
 
-    --raven-rose: #D8A4AF;
-    --raven-rose-soft: #F5E6E9;
+    /* Primary */
+    --raven-primary: #2F66B0;
+    --raven-primary-dark: #264F8B;
+    --raven-primary-soft: #E7EEF8;
 
-    --raven-yellow: #EFE6C7;
-    --raven-yellow-soft: #F8F2DE;
+    /* Secondary / Periwinkle */
+    --raven-secondary: #8089C7;
+    --raven-secondary-dark: #656EAA;
+    --raven-secondary-soft: #ECEBFA;
 
-    /* Surfaces */
-    --raven-background: #F8F6F1;
+    /* Aqua accent */
+    --raven-accent: #9DCDD2;
+    --raven-accent-dark: #639FA7;
+    --raven-accent-soft: #EAF6F7;
+
+
+    /* =====================================================
+       SURFACES
+       ===================================================== */
+
+    --raven-background: #F8F6F2;
     --raven-surface: #FFFDFC;
-    --raven-surface-muted: #F3F0EA;
+    --raven-surface-muted: #F3F2F0;
 
-    /* Text */
-    --raven-text: #1E2832;
-    --raven-text-secondary: #53616C;
-    --raven-text-muted: #7B858D;
 
-    /* Border */
-    --raven-border: #DDD8CE;
-    --raven-border-strong: #C7C0B4;
+    /* =====================================================
+       TEXT
+       ===================================================== */
 
-    /* Functional */
-    --raven-success: #667F60;
-    --raven-success-soft: #E5ECE2;
+    --raven-text: #1F2940;
+    --raven-text-secondary: #596776;
+    --raven-text-muted: #7C8793;
 
-    --raven-info: #7EA6BE;
-    --raven-info-soft: #E4EEF5;
 
-    --raven-warning: #C58A62;
-    --raven-warning-soft: #F5E7DC;
+    /* =====================================================
+       BORDERS
+       ===================================================== */
 
-    --raven-danger: #A94A34;
-    --raven-danger-soft: #F4E0DA;
+    --raven-border: #D9DDE4;
+    --raven-border-strong: #C8CED8;
 
-    /* Effects */
+
+    /* =====================================================
+       FUNCTIONAL COLORS
+       ===================================================== */
+
+    /* Success */
+    --raven-success: #6E8A6A;
+    --raven-success-soft: #E7EFE5;
+
+    /* Information */
+    --raven-info: #6E9FBB;
+    --raven-info-soft: #E7F1F6;
+
+    /* Pending / review */
+    --raven-warning: #8C7DB0;
+    --raven-warning-soft: #EFEAF8;
+
+    /* Destructive / error */
+    --raven-danger: #AF5A45;
+    --raven-danger-soft: #F6E4DE;
+
+
+    /* =====================================================
+       LEGACY ALIASES
+       Mantienen funcionando los componentes ya creados.
+       En código nuevo usaremos primary / secondary / accent.
+       ===================================================== */
+
+    --raven-green: var(--raven-primary);
+    --raven-green-dark: var(--raven-primary-dark);
+    --raven-green-soft: var(--raven-primary-soft);
+
+    --raven-blue: var(--raven-accent);
+    --raven-blue-soft: var(--raven-accent-soft);
+
+    --raven-rose: var(--raven-secondary);
+    --raven-rose-soft: var(--raven-secondary-soft);
+
+    --raven-yellow: var(--raven-secondary-soft);
+    --raven-yellow-soft: #F5F4FB;
+
+
+    /* =====================================================
+       EFFECTS
+       ===================================================== */
+
     --raven-radius-sm: 10px;
     --raven-radius-md: 16px;
     --raven-radius-lg: 22px;
 
     --raven-shadow-sm:
-        0 1px 2px rgba(30, 40, 50, 0.04),
-        0 4px 16px rgba(30, 40, 50, 0.04);
+        0 1px 2px rgba(31, 41, 64, 0.04),
+        0 4px 16px rgba(31, 41, 64, 0.04);
 
     --raven-shadow-md:
-        0 8px 30px rgba(30, 40, 50, 0.07);
+        0 8px 30px rgba(31, 41, 64, 0.07);
 
     --raven-transition: 180ms ease;
 }
@@ -190,7 +241,7 @@ a {
 .raven-nav-link.is-active {
     background: var(--raven-green);
     color: white;
-    box-shadow: 0 8px 18px rgba(46, 87, 66, 0.18);
+    box-shadow: 0 8px 18px rgba(47, 102, 176, 0.18);
 }
 
 .raven-nav-icon {
@@ -275,8 +326,8 @@ a {
 
     border-radius: 50%;
 
-    background: var(--raven-yellow);
-    color: var(--raven-green-dark);
+    background: var(--raven-secondary-soft);
+    color: var(--raven-primary-dark);
 
     font-size: 13px;
     font-weight: 800;
@@ -447,7 +498,7 @@ a {
 .raven-button-primary {
     background: var(--raven-green);
     color: white;
-    box-shadow: 0 7px 16px rgba(46, 87, 66, 0.16);
+    box-shadow: 0 7px 16px rgba(47, 102, 176, 0.16);
 }
 
 .raven-button-primary:hover {
@@ -524,7 +575,7 @@ a {
 .raven-select:focus,
 .raven-textarea:focus {
     border-color: var(--raven-green);
-    box-shadow: 0 0 0 3px rgba(46, 87, 66, 0.10);
+    box-shadow: 0 0 0 3px rgba(47, 102, 176, 0.10);
 }
 
 .raven-field-help {
@@ -597,13 +648,14 @@ a {
 }
 
 .raven-badge-info {
-    background: var(--raven-info-soft);
-    color: #42667A;
+    background: var(--raven-accent-soft);
+    color: #426F78;
 }
 
-.raven-badge-warning {
+.raven-alert-warning {
+    border-color: #D9D1EA;
     background: var(--raven-warning-soft);
-    color: #85593E;
+    color: #665A86;
 }
 
 .raven-badge-danger {
@@ -612,8 +664,8 @@ a {
 }
 
 .raven-badge-rose {
-    background: var(--raven-rose-soft);
-    color: #895462;
+    background: var(--raven-secondary-soft);
+    color: #62598A;
 }
 
 .raven-badge-neutral {
