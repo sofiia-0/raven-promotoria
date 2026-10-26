@@ -81,6 +81,9 @@
                             </div>
                         @endif
                     </dl>
+                    <div class="raven-form-actions">
+                        <a class="raven-button raven-button-secondary" href="{{ route('promoter.pharmacies.show', ['pharmacy' => $pharmacy->id]) }}">Editar y ver historial</a>
+                    </div>
                 </article>
             @endforeach
         </div>
