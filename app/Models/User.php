@@ -8,6 +8,8 @@ use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -38,5 +40,22 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    public function pharmacyAssignments(): HasMany
+    {
+        return $this->hasMany(PharmacyAssignment::class, 'promoter_id');
+    }
+
+    /**
+     * Establecimientos asignados actualmente a esta promotora.
+     * No reemplaza la validación de autorización por rol/usuario.
+     */
+    public function assignedPharmacies(): BelongsToMany
+    {
+        return $this->belongsToMany(Pharmacy::class, 'pharmacy_assignments', 'promoter_id', 'pharmacy_id')
+            ->wherePivotNull('ended_at')
+            ->withPivot(['id', 'assigned_at', 'ended_at'])
+            ->withTimestamps();
     }
 }
