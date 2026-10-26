@@ -51,5 +51,11 @@ Route::middleware([
     Route::get('/promoter/pharmacies', function () {
         return view('promoter.pharmacies');
     })->name('promoter.pharmacies.index');
-});
 
+    Route::get('/promoter/pharmacies/{pharmacy}', function (int $pharmacy) {
+        return view('promoter.pharmacy-detail', [
+            'pharmacyId' => $pharmacy,
+        ]);
+    })->whereNumber('pharmacy')
+      ->name('promoter.pharmacies.show');
+});

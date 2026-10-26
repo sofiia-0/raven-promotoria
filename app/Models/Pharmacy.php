@@ -36,6 +36,12 @@ class Pharmacy extends Model
         ];
     }
 
+    /** Auditoría de correcciones de datos de este establecimiento. */
+    public function changes(): HasMany
+    {
+        return $this->hasMany(PharmacyChange::class);
+    }
+
     public function assignments(): HasMany
     {
         return $this->hasMany(PharmacyAssignment::class);
