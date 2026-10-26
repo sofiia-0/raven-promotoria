@@ -1,0 +1,36 @@
+/* Estilos propios del panel de Promotora. Reutilizan los tokens y componentes Raven. */
+.promoter-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+.promoter-summary-card {display: flex; flex-direction: column; align-items: flex-start; gap: 12px;}
+.promoter-summary-card .raven-button {margin-top: auto;}
+.promoter-kpi-label {margin: 0; color: var(--raven-text-secondary); font-size: 13px; font-weight: 700;}
+.promoter-kpi-value {margin: 0; color: var(--raven-primary); font-size: 42px; font-weight: 800; line-height: 1.1;}
+.promoter-pharmacy-module {display: flex; flex-direction: column; gap: 20px;}
+.promoter-filters {display: grid; grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr)) auto; align-items: end; gap: 14px;}
+.promoter-filters .raven-button {min-height: 44px;}
+.promoter-results-head {display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;}
+.promoter-results-count {margin: 0; font-size: 14px; font-weight: 800;}
+.promoter-results-help {font-size: 12px; color: var(--raven-text-muted);}
+.promoter-pharmacy-grid {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;}
+.promoter-pharmacy-card {min-width: 0;}
+.promoter-pharmacy-card-head {display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;}
+.promoter-pharmacy-card-head .raven-card-title {overflow-wrap: anywhere;}
+.promoter-detail-list {display: grid; gap: 12px; margin: 18px 0 0;}
+.promoter-detail-list div {min-width: 0;}
+.promoter-detail-list dt {color: var(--raven-text-muted); font-size: 11px; font-weight: 800;}
+.promoter-detail-list dd {margin: 3px 0 0; color: var(--raven-text-secondary); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere;}
+.promoter-pagination {overflow-x: auto;}
+@media (max-width: 1200px) {
+    .promoter-pharmacy-grid {grid-template-columns: repeat(2, minmax(0, 1fr));}
+    .promoter-filters {grid-template-columns: repeat(2, minmax(0, 1fr));}
+    .promoter-filter-search {grid-column: span 2;}
+}
+@media (max-width: 700px) {
+    .promoter-summary-grid, .promoter-pharmacy-grid {grid-template-columns: 1fr;}
+    .promoter-filters {grid-template-columns: 1fr;}
+    .promoter-filter-search {grid-column: auto;}
+    .promoter-pharmacy-card-head {flex-wrap: wrap;}
+}
