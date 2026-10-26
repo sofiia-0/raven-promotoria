@@ -45,6 +45,11 @@ Route::middleware([
     'role:promoter',
 ])->group(function () {
     Route::get('/promoter', function () {
-        return 'Panel de Promotora';
+        return view('promoter.dashboard');
     })->name('promoter.dashboard');
+
+    Route::get('/promoter/pharmacies', function () {
+        return view('promoter.pharmacies');
+    })->name('promoter.pharmacies.index');
 });
+
