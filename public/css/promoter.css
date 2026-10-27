@@ -84,8 +84,37 @@
 @media (max-width: 1100px) {
     .promoter-planning-weeks {grid-template-columns: 1fr;}
 }
+
+/* Registro e historial de visitas (RF-VIS). */
+[x-cloak] {display: none !important;}
+.promoter-sr-only {position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;}
+.promoter-visits {display: flex; flex-direction: column; gap: 20px;}
+.promoter-kpi-of {font-size: 16px; font-weight: 700; color: var(--raven-text-muted);}
+.promoter-visit-row {border-bottom: 1px solid var(--raven-border);}
+.promoter-visit-row:last-child {border-bottom: none;}
+.promoter-visit-row .promoter-planning-item {border-bottom: none;}
+.promoter-visit-actions {display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;}
+.promoter-reschedule-form {margin: 0 0 14px 56px; padding: 14px; border-radius: 12px; background: var(--raven-surface-muted);}
+.promoter-visit-status {border: 0; padding: 0; margin: 0; display: flex; gap: 18px; flex-wrap: wrap; align-items: center;}
+.promoter-visit-status legend {width: 100%; margin-bottom: 6px;}
+.promoter-choice {display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 650; cursor: pointer;}
+.promoter-checklist {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;}
+.promoter-checklist-item {display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--raven-border); border-radius: 10px; cursor: pointer; font-size: 13px;}
+.promoter-checklist-item input {margin-top: 3px;}
+.promoter-checklist-item small {display: block; margin-top: 2px; color: var(--raven-text-muted); font-size: 12px;}
+.promoter-visit-badges {display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;}
+.promoter-visit-details {grid-template-columns: repeat(2, minmax(0, 1fr));}
+.promoter-history-filters {display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: end;}
+.promoter-history-search {grid-column: span 3;}
+.promoter-history-filters .raven-button {min-height: 44px;}
+.raven-table .promoter-dashboard-help {display: block;}
 @media (max-width: 750px) {
     .promoter-planning-kpis {grid-template-columns: 1fr;}
+    .promoter-checklist, .promoter-visit-details, .promoter-history-filters {grid-template-columns: 1fr;}
+    .promoter-history-search {grid-column: auto;}
+    .promoter-reschedule-form {margin-left: 0;}
+    .promoter-planning-item {flex-wrap: wrap;}
+    .promoter-visit-actions {width: 100%; justify-content: flex-start;}
     .promoter-planning-nav {flex-wrap: wrap;}
     .promoter-planning-period {order: -1; width: 100%;}
 }

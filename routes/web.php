@@ -66,4 +66,15 @@ Route::middleware([
     Route::get('/promoter/planning', function () {
         return view('promoter.planning');
     })->name('promoter.planning.index');
+
+    Route::get('/promoter/visits/history', function () {
+        return view('promoter.visit-history');
+    })->name('promoter.visits.history');
+
+    Route::get('/promoter/visits/{visit}', function (int $visit) {
+        return view('promoter.visit-detail', [
+            'visitId' => $visit,
+        ]);
+    })->whereNumber('visit')
+        ->name('promoter.visits.show');
 });
