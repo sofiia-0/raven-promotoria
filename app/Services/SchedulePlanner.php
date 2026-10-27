@@ -5,9 +5,12 @@ namespace App\Services;
 use App\Enums\ActivityType;
 use App\Enums\ScheduleStatus;
 use App\Enums\UserRole;
+use App\Enums\VisitStatus;
+use App\Models\ActivityReschedule;
 use App\Models\MonthlySchedule;
 use App\Models\PlannedActivity;
 use App\Models\User;
+use App\Models\VisitReason;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -236,6 +239,97 @@ class SchedulePlanner
 
             return $schedule;
         });
+    }
+
+    /**
+     * Mueve una visita de un cronograma ENVIADO a otra fecha del mismo mes y deja rastro.
+     * Abre un nuevo intento: tras una visita NO_REALIZADA, la actividad vuelve a quedar pendiente.
+     */
+    public function reschedule(User $promoter, int $activityId, string $toDate, int $reasonId, ?string $notes = null): PlannedActivity
+    {
+        $this->ensurePromoter($promoter);
+
+        if (! VisitReason::query()->active()->whereKey($reasonId)->exists()) {
+            throw ValidationException::withMessages([
+                'rescheduleReasonId' => 'Seleccioná un motivo válido.',
+            ]);
+        }
+
+        try {
+            return DB::transaction(function () use ($promoter, $activityId, $toDate, $reasonId, $notes): PlannedActivity {
+                // Mismo bloqueo que usa el registro de visitas: no se reprograma mientras se registra.
+                $activity = PlannedActivity::query()
+                    ->whereKey($activityId)
+                    ->whereHas('week.schedule', fn ($query) => $query->where('promoter_id', $promoter->id))
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                $schedule = $activity->week->schedule;
+
+                $fail = fn (string $message) => throw ValidationException::withMessages(['rescheduleDate' => $message]);
+
+                if ($schedule->isDraft()) {
+                    $fail('Mientras el cronograma está en borrador, cambiá la actividad desde Planificación.');
+                }
+                if ($activity->activity_type !== ActivityType::VISITA) {
+                    $fail('Solo se reprograman visitas.');
+                }
+                if ($activity->visits()->where('status', VisitStatus::REALIZADA)->exists()) {
+                    $fail('Esta visita ya fue realizada.');
+                }
+
+                $date = CarbonImmutable::createFromFormat('!Y-m-d', $toDate);
+                if ($date->lt(self::today())) {
+                    $fail('La nueva fecha no puede ser anterior a hoy.');
+                }
+                if ($date->isSameDay($activity->scheduled_date)) {
+                    $fail('Elegí una fecha distinta a la actual.');
+                }
+
+                $week = $schedule->weeks()
+                    ->whereDate('starts_on', '<=', $date->toDateString())
+                    ->whereDate('ends_on', '>=', $date->toDateString())
+                    ->first() ?? $fail('La nueva fecha debe estar dentro del mes del cronograma.');
+
+                $taken = PlannedActivity::query()
+                    ->whereKeyNot($activity->id)
+                    ->where('pharmacy_id', $activity->pharmacy_id)
+                    ->whereDate('scheduled_date', $date->toDateString())
+                    ->whereHas('week', fn ($query) => $query->where('monthly_schedule_id', $schedule->id))
+                    ->exists();
+                if ($taken) {
+                    $fail('Esa farmacia ya está planificada para ese día.');
+                }
+
+                $from = $activity->scheduled_date;
+                $notes = trim((string) $notes);
+
+                $reschedule = ActivityReschedule::query()->create([
+                    'planned_activity_id' => $activity->id,
+                    'actor_id' => $promoter->id,
+                    'from_date' => $from->toDateString(),
+                    'to_date' => $date->toDateString(),
+                    'visit_reason_id' => $reasonId,
+                    'notes' => $notes === '' ? null : $notes,
+                ]);
+
+                $activity->planned_week_id = $week->id;
+                $activity->scheduled_date = $date;
+                $activity->reschedule_count++;
+                $activity->save();
+
+                $this->audit->record($promoter, 'activity.rescheduled', $activity, [
+                    'from' => $from->toDateString(),
+                    'to' => $date->toDateString(),
+                    'reschedule_id' => $reschedule->id,
+                ]);
+
+                return $activity;
+            });
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                'rescheduleDate' => 'Esa farmacia ya está planificada para ese día.',
+            ]);
+        }
     }
 
     private function ensurePromoter(User $user): void
