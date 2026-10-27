@@ -41,6 +41,12 @@
                     <span class="raven-nav-icon" aria-hidden="true">▤</span>
                     Planificación
                 </a>
+                <a href="{{ route('promoter.visits.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('promoter.visits.index', 'promoter.visits.create') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('promoter.visits.index', 'promoter.visits.create')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true">✓</span>
+                    Visitas
+                </a>
                 <a href="{{ route('promoter.visits.history') }}"
                    class="raven-nav-link {{ request()->routeIs('promoter.visits.history', 'promoter.visits.show') ? 'is-active' : '' }}"
                    @if(request()->routeIs('promoter.visits.history', 'promoter.visits.show')) aria-current="page" @endif>
