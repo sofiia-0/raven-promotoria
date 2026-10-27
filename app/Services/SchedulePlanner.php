@@ -25,6 +25,8 @@ class SchedulePlanner
     /** Zona horaria de operación: define cuál es «el mes actual». */
     public const TIMEZONE = 'America/Managua';
 
+    public function __construct(private AuditLogger $audit = new AuditLogger) {}
+
     /**
      * Semanas de lunes a domingo recortadas al mes. Si el mes ocupa seis tramos,
      * el primero (solo sábado/domingo) se une al segundo para respetar el máximo de 5.
@@ -225,6 +227,11 @@ class SchedulePlanner
             $schedule->update([
                 'status' => ScheduleStatus::ENVIADO,
                 'submitted_at' => now(),
+            ]);
+
+            $this->audit->record($promoter, 'schedule.submitted', $schedule, [
+                'period' => sprintf('%04d-%02d', $schedule->year, $schedule->month),
+                'activities' => $schedule->activities()->count(),
             ]);
 
             return $schedule;
