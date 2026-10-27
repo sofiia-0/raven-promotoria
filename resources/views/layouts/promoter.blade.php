@@ -29,6 +29,12 @@
                     <span class="raven-nav-icon" aria-hidden="true">▦</span>
                     Mis farmacias
                 </a>
+                <a href="{{ route('promoter.requests.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('promoter.requests.*') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('promoter.requests.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true">≡</span>
+                    Mis solicitudes
+                </a>
             </nav>
 
             <div class="raven-sidebar-footer">
