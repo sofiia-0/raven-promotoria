@@ -47,6 +47,11 @@ class Pharmacy extends Model
         return $this->hasMany(PharmacyAssignment::class);
     }
 
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class);
+    }
+
     public function currentAssignment(): HasOne
     {
         return $this->hasOne(PharmacyAssignment::class)->whereNull('ended_at');

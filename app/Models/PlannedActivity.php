@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\ActivityProgress;
 use App\Enums\ActivityType;
+use App\Enums\VisitStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PlannedActivity extends Model
 {
@@ -21,6 +24,7 @@ class PlannedActivity extends Model
         return [
             'activity_type' => ActivityType::class,
             'scheduled_date' => 'immutable_date',
+            'reschedule_count' => 'integer',
         ];
     }
 
@@ -32,5 +36,34 @@ class PlannedActivity extends Model
     public function pharmacy(): BelongsTo
     {
         return $this->belongsTo(Pharmacy::class);
+    }
+
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class)->orderBy('attempt');
+    }
+
+    public function reschedules(): HasMany
+    {
+        return $this->hasMany(ActivityReschedule::class)->orderBy('created_at')->orderBy('id');
+    }
+
+    /**
+     * Pendiente: no hay registro para el intento vigente.
+     * Requiere la relación `visits` cargada para no generar N+1.
+     */
+    public function progress(): ?ActivityProgress
+    {
+        if ($this->activity_type !== ActivityType::VISITA) {
+            return null;
+        }
+
+        if ($this->visits->contains('status', VisitStatus::REALIZADA)) {
+            return ActivityProgress::REALIZADA;
+        }
+
+        $current = $this->visits->firstWhere('attempt', $this->reschedule_count);
+
+        return $current ? ActivityProgress::NO_REALIZADA : ActivityProgress::PENDIENTE;
     }
 }
