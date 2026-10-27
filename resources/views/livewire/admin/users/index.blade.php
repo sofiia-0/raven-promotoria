@@ -37,8 +37,8 @@
                 </h2>
 
                 <p class="raven-section-description">
-                    Crea una cuenta para una persona de coordinación
-                    o promotoría.
+                    Crea una cuenta y genera un enlace seguro para que
+                    la persona configure su contraseña.
                 </p>
 
             </div>
@@ -370,7 +370,7 @@
                                     </x-ui.button>
 
 
-                                    @if ($user->is_active)
+                                    @if ($user->is_active && $user->role !== \App\Enums\UserRole::ADMIN)
 
                                         <x-ui.button
                                             variant="ghost"
