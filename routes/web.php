@@ -58,4 +58,8 @@ Route::middleware([
         ]);
     })->whereNumber('pharmacy')
       ->name('promoter.pharmacies.show');
+
+    Route::get('/promoter/requests', function () {
+        return view('promoter.requests');
+    })->name('promoter.requests.index');
 });
