@@ -35,6 +35,12 @@
                     <span class="raven-nav-icon" aria-hidden="true">≡</span>
                     Mis solicitudes
                 </a>
+                <a href="{{ route('promoter.planning.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('promoter.planning.*') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('promoter.planning.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true">▤</span>
+                    Planificación
+                </a>
             </nav>
 
             <div class="raven-sidebar-footer">

@@ -62,3 +62,30 @@
     .promoter-dashboard-kpis, .promoter-dashboard-columns {grid-template-columns: 1fr;}
     .promoter-dashboard-section-head {flex-wrap: wrap;}
 }
+
+/* Planificación mensual (RF-PLAN). */
+.promoter-planning {display: flex; flex-direction: column; gap: 20px;}
+.promoter-planning-nav {display: flex; align-items: center; justify-content: space-between; gap: 12px;}
+.promoter-planning-period {display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; text-align: center;}
+.promoter-planning-kpis {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;}
+.promoter-planning-kpis .raven-card {min-width: 0;}
+.promoter-planning-notes {grid-column: 1 / -1;}
+.promoter-planning-weeks {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;}
+.promoter-planning-week {min-width: 0;}
+.promoter-planning-list {list-style: none; margin: 0; padding: 0;}
+.promoter-planning-item {display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--raven-border);}
+.promoter-planning-item:last-child {border-bottom: none;}
+.promoter-planning-item.is-past {opacity: .65;}
+.promoter-planning-date {display: flex; flex-direction: column; align-items: center; min-width: 44px; padding: 6px 4px; border-radius: 10px; background: var(--raven-primary-soft); color: var(--raven-primary); font-size: 11px; font-weight: 700; text-transform: capitalize;}
+.promoter-planning-date strong {font-size: 18px; line-height: 1.1; font-variant-numeric: tabular-nums;}
+.promoter-planning-body {flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;}
+.promoter-planning-title {margin: 0; font-size: 13px; font-weight: 750; color: var(--raven-text); overflow-wrap: anywhere;}
+.promoter-planning-submit {display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;}
+@media (max-width: 1100px) {
+    .promoter-planning-weeks {grid-template-columns: 1fr;}
+}
+@media (max-width: 750px) {
+    .promoter-planning-kpis {grid-template-columns: 1fr;}
+    .promoter-planning-nav {flex-wrap: wrap;}
+    .promoter-planning-period {order: -1; width: 100%;}
+}

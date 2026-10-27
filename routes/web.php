@@ -62,4 +62,8 @@ Route::middleware([
     Route::get('/promoter/requests', function () {
         return view('promoter.requests');
     })->name('promoter.requests.index');
+
+    Route::get('/promoter/planning', function () {
+        return view('promoter.planning');
+    })->name('promoter.planning.index');
 });
