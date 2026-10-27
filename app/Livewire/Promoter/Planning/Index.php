@@ -160,6 +160,7 @@ class Index extends Component
 
         $schedule = $this->schedule()?->load([
             'weeks.activities.pharmacy:id,name,city,department',
+            'weeks.activities.visits:id,planned_activity_id,attempt,status',
         ]);
 
         $activities = $schedule?->weeks->flatMap->activities ?? collect();

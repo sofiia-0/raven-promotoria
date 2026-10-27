@@ -84,6 +84,7 @@
 @media (max-width: 1100px) {
     .promoter-planning-weeks {grid-template-columns: 1fr;}
 }
+.promoter-planning-status {display: flex; gap: 6px; flex-wrap: wrap;}
 
 /* Registro e historial de visitas (RF-VIS). */
 [x-cloak] {display: none !important;}

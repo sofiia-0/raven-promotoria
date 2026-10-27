@@ -145,7 +145,15 @@
                                         <strong>{{ $activity->scheduled_date->format('j') }}</strong>
                                     </div>
                                     <div class="promoter-planning-body">
-                                        <span class="raven-badge {{ $activity->activity_type === \App\Enums\ActivityType::VISITA ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $activity->activity_type->label() }}</span>
+                                        <div class="promoter-planning-status">
+                                            <span class="raven-badge {{ $activity->activity_type === \App\Enums\ActivityType::VISITA ? 'raven-badge-info' : 'raven-badge-neutral' }}">{{ $activity->activity_type->label() }}</span>
+                                            @if(! $schedule->isDraft() && $progress = $activity->progress())
+                                                <span class="raven-badge {{ $progress->badge() }}">{{ $progress->label() }}</span>
+                                            @endif
+                                            @if($activity->reschedule_count > 0)
+                                                <span class="raven-badge raven-badge-rose">Reprogramada</span>
+                                            @endif
+                                        </div>
                                         @if($activity->pharmacy)
                                             <p class="promoter-planning-title">{{ $activity->pharmacy->name }}</p>
                                             <p class="promoter-dashboard-help">{{ collect([$activity->pharmacy->city, $activity->pharmacy->department])->filter()->join(', ') ?: 'Ubicación sin especificar' }}</p>
