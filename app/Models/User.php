@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use App\Enums\UserRole;
+use App\Notifications\RavenPasswordResetNotification;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -40,6 +41,15 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'is_active' => 'boolean',
         ];
+    }
+
+    /**
+     * Laravel genera el token; Raven personaliza únicamente el mensaje.
+     * Nunca se envían contraseñas por correo.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new RavenPasswordResetNotification($token));
     }
 
     public function pharmacyAssignments(): HasMany

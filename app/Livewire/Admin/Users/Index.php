@@ -24,6 +24,51 @@ class Index extends Component
     public string $editEmail = '';
     public string $editRole = '';
 
+    public function mount(): void
+    {
+        $this->ensureAdmin();
+    }
+
+    private function ensureAdmin(): void
+    {
+        abort_unless(
+            auth()->user()?->role === UserRole::ADMIN
+                && auth()->user()?->is_active,
+            403
+        );
+    }
+
+    /**
+     * El driver log/array genera enlaces de prueba, pero no entrega correos.
+     */
+    private function accessFeedback(?string $status, bool $newUser = false): void
+    {
+        if ($status !== Password::RESET_LINK_SENT) {
+            session()->flash(
+                'warning',
+                $newUser
+                    ? 'Cuenta creada, pero no se pudo procesar el enlace de acceso. Revisá la configuración del correo o intentá reenviarlo más tarde.'
+                    : 'No se pudo procesar el enlace. Si lo acabás de solicitar, esperá un minuto antes de intentar de nuevo.'
+            );
+
+            return;
+        }
+
+        if (in_array(config('mail.default'), ['log', 'array'], true)) {
+            session()->flash(
+                'warning',
+                ($newUser ? 'Cuenta creada. ' : '').'Enlace generado en modo de prueba; no se envió un correo real.'
+            );
+
+            return;
+        }
+
+        session()->flash(
+            'success',
+            ($newUser ? 'Cuenta creada. ' : '').'Envío del enlace de acceso procesado. Comprobá la bandeja de entrada o la configuración del proveedor de correo.'
+        );
+    }
+
     protected function rules(): array
     {
         return [
@@ -50,47 +95,45 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->ensureAdmin();
         $this->resetPage();
     }
 
     public function createUser(): void
     {
+        $this->ensureAdmin();
+
+        // Validar el mismo correo normalizado que guardaremos.
+        $this->name = trim($this->name);
+        $this->email = Str::lower(trim($this->email));
         $data = $this->validate();
 
         $user = User::create([
-            'name' => trim($data['name']),
-            'email' => strtolower(trim($data['email'])),
+            'name' => $data['name'],
+            'email' => $data['email'],
             'password' => Str::random(64),
             'role' => UserRole::from($data['role']),
             'is_active' => true,
         ]);
 
-        $status = Password::sendResetLink([
-            'email' => $user->email,
-        ]);
-
-        if ($status === Password::RESET_LINK_SENT) {
-            session()->flash(
-                'success',
-                'Usuario creado. Se generó el enlace para configurar su contraseña.'
-            );
-        } else {
-            session()->flash(
-                'warning',
-                'El usuario fue creado, pero no se pudo generar el enlace de acceso.'
-            );
+        // El sistema no conoce una contraseña temporal utilizable.
+        // Fortify permite a la persona elegirla mediante un token limitado.
+        try {
+            $status = Password::sendResetLink(['email' => $user->email]);
+        } catch (\Throwable $exception) {
+            report($exception);
+            $status = null;
         }
 
-        $this->reset([
-            'name',
-            'email',
-        ]);
-
+        $this->accessFeedback($status, true);
+        $this->reset(['name', 'email']);
         $this->role = UserRole::PROMOTER->value;
     }
 
     public function editUser(int $userId): void
     {
+        $this->ensureAdmin();
+
         $user = User::findOrFail($userId);
 
         if ($user->role === UserRole::ADMIN) {
@@ -110,6 +153,8 @@ class Index extends Component
 
     public function updateUser(): void
     {
+        $this->ensureAdmin();
+
         if (! $this->editingUserId) {
             return;
         }
@@ -157,6 +202,8 @@ class Index extends Component
 
     public function cancelEdit(): void
     {
+        $this->ensureAdmin();
+
         $this->reset([
             'editingUserId',
             'editName',
@@ -167,6 +214,8 @@ class Index extends Component
 
     public function toggleActive(int $userId): void
     {
+        $this->ensureAdmin();
+
         $user = User::findOrFail($userId);
 
         if (
@@ -195,29 +244,27 @@ class Index extends Component
 
     public function resendAccess(int $userId): void
     {
+        $this->ensureAdmin();
         $user = User::findOrFail($userId);
 
-        if (! $user->is_active) {
-            session()->flash(
-                'warning',
-                'La cuenta debe estar activa antes de enviar un enlace de acceso.'
-            );
-
+        if ($user->role === UserRole::ADMIN) {
+            session()->flash('warning', 'No se reenvían enlaces a cuentas administrativas desde esta sección.');
             return;
         }
 
-        $status = Password::sendResetLink([
-            'email' => $user->email,
-        ]);
+        if (! $user->is_active) {
+            session()->flash('warning', 'La cuenta debe estar activa antes de enviar un enlace de acceso.');
+            return;
+        }
 
-        session()->flash(
-            $status === Password::RESET_LINK_SENT
-                ? 'success'
-                : 'warning',
-            $status === Password::RESET_LINK_SENT
-                ? 'Enlace de acceso generado correctamente.'
-                : 'No fue posible generar el enlace.'
-        );
+        try {
+            $status = Password::sendResetLink(['email' => $user->email]);
+        } catch (\Throwable $exception) {
+            report($exception);
+            $status = null;
+        }
+
+        $this->accessFeedback($status);
     }
 
     public function render()
