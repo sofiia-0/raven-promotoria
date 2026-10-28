@@ -13,8 +13,8 @@
             <h2 id="identification-title" class="promoter-form-heading"><span class="promoter-section-symbol"><x-promoter.icon name="identity" /></span><span>Identificación</span></h2>
             <div class="raven-form-grid">
                 <x-promoter.field model="name" label="Nombre del establecimiento" :value="$name" required max="255" />
-                <x-promoter.field model="client_type" label="Tipo de establecimiento" :value="$client_type" :options="$catalogOptions['client_type']" max="80" />
-                <x-promoter.field model="category" label="Categoría" :value="$category" :options="$catalogOptions['category']" max="20" />
+                <x-promoter.searchable-select model="client_type" label="Tipo de establecimiento" :value="$client_type" :options="$catalogOptions['client_type']" clearable />
+                <x-promoter.searchable-select model="category" label="Categoría" :value="$category" :options="$catalogOptions['category']" clearable />
             </div>
         </section>
         <section class="raven-card promoter-edit-section promoter-edit-section--location" aria-labelledby="location-title">

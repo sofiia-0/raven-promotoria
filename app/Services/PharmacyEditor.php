@@ -7,6 +7,7 @@ use App\Models\Pharmacy;
 use App\Models\PharmacyChange;
 use App\Models\User;
 use App\Support\NicaraguaGeography;
+use App\Support\PromoterCatalogOptions;
 use App\Support\PromoterValidationMessages;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -59,7 +60,15 @@ class PharmacyEditor
                 if (! array_key_exists($field, $validated)) {
                     continue;
                 }
-                $next = $this->normalise($field, $validated[$field]);
+                $value = $validated[$field];
+                if (in_array($field, ['client_type', 'category'], true) && (is_string($value) || $value === null)) {
+                    $resolved = PromoterCatalogOptions::resolveCommercial($actor, $field, $value, $pharmacy->{$field});
+                    if ($resolved['proposed']) {
+                        throw ValidationException::withMessages([$field => 'Seleccione una opción disponible para este campo.']);
+                    }
+                    $value = $resolved['value'];
+                }
+                $next = $this->normalise($field, $value);
                 $previous = $this->normalise($field, $pharmacy->{$field});
                 if ($previous === $next) {
                     continue;

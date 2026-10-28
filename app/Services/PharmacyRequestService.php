@@ -7,6 +7,7 @@ use App\Models\Pharmacy;
 use App\Models\PharmacyRequest;
 use App\Models\User;
 use App\Support\NicaraguaGeography;
+use App\Support\PromoterCatalogOptions;
 use App\Support\PromoterValidationMessages;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -51,8 +52,8 @@ class PharmacyRequestService
             'reason' => trim((string) ($input['reason'] ?? '')),
         ]), [
             'name' => ['required', 'string', 'max:255', 'not_regex:/·/u'],
-            'client_type' => ['nullable', 'string', 'max:80'],
-            'category' => ['nullable', 'string', 'max:20'],
+            'client_type' => ['nullable', 'string', 'max:80', 'regex:/^[^\p{C}]*$/u', 'not_in:'.PromoterCatalogOptions::OTHER.',Otro (especificar)'],
+            'category' => ['nullable', 'string', 'max:20', 'regex:/^[^\p{C}]*$/u', 'not_in:'.PromoterCatalogOptions::OTHER.',Otro (especificar)'],
             'address' => ['required', 'string', 'max:1000'],
             'city' => NicaraguaGeography::rules((string) $draft['department'])['city'],
             'department' => NicaraguaGeography::rules((string) $draft['department'])['department'],
@@ -63,7 +64,19 @@ class PharmacyRequestService
 
         $reason = $validated['reason'];
         unset($validated['reason']);
+        $proposedOptions = [];
+        foreach (['client_type', 'category'] as $field) {
+            $resolved = PromoterCatalogOptions::resolveCommercial($actor, $field, $validated[$field] ?? null);
+            $validated[$field] = $resolved['value'];
+            if ($resolved['proposed']) {
+                $proposedOptions[$field] = $resolved['value'];
+            }
+        }
         $proposal = collect($validated)->map(fn ($v) => $v === '' ? null : $v)->all();
+
+        if ($proposedOptions !== []) {
+            $proposal['catalog_proposals'] = $proposedOptions;
+        }
 
         return PharmacyRequest::create([
             'promoter_id' => $actor->id,

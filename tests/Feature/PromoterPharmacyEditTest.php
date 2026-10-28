@@ -49,6 +49,9 @@ class PromoterPharmacyEditTest extends TestCase
     {
         $promoter = $this->promoter();
         $pharmacy = $this->assigned($promoter);
+        // La opción elegida debe existir en el catálogo autorizado de la promotora.
+        $option = Pharmacy::create(['name' => 'Otra ficha de prueba', 'category' => 'N/A', 'is_active' => true]);
+        PharmacyAssignment::create(['pharmacy_id' => $option->id, 'promoter_id' => $promoter->id, 'assigned_at' => now()]);
 
         $this->actingAs($promoter)
             ->get('/promoter/pharmacies/'.$pharmacy->id)
@@ -131,7 +134,7 @@ class PromoterPharmacyEditTest extends TestCase
         $form = Livewire::actingAs($first)
             ->test(Show::class, ['pharmacyId' => $pharmacy->id]);
 
-        (new PharmacyAssignmentService())
+        (new PharmacyAssignmentService)
             ->reassign($pharmacy, $second);
 
         try {

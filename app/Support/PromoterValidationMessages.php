@@ -7,6 +7,8 @@ trait PromoterValidationMessages
     protected function messages(): array
     {
         return [
+            'regex' => 'Ingrese un valor sin caracteres de control para :attribute.',
+            'not_in' => 'Especifique un valor válido para :attribute.',
             'required' => 'Complete el campo :attribute.',
             'not_regex' => 'Ingrese únicamente el nombre del establecimiento; el departamento se muestra por separado.',
             'string' => 'Ingrese un valor válido para :attribute.',
@@ -29,6 +31,7 @@ trait PromoterValidationMessages
             'frequency' => 'frecuencia', 'dependents' => 'dependientes', 'shifts' => 'turnos',
             'phone' => 'teléfono', 'email' => 'correo',
             'altaName' => 'nombre', 'altaClientType' => 'tipo de establecimiento',
+            'altaClientTypeOther' => 'tipo propuesto', 'altaCategoryOther' => 'categoría propuesta',
             'altaCategory' => 'categoría', 'altaNeighborhood' => 'barrio / zona',
             'altaAddress' => 'dirección', 'altaCity' => 'municipio',
             'altaDepartment' => 'departamento', 'altaPhone' => 'teléfono', 'altaEmail' => 'correo',

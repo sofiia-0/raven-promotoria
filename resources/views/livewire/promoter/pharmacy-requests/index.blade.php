@@ -20,8 +20,16 @@
                 <fieldset class="promoter-fieldset"><legend><x-promoter.icon name="identity" />Identificación</legend>
                     <div class="raven-form-grid">
                         <x-promoter.field model="altaName" label="Nombre del establecimiento" :value="$altaName" required max="255" />
-                        <x-promoter.field model="altaClientType" label="Tipo de establecimiento" :value="$altaClientType" :options="$catalogOptions['client_type']" max="80" />
-                        <x-promoter.field model="altaCategory" label="Categoría" :value="$altaCategory" :options="$catalogOptions['category']" max="20" />
+                        <div><x-promoter.searchable-select model="altaClientType" label="Tipo de establecimiento" :value="$altaClientType" :options="$catalogOptions['client_type']" clearable allowOther />
+                            @if($altaClientType === \App\Support\PromoterCatalogOptions::OTHER)
+                                <div class="promoter-reason-field"><x-promoter.field model="altaClientTypeOther" label="Especifique el tipo" :value="$altaClientTypeOther" required max="80" help="El valor propuesto quedará pendiente de revisión por Coordinadora." /></div>
+                            @endif
+                        </div>
+                        <div><x-promoter.searchable-select model="altaCategory" label="Categoría" :value="$altaCategory" :options="$catalogOptions['category']" clearable allowOther />
+                            @if($altaCategory === \App\Support\PromoterCatalogOptions::OTHER)
+                                <div class="promoter-reason-field"><x-promoter.field model="altaCategoryOther" label="Especifique la categoría" :value="$altaCategoryOther" required max="20" help="El valor propuesto quedará pendiente de revisión por Coordinadora." /></div>
+                            @endif
+                        </div>
                     </div>
                 </fieldset>
                 <fieldset class="promoter-fieldset"><legend><x-promoter.icon name="location" />Ubicación</legend>
@@ -88,6 +96,11 @@
                             <x-promoter.location :city="$item->data['city'] ?? null" :department="$item->data['department'] ?? null" :address="$item->data['address'] ?? null" :neighborhood="$item->data['neighborhood'] ?? null" :reference="\App\Support\EstablishmentPresentation::reference($item->data['name'] ?? null, $item->data['department'] ?? null, $item->data['city'] ?? null)" />
                         @elseif($item->pharmacy)
                             <x-promoter.location :city="$item->pharmacy->city" :department="$item->pharmacy->department" :address="$item->pharmacy->address" :neighborhood="$item->pharmacy->neighborhood" :reference="$item->pharmacy->branch_summary" />
+                        @endif
+                        @if($item->type === 'alta')
+                            @foreach(['client_type' => 'Tipo propuesto', 'category' => 'Categoría propuesta'] as $field => $label)
+                                @if(isset($item->data['catalog_proposals'][$field]))<p class="raven-card-description"><strong>{{ $label }}:</strong> {{ $item->data['catalog_proposals'][$field] }}</p>@endif
+                            @endforeach
                         @endif
                         <details class="promoter-request-details"><summary>Ver motivo{{ $item->review_note ? ' y revisión' : '' }}</summary><p>{{ $item->reason }}</p>@if($item->review_note)<p><strong>Nota de revisión:</strong> {{ $item->review_note }}</p>@endif</details>
                     </div>

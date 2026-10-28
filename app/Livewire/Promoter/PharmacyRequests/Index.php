@@ -27,6 +27,10 @@ class Index extends Component
 
     public string $altaCategory = '';
 
+    public string $altaClientTypeOther = '';
+
+    public string $altaCategoryOther = '';
+
     public string $altaAddress = '';
 
     public string $altaCity = '';
@@ -87,15 +91,35 @@ class Index extends Component
         $this->resetValidation(['altaCity', 'altaDepartment']);
     }
 
+    public function updatedAltaClientType(): void
+    {
+        if ($this->altaClientType !== PromoterCatalogOptions::OTHER) {
+            $this->altaClientTypeOther = '';
+        }
+        $this->resetValidation(['altaClientType', 'altaClientTypeOther']);
+    }
+
+    public function updatedAltaCategory(): void
+    {
+        if ($this->altaCategory !== PromoterCatalogOptions::OTHER) {
+            $this->altaCategoryOther = '';
+        }
+        $this->resetValidation(['altaCategory', 'altaCategoryOther']);
+    }
+
     public function submitAlta(PharmacyRequestService $service): void
     {
         $actor = $this->promoter();
         $this->activeForm = 'alta';
+        $this->altaClientTypeOther = PromoterCatalogOptions::clean($this->altaClientTypeOther);
+        $this->altaCategoryOther = PromoterCatalogOptions::clean($this->altaCategoryOther);
         $locationRules = NicaraguaGeography::rules($this->altaDepartment);
         $values = $this->validate([
             'altaName' => ['required', 'string', 'max:255', 'not_regex:/·/u'],
             'altaClientType' => ['nullable', 'string', 'max:80'],
             'altaCategory' => ['nullable', 'string', 'max:20'],
+            'altaClientTypeOther' => ['exclude_unless:altaClientType,'.PromoterCatalogOptions::OTHER, 'required', 'string', 'max:80', 'regex:/^[^\p{C}]*$/u', 'not_in:'.PromoterCatalogOptions::OTHER.',Otro (especificar)'],
+            'altaCategoryOther' => ['exclude_unless:altaCategory,'.PromoterCatalogOptions::OTHER, 'required', 'string', 'max:20', 'regex:/^[^\p{C}]*$/u', 'not_in:'.PromoterCatalogOptions::OTHER.',Otro (especificar)'],
             'altaAddress' => ['required', 'string', 'max:1000'],
             'altaCity' => $locationRules['city'],
             'altaDepartment' => $locationRules['department'],
@@ -104,10 +128,20 @@ class Index extends Component
             'altaReason' => ['required', 'string', 'min:10', 'max:1500'],
         ]);
 
+        foreach (['altaClientType' => 'client_type', 'altaCategory' => 'category'] as $property => $field) {
+            if ($values[$property] !== PromoterCatalogOptions::OTHER
+                && PromoterCatalogOptions::resolveCommercial($actor, $field, $values[$property])['proposed']) {
+                $this->addError($property, 'Seleccione una opción disponible o utilice Otro (especificar).');
+            }
+        }
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
         $service->submitAlta($actor, [
             'name' => $values['altaName'],
-            'client_type' => $values['altaClientType'] ?? null,
-            'category' => $values['altaCategory'] ?? null,
+            'client_type' => $values['altaClientType'] === PromoterCatalogOptions::OTHER ? $values['altaClientTypeOther'] : ($values['altaClientType'] ?? null),
+            'category' => $values['altaCategory'] === PromoterCatalogOptions::OTHER ? $values['altaCategoryOther'] : ($values['altaCategory'] ?? null),
             'address' => $values['altaAddress'] ?? null,
             'city' => $values['altaCity'] ?? null,
             'department' => $values['altaDepartment'],
@@ -117,7 +151,7 @@ class Index extends Component
         ]);
 
         $this->reset([
-            'altaName', 'altaClientType', 'altaCategory',
+            'altaName', 'altaClientType', 'altaCategory', 'altaClientTypeOther', 'altaCategoryOther',
             'altaAddress', 'altaCity', 'altaDepartment', 'altaPhone',
             'altaEmail', 'altaReason',
         ]);

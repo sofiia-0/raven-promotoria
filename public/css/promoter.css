@@ -675,3 +675,6 @@
 @media (prefers-reduced-motion: reduce) {
     .promoter-shell .promoter-request-action {transition: none;}
 }
+
+/* Acción opcional de los selectores comerciales, con el estilo de enlace Raven. */
+.promoter-shell .promoter-combobox-clear {justify-self: start; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer;}
