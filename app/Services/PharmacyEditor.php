@@ -24,7 +24,7 @@ class PharmacyEditor
     public function update(int $pharmacyId, User $actor, array $validated): bool
     {
         if ($actor->role !== UserRole::PROMOTER || ! $actor->is_active) {
-            throw new AccessDeniedHttpException('No podés editar establecimientos.');
+            throw new AccessDeniedHttpException('No tiene permiso para editar establecimientos.');
         }
 
         return DB::transaction(function () use ($pharmacyId, $actor, $validated): bool {
@@ -33,7 +33,7 @@ class PharmacyEditor
 
             if (! $pharmacy->is_active || ! $pharmacy->assignments()
                 ->where('promoter_id', $actor->id)->whereNull('ended_at')->exists()) {
-                throw (new ModelNotFoundException())->setModel(Pharmacy::class, [$pharmacyId]);
+                throw (new ModelNotFoundException)->setModel(Pharmacy::class, [$pharmacyId]);
             }
 
             $before = [];
@@ -75,6 +75,7 @@ class PharmacyEditor
         if (in_array($field, self::NUMERIC, true)) {
             return (int) $value;
         }
+
         return is_string($value) ? (trim($value) ?: null) : $value;
     }
 }
