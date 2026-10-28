@@ -56,7 +56,7 @@ class Index extends Component
             'rescheduleReasonId' => ['required', 'integer'],
             'rescheduleNotes' => ['nullable', 'string', 'max:500'],
         ], [
-            'rescheduleReasonId.required' => 'Seleccioná el motivo de la reprogramación.',
+            'rescheduleReasonId.required' => 'Seleccione el motivo de la reprogramación.',
         ], [
             'rescheduleDate' => 'nueva fecha',
             'rescheduleReasonId' => 'motivo',

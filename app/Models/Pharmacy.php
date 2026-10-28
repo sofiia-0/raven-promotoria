@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\EstablishmentPresentation;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -58,6 +59,16 @@ class Pharmacy extends Model
     public function currentAssignment(): HasOne
     {
         return $this->hasOne(PharmacyAssignment::class)->whereNull('ended_at');
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        return EstablishmentPresentation::title($this->name, $this->department);
+    }
+
+    public function getBranchSummaryAttribute(): string
+    {
+        return EstablishmentPresentation::reference($this->name, $this->department, $this->city);
     }
 
     /** Texto de ubicación calculado: NO es otra columna editable. */

@@ -1,4 +1,4 @@
-<div class="promoter-planning">
+<div class="promoter-workflow promoter-planning">
     <section class="raven-card promoter-planning-nav" aria-label="Seleccionar mes">
         <button type="button" class="raven-button raven-button-secondary" wire:click="previousMonth">‹ Mes anterior</button>
         <div class="promoter-planning-period">
@@ -20,7 +20,7 @@
         <section class="raven-card raven-empty">
             <h2 class="raven-card-title">No hay cronograma para {{ $monthLabel }}</h2>
             @if($canCreate)
-                <p class="raven-card-description">Creá el cronograma del mes para organizar tus visitas por semana.</p>
+                <p class="raven-card-description">Cree el cronograma del mes para organizar sus visitas por semana.</p>
                 <div class="raven-form-actions">
                     <button type="button" class="raven-button raven-button-primary"
                             wire:click="createSchedule" wire:loading.attr="disabled" wire:target="createSchedule">
@@ -83,17 +83,17 @@
                             <div class="raven-field">
                                 <label class="raven-label" for="planning-pharmacy">Farmacia</label>
                                 <select id="planning-pharmacy" class="raven-select" wire:model="pharmacyId">
-                                    <option value="">Seleccioná una farmacia</option>
+                                    <option value="">Seleccione una farmacia</option>
                                     @foreach($pharmacyOptions as $option)
                                         <option value="{{ $option->id }}" wire:key="pharmacy-option-{{ $option->id }}">
-                                            {{ $option->name }}{{ $option->city ? ' · '.$option->city : '' }}
+                                        {{ $option->display_name }}{{ $option->city ? ' — '.$option->city : '' }}{{ $option->branch_summary ? ' / '.$option->branch_summary : '' }}
                                         </option>
                                     @endforeach
                                 </select>
                                 @if($pharmacyOptions->isEmpty())
                                     <span class="raven-field-help">No hay farmacias activas que coincidan con la búsqueda.</span>
                                 @elseif($pharmacyOptions->count() >= 50)
-                                    <span class="raven-field-help">Se muestran las primeras 50. Afiná la búsqueda para encontrar otras.</span>
+                                    <span class="raven-field-help">Se muestran las primeras 50. Afine la búsqueda para encontrar otras.</span>
                                 @endif
                                 @error('pharmacyId') <span class="raven-field-error">{{ $message }}</span> @enderror
                             </div>
@@ -155,8 +155,8 @@
                                             @endif
                                         </div>
                                         @if($activity->pharmacy)
-                                            <p class="promoter-planning-title">{{ $activity->pharmacy->name }}</p>
-                                            <p class="promoter-dashboard-help">{{ collect([$activity->pharmacy->city, $activity->pharmacy->department])->filter()->join(', ') ?: 'Ubicación sin especificar' }}</p>
+                                            <p class="promoter-planning-title">{{ $activity->pharmacy->display_name }}</p>
+                                            @if($activity->pharmacy)<x-promoter.location :department="$activity->pharmacy->department" :city="$activity->pharmacy->city" :neighborhood="$activity->pharmacy->neighborhood" :address="$activity->pharmacy->address" :reference="$activity->pharmacy->branch_summary" />@endif
                                         @endif
                                         @if($activity->notes)
                                             <p class="promoter-dashboard-help">{{ $activity->notes }}</p>
@@ -182,11 +182,11 @@
             <section class="raven-card promoter-planning-submit" aria-labelledby="submit-title">
                 <div>
                     <h2 id="submit-title" class="raven-card-title">Enviar cronograma</h2>
-                    <p class="raven-card-description">Al enviarlo, coordinación lo recibe y ya no podrás modificarlo.</p>
+                    <p class="raven-card-description">Al enviarlo, coordinación lo recibe y ya no podrá modificarlo.</p>
                 </div>
                 <button type="button" class="raven-button raven-button-primary"
                         wire:click="submit"
-                        wire:confirm="¿Enviar el cronograma de {{ $monthLabel }}? Después no podrás editarlo."
+                        wire:confirm="¿Enviar el cronograma de {{ $monthLabel }}? Después no podrá editarlo."
                         wire:loading.attr="disabled" wire:target="submit">
                     Enviar cronograma
                 </button>

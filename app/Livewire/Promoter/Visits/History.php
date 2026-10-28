@@ -109,7 +109,7 @@ class History extends Component
 
         return view('livewire.promoter.visits.history', [
             'visits' => $query
-                ->with(['pharmacy:id,name,city,department', 'reason:id,name'])
+                ->with(['pharmacy:id,name,city,department,neighborhood,address', 'reason:id,name'])
                 ->orderByDesc('visited_at')
                 ->orderByDesc('id')
                 ->paginate(15),

@@ -1,4 +1,4 @@
-<div class="raven-stack">
+<div class="promoter-workflow raven-stack">
     <div>
         <a class="raven-button raven-button-secondary" href="{{ route('promoter.visits.history') }}">Volver al historial</a>
     </div>
@@ -14,8 +14,8 @@
                     <span class="raven-badge {{ $visit->status === \App\Enums\VisitStatus::REALIZADA ? 'raven-badge-success' : 'raven-badge-danger' }}">{{ $visit->status->label() }}</span>
                     <span class="raven-badge {{ $visit->isUnplanned() ? 'raven-badge-rose' : 'raven-badge-neutral' }}">{{ $visit->isUnplanned() ? 'Fuera de plan' : 'Planificada' }}</span>
                 </div>
-                <h2 class="raven-section-title">{{ $visit->pharmacy->name }}</h2>
-                <p class="raven-section-description">{{ $visit->pharmacy->location_summary ?: 'Ubicación por completar' }}</p>
+                <h2 class="raven-section-title">{{ $visit->pharmacy->display_name }}</h2>
+                @if($visit->pharmacy)<x-promoter.location :department="$visit->pharmacy->department" :city="$visit->pharmacy->city" :neighborhood="$visit->pharmacy->neighborhood" :address="$visit->pharmacy->address" :reference="$visit->pharmacy->branch_summary" />@endif
             </div>
         </div>
 

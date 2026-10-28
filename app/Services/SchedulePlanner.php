@@ -169,7 +169,7 @@ class SchedulePlanner
 
                     if (! $allowed) {
                         throw ValidationException::withMessages([
-                            'pharmacyId' => 'Seleccioná una farmacia activa de tus asignaciones.',
+                            'pharmacyId' => 'Seleccione una farmacia activa de sus asignaciones.',
                         ]);
                     }
 
@@ -223,7 +223,7 @@ class SchedulePlanner
 
             if (! $schedule->activities()->exists()) {
                 throw ValidationException::withMessages([
-                    'submit' => 'Agregá al menos una actividad antes de enviar el cronograma.',
+                    'submit' => 'Agregue al menos una actividad antes de enviar el cronograma.',
                 ]);
             }
 
@@ -251,7 +251,7 @@ class SchedulePlanner
 
         if (! VisitReason::query()->active()->whereKey($reasonId)->exists()) {
             throw ValidationException::withMessages([
-                'rescheduleReasonId' => 'Seleccioná un motivo válido.',
+                'rescheduleReasonId' => 'Seleccione un motivo válido.',
             ]);
         }
 
@@ -268,7 +268,7 @@ class SchedulePlanner
                 $fail = fn (string $message) => throw ValidationException::withMessages(['rescheduleDate' => $message]);
 
                 if ($schedule->isDraft()) {
-                    $fail('Mientras el cronograma está en borrador, cambiá la actividad desde Planificación.');
+                    $fail('Mientras el cronograma está en borrador, cambie la actividad desde Planificación.');
                 }
                 if ($activity->activity_type !== ActivityType::VISITA) {
                     $fail('Solo se reprograman visitas.');

@@ -34,8 +34,8 @@ class PromoterPharmaciesTest extends TestCase
 
     public function test_a_promoter_cannot_see_someone_elses_pharmacies_or_ended_assignments(): void
     {
-        $mine = User::factory()->create(['role' => UserRole::PROMOTER]);
-        $another = User::factory()->create(['role' => UserRole::PROMOTER]);
+        $mine = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => true]);
+        $another = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => true]);
         $pharmacyMine = Pharmacy::create(['name' => 'DEMO - Mi farmacia', 'is_active' => true]);
         $pharmacyOther = Pharmacy::create(['name' => 'DEMO - Privada', 'is_active' => true]);
         $pharmacyEnded = Pharmacy::create(['name' => 'DEMO - Asignación terminada', 'is_active' => true]);
@@ -58,8 +58,8 @@ class PromoterPharmaciesTest extends TestCase
 
     public function test_search_does_not_bypass_the_promoter_assignment_filter(): void
     {
-        $mine = User::factory()->create(['role' => UserRole::PROMOTER]);
-        $another = User::factory()->create(['role' => UserRole::PROMOTER]);
+        $mine = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => true]);
+        $another = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => true]);
         $p = Pharmacy::create(['name' => 'DEMO - Farmacia Ajena', 'city' => 'León']);
         PharmacyAssignment::create([
             'pharmacy_id' => $p->id,

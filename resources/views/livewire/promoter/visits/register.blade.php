@@ -1,4 +1,4 @@
-<div class="raven-stack">
+<div class="promoter-workflow raven-stack">
     <div>
         <a class="raven-button raven-button-secondary" href="{{ route('promoter.visits.index') }}">Volver a Visitas</a>
     </div>
@@ -16,18 +16,18 @@
                 <div>
                     @if($activity)
                         <span class="raven-badge raven-badge-info">Visita planificada</span>
-                        <h2 class="raven-section-title">{{ $activity->pharmacy->name }}</h2>
+                        <h2 class="raven-section-title">{{ $activity->pharmacy->display_name }}</h2>
                         <p class="raven-section-description">
                             Planificada para el {{ $activity->scheduled_date->locale('es')->translatedFormat('l j \d\e F') }}
-                            · {{ $activity->pharmacy->location_summary ?: 'Ubicación por completar' }}
                         </p>
+                        <x-promoter.location :department="$activity->pharmacy->department" :city="$activity->pharmacy->city" :neighborhood="$activity->pharmacy->neighborhood" :address="$activity->pharmacy->address" :reference="$activity->pharmacy->branch_summary" />
                         @if($activity->notes)
                             <p class="raven-field-help">Nota del plan: {{ $activity->notes }}</p>
                         @endif
                     @else
                         <span class="raven-badge raven-badge-rose">Fuera de plan</span>
                         <h2 class="raven-section-title">Visita no planificada</h2>
-                        <p class="raven-section-description">Solo podés elegir farmacias activas que tenés asignadas.</p>
+                        <p class="raven-section-description">Solo puede elegir farmacias activas que tiene asignadas.</p>
                     @endif
                 </div>
             </div>
@@ -44,15 +44,15 @@
                         <div class="raven-field">
                             <label class="raven-label" for="visit-pharmacy">Farmacia</label>
                             <select id="visit-pharmacy" class="raven-select" wire:model="pharmacyId">
-                                <option value="">Seleccioná una farmacia</option>
+                                <option value="">Seleccione una farmacia</option>
                                 @foreach($pharmacyOptions as $option)
                                     <option value="{{ $option->id }}" wire:key="visit-pharmacy-{{ $option->id }}">
-                                        {{ $option->name }}{{ $option->city ? ' · '.$option->city : '' }}
+                                        {{ $option->display_name }}{{ $option->city ? ' — '.$option->city : '' }}{{ $option->branch_summary ? ' / '.$option->branch_summary : '' }}
                                     </option>
                                 @endforeach
                             </select>
                             @if($pharmacyOptions->count() >= 50)
-                                <span class="raven-field-help">Se muestran las primeras 50. Afiná la búsqueda para encontrar otras.</span>
+                                <span class="raven-field-help">Se muestran las primeras 50. Afine la búsqueda para encontrar otras.</span>
                             @endif
                             @error('pharmacyId') <span class="raven-field-error">{{ $message }}</span> @enderror
                         </div>
@@ -73,7 +73,7 @@
                         <div class="raven-field promoter-planning-notes">
                             <label class="raven-label" for="visit-reason">Motivo</label>
                             <select id="visit-reason" class="raven-select" wire:model="reasonId">
-                                <option value="">Seleccioná el motivo</option>
+                                <option value="">Seleccione el motivo</option>
                                 @foreach($reasons as $reason)
                                     <option value="{{ $reason->id }}">{{ $reason->name }}</option>
                                 @endforeach

@@ -1,4 +1,4 @@
-<div class="promoter-pharmacy-module">
+<div class="promoter-workflow promoter-pharmacy-module">
     <section class="raven-card" aria-label="Filtrar historial">
         <div class="promoter-history-filters">
             <div class="raven-field">
@@ -45,10 +45,10 @@
     @if($visits->count() === 0)
         <section class="raven-card raven-empty">
             <h2 class="raven-card-title">No hay visitas registradas</h2>
-            <p class="raven-card-description">Ajustá el rango de fechas o los filtros.</p>
+            <p class="raven-card-description">Ajuste el rango de fechas o los filtros.</p>
         </section>
     @else
-        <div class="raven-table-shell">
+        <div class="raven-table-shell" tabindex="0" role="region" aria-label="Historial de visitas, tabla desplazable">
             <table class="raven-table">
                 <thead>
                     <tr>
@@ -64,8 +64,8 @@
                         <tr wire:key="visit-{{ $visit->id }}">
                             <td>{{ $visit->visited_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</td>
                             <td>
-                                <span class="raven-table-name">{{ $visit->pharmacy?->name }}</span>
-                                <span class="promoter-dashboard-help">{{ $visit->pharmacy?->city }}</span>
+                                <span class="raven-table-name">{{ $visit->pharmacy?->display_name }}</span>
+                                @if($visit->pharmacy)<x-promoter.location :department="$visit->pharmacy->department" :city="$visit->pharmacy->city" :neighborhood="$visit->pharmacy->neighborhood" :address="$visit->pharmacy->address" :reference="$visit->pharmacy->branch_summary" />@endif
                             </td>
                             <td>
                                 <span class="raven-badge {{ $visit->status === \App\Enums\VisitStatus::REALIZADA ? 'raven-badge-success' : 'raven-badge-danger' }}">{{ $visit->status->label() }}</span>
@@ -84,6 +84,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="promoter-pagination">{{ $visits->links() }}</div>
+        <div class="promoter-pagination">{{ $visits->links('components.promoter.pagination') }}</div>
     @endif
 </div>

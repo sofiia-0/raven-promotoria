@@ -50,7 +50,7 @@ class VisitRecorder
             $reasonId = (int) ($data['visit_reason_id'] ?? 0);
             if (! VisitReason::query()->active()->whereKey($reasonId)->exists()) {
                 throw ValidationException::withMessages([
-                    'reasonId' => 'Indicá el motivo por el que no se realizó la visita.',
+                    'reasonId' => 'Indique el motivo por el que no se realizó la visita.',
                 ]);
             }
         }
@@ -75,7 +75,7 @@ class VisitRecorder
                     ->exists();
                 if (! $allowed) {
                     throw ValidationException::withMessages([
-                        'pharmacyId' => 'La farmacia no está entre tus asignaciones activas.',
+                        'pharmacyId' => 'La farmacia no está entre sus asignaciones activas.',
                     ]);
                 }
 
@@ -143,7 +143,7 @@ class VisitRecorder
                 $today->subMonthNoOverflow()->startOfMonth()->toDateString(),
                 $today->endOfMonth()->toDateString(),
             ])
-            ->with(['pharmacy:id,name,city,department,neighborhood', 'visits:id,planned_activity_id,attempt,status'])
+            ->with(['pharmacy:id,name,city,department,neighborhood,address', 'visits:id,planned_activity_id,attempt,status'])
             ->orderBy('scheduled_date')
             ->orderBy('id')
             ->get();
@@ -200,11 +200,11 @@ class VisitRecorder
             $fail('Solo se registran visitas.');
         }
         if ($activity->progress() !== ActivityProgress::PENDIENTE) {
-            $fail('Esta visita ya tiene un registro. Si no se realizó, reprogramala para volver a intentarla.');
+            $fail('Esta visita ya tiene un registro. Si no se realizó, reprográmela para volver a intentarla.');
         }
         if ($activity->scheduled_date->gt(SchedulePlanner::today())) {
             $fail('Esta visita está programada para el '.$activity->scheduled_date->format('d/m/Y')
-                .'. Si la vas a hacer antes, reprogramala para hoy.');
+                .'. Si va a realizarla antes, reprográmela para hoy.');
         }
     }
 

@@ -89,8 +89,8 @@ class Register extends Component
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             'locationAccuracy' => ['nullable', 'integer', 'min:0'],
         ], [
-            'pharmacyId.required' => 'Seleccioná la farmacia visitada.',
-            'reasonId.required' => 'Indicá el motivo por el que no se realizó la visita.',
+            'pharmacyId.required' => 'Seleccione la farmacia visitada.',
+            'reasonId.required' => 'Indique el motivo por el que no se realizó la visita.',
         ], [
             'status' => 'resultado',
             'pharmacyId' => 'farmacia',

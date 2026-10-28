@@ -89,7 +89,7 @@ class Index extends Component
     {
         $month = $this->month();
         $planner->create($this->promoter(), $month->year, $month->month);
-        session()->flash('success', 'Cronograma creado. Ya podés agregar actividades.');
+        session()->flash('success', 'Cronograma creado. Ya puede agregar actividades.');
     }
 
     public function updatedActivityType(): void
@@ -159,7 +159,7 @@ class Index extends Component
         $today = SchedulePlanner::today();
 
         $schedule = $this->schedule()?->load([
-            'weeks.activities.pharmacy:id,name,city,department',
+            'weeks.activities.pharmacy:id,name,city,department,neighborhood,address',
             'weeks.activities.visits:id,planned_activity_id,attempt,status',
         ]);
 

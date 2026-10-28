@@ -1,4 +1,4 @@
-<div class="promoter-visits">
+<div class="promoter-workflow promoter-visits">
     @if(session('success'))
         <div class="raven-alert raven-alert-success" role="status">{{ session('success') }}</div>
     @endif
@@ -23,17 +23,17 @@
 
     <section class="raven-card promoter-planning-submit">
         <div>
-            <h2 class="raven-card-title">¿Visitaste una farmacia que no estaba en el plan?</h2>
-            <p class="raven-card-description">Registrala como visita fuera de plan; queda separada en tu historial.</p>
+            <h2 class="raven-card-title">¿Visitó una farmacia que no estaba en el plan?</h2>
+            <p class="raven-card-description">Regístrela como visita fuera de plan; queda separada en su historial.</p>
         </div>
         <a class="raven-button raven-button-secondary" href="{{ route('promoter.visits.create') }}">Registrar fuera de plan</a>
     </section>
 
     @php
         $sections = [
-            ['id' => 'today', 'title' => 'Para hoy', 'help' => 'Registrá el resultado cuando termines cada visita.', 'items' => $dueToday, 'register' => true, 'empty' => 'No tenés visitas planificadas para hoy.'],
-            ['id' => 'overdue', 'title' => 'Atrasadas', 'help' => 'Podés registrarlas tarde o reprogramarlas a otro día del mes.', 'items' => $overdue, 'register' => true, 'empty' => 'No hay visitas atrasadas.'],
-            ['id' => 'failed', 'title' => 'No realizadas', 'help' => 'Reprogramalas para volver a intentarlo dentro del mes.', 'items' => $failed, 'register' => false, 'empty' => 'No hay visitas no realizadas este mes.'],
+            ['id' => 'today', 'title' => 'Para hoy', 'help' => 'Registre el resultado cuando termine cada visita.', 'items' => $dueToday, 'register' => true, 'empty' => 'No tiene visitas planificadas para hoy.'],
+            ['id' => 'overdue', 'title' => 'Atrasadas', 'help' => 'Puede registrarlas tarde o reprogramarlas a otro día del mes.', 'items' => $overdue, 'register' => true, 'empty' => 'No hay visitas atrasadas.'],
+            ['id' => 'failed', 'title' => 'No realizadas', 'help' => 'Reprográmelas para volver a intentarlo dentro del mes.', 'items' => $failed, 'register' => false, 'empty' => 'No hay visitas no realizadas este mes.'],
             ['id' => 'upcoming', 'title' => 'Próximas', 'help' => 'Visitas planificadas para los próximos días del mes.', 'items' => $upcoming, 'register' => false, 'empty' => 'No quedan visitas planificadas en el mes.'],
         ];
     @endphp
@@ -61,8 +61,8 @@
                                     <span>{{ $activity->scheduled_date->locale('es')->translatedFormat('M') }}</span>
                                 </div>
                                 <div class="promoter-planning-body">
-                                    <p class="promoter-planning-title">{{ $activity->pharmacy?->name ?? 'Farmacia' }}</p>
-                                    <p class="promoter-dashboard-help">{{ collect([$activity->pharmacy?->neighborhood, $activity->pharmacy?->city])->filter()->join(' · ') ?: 'Ubicación sin especificar' }}</p>
+                                    <p class="promoter-planning-title">{{ $activity->pharmacy?->display_name ?? 'Farmacia' }}</p>
+                                    @if($activity->pharmacy)<x-promoter.location :department="$activity->pharmacy->department" :city="$activity->pharmacy->city" :neighborhood="$activity->pharmacy->neighborhood" :address="$activity->pharmacy->address" :reference="$activity->pharmacy->branch_summary" />@endif
                                     @if($activity->reschedule_count > 0)
                                         <span class="raven-badge raven-badge-rose">Reprogramada {{ $activity->reschedule_count }} {{ $activity->reschedule_count === 1 ? 'vez' : 'veces' }}</span>
                                     @endif
@@ -84,7 +84,7 @@
 
                             @if($reschedulingId === $activity->id)
                                 <form class="promoter-reschedule-form" wire:submit="saveReschedule"
-                                      aria-label="Reprogramar visita a {{ $activity->pharmacy?->name }}">
+                                      aria-label="Reprogramar visita a {{ $activity->pharmacy?->display_name }}">
                                     <div class="raven-form-grid">
                                         <div class="raven-field">
                                             <label class="raven-label" for="reschedule-date-{{ $activity->id }}">Nueva fecha</label>
@@ -97,7 +97,7 @@
                                         <div class="raven-field">
                                             <label class="raven-label" for="reschedule-reason-{{ $activity->id }}">Motivo</label>
                                             <select id="reschedule-reason-{{ $activity->id }}" class="raven-select" wire:model="rescheduleReasonId">
-                                                <option value="">Seleccioná un motivo</option>
+                                                <option value="">Seleccione un motivo</option>
                                                 @foreach($reasons as $reason)
                                                     <option value="{{ $reason->id }}">{{ $reason->name }}</option>
                                                 @endforeach

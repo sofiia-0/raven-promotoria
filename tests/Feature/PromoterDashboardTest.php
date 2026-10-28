@@ -61,8 +61,8 @@ class PromoterDashboardTest extends TestCase
             ->assertViewHas('totalActive', 2)
             ->assertViewHas('departmentsCount', 1)
             ->assertViewHas('missingAddress', 1)
-            ->assertSee('Por categoría')
-            ->assertSee('Por departamento')
+            ->assertSee('Distribución por categoría')
+            ->assertSee('Distribución por departamento')
             ->assertDontSee('Farmacia Ajena');
     }
 
@@ -97,7 +97,7 @@ class PromoterDashboardTest extends TestCase
         $second = $this->promoter();
         $pharmacy = $this->pharmacy('Farmacia Transferida', $first);
 
-        (new PharmacyAssignmentService())->reassign($pharmacy, $second);
+        (new PharmacyAssignmentService)->reassign($pharmacy, $second);
 
         Livewire::actingAs($first)->test(Dashboard::class)
             ->assertViewHas('totalActive', 0);

@@ -233,7 +233,7 @@ class PromoterVisitsTest extends TestCase
         $future = $this->activityOn('2026-10-20');
         Livewire::actingAs($this->promoter)
             ->test(Register::class, ['actividad' => $future->id])
-            ->assertSee('Si la vas a hacer antes, reprogramala para hoy')
+            ->assertSee('Si va a realizarla antes, reprográmela para hoy')
             ->assertDontSee('Registrar visita</button>', false);
 
         $recorder->register($this->promoter, $this->payload());
