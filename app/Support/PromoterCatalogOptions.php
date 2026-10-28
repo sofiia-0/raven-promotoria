@@ -29,8 +29,8 @@ class PromoterCatalogOptions
     public static function forForm(User $actor, string $department): array
     {
         return [
-            'department' => self::values($actor, 'department'),
-            'city' => self::values($actor, 'city', $department),
+            'department' => NicaraguaGeography::departments(),
+            'city' => NicaraguaGeography::municipalities($department),
             'client_type' => self::values($actor, 'client_type'),
             'category' => self::values($actor, 'category'),
         ];

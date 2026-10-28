@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Promoter\Pharmacies;
 
+use App\Support\EstablishmentSearch;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,7 +12,9 @@ class Index extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $department = '';
+
     public string $category = '';
 
     public function updatedSearch(): void
@@ -41,8 +43,7 @@ class Index extends Component
         // El ID sale de la sesión: NUNCA desde un filtro enviado por la promotora.
         $promoter = auth()->user();
 
-        $base = fn () => $promoter->assignedPharmacies()
-            ->where('pharmacies.is_active', true);
+        $base = fn () => EstablishmentSearch::forPromoter($promoter);
 
         $departments = $base()
             ->whereNotNull('pharmacies.department')
@@ -58,17 +59,7 @@ class Index extends Component
             ->orderBy('pharmacies.category')
             ->pluck('pharmacies.category');
 
-        $query = $base();
-
-        if (trim($this->search) !== '') {
-            $term = '%'.trim($this->search).'%';
-            $query->where(function (Builder $q) use ($term): void {
-                $q->where('pharmacies.name', 'like', $term)
-                    ->orWhere('pharmacies.city', 'like', $term)
-                    ->orWhere('pharmacies.neighborhood', 'like', $term)
-                    ->orWhere('pharmacies.address', 'like', $term);
-            });
-        }
+        $query = EstablishmentSearch::forPromoter($promoter, $this->search);
 
         if ($this->department !== '') {
             $query->where('pharmacies.department', $this->department);

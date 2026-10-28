@@ -6,13 +6,19 @@ use App\Enums\UserRole;
 use App\Models\Pharmacy;
 use App\Models\PharmacyChange;
 use App\Models\User;
+use App\Support\NicaraguaGeography;
+use App\Support\PromoterValidationMessages;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /** Edita exclusivamente información de la ficha y registra cambios efectivos. */
 class PharmacyEditor
 {
+    use PromoterValidationMessages;
+
     public const EDITABLE = [
         'name', 'client_type', 'category', 'neighborhood', 'address',
         'city', 'department', 'frequency', 'dependents', 'shifts', 'phone', 'email',
@@ -34,6 +40,17 @@ class PharmacyEditor
             if (! $pharmacy->is_active || ! $pharmacy->assignments()
                 ->where('promoter_id', $actor->id)->whereNull('ended_at')->exists()) {
                 throw (new ModelNotFoundException)->setModel(Pharmacy::class, [$pharmacyId]);
+            }
+
+            $rules = NicaraguaGeography::editingRules($pharmacy, $validated);
+            if ($rules !== []) {
+                Validator::make(array_merge([
+                    'department' => $pharmacy->department, 'city' => $pharmacy->city,
+                ], $validated), $rules, $this->messages(), $this->validationAttributes())->validate();
+            }
+            if (isset($validated['name']) && trim($validated['name']) !== trim((string) $pharmacy->name)
+                && str_contains($validated['name'], '·')) {
+                throw ValidationException::withMessages(['name' => $this->messages()['not_regex']]);
             }
 
             $before = [];

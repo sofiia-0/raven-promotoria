@@ -3,7 +3,7 @@
         <div class="promoter-filters">
             <div class="raven-field promoter-filter-search">
                 <label class="raven-label" for="promoter-search">Buscar establecimiento</label>
-                <input id="promoter-search" class="raven-input" type="search" placeholder="Nombre, municipio, barrio o dirección" wire:model.live.debounce.350ms="search">
+                <input id="promoter-search" class="raven-input" type="search" placeholder="Nombre, departamento, municipio o referencia" wire:model.live.debounce.350ms="search">
             </div>
             <div class="raven-field">
                 <label class="raven-label" for="promoter-department">Departamento</label>
@@ -28,10 +28,10 @@
             @foreach($pharmacies as $pharmacy)
                 <article class="raven-card promoter-pharmacy-card" wire:key="pharmacy-{{ $pharmacy->id }}">
                     <div class="promoter-pharmacy-card-head">
-                        <h2 class="raven-card-title">{{ $pharmacy->name }}</h2>
+                        <h2 class="raven-card-title">{{ $pharmacy->display_name }}</h2>
                         <span class="raven-badge raven-badge-success">Activa</span>
                     </div>
-                    <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" />
+                    <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" />
                     <dl class="promoter-card-meta">
                         <div><dt>Tipo</dt><dd>{{ $pharmacy->client_type ?: 'Sin especificar' }}</dd></div>
                         <div><dt>Categoría</dt><dd>{{ $pharmacy->category ?: 'Sin especificar' }}</dd></div>

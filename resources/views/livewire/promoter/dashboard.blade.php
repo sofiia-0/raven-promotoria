@@ -59,7 +59,7 @@
                         <li class="promoter-dashboard-activity">
                             <span class="promoter-activity-marker" aria-hidden="true"></span>
                             <div class="promoter-activity-copy">
-                                <a class="promoter-dashboard-activity-link" href="{{ route('promoter.pharmacies.show', $change->pharmacy_id) }}">{{ $change->pharmacy?->name ?? 'Establecimiento' }}</a>
+                                <a class="promoter-dashboard-activity-link" href="{{ route('promoter.pharmacies.show', $change->pharmacy_id) }}">{{ $change->pharmacy?->display_name ?? 'Establecimiento' }}</a>
                                 <p class="promoter-dashboard-help">{{ $change->actor?->name ?? 'Usuario' }}</p>
                                 <time class="promoter-dashboard-help" datetime="{{ $change->created_at->toIso8601String() }}">{{ $change->created_at->format('d/m/Y H:i') }}</time>
                             </div>

@@ -1,4 +1,4 @@
-@props(['model', 'label', 'value' => '', 'type' => 'text', 'options' => null, 'live' => false, 'required' => false, 'help' => null, 'max' => null, 'min' => null, 'disabled' => false])
+@props(['model', 'label', 'value' => '', 'type' => 'text', 'options' => null, 'live' => false, 'required' => false, 'help' => null, 'secondaryHelp' => null, 'max' => null, 'min' => null, 'disabled' => false])
 <div class="raven-field {{ $type === 'textarea' ? 'promoter-field-wide' : '' }}">
     <label class="raven-label" for="field-{{ $model }}">{{ $label }} @if($required)<span class="promoter-required" aria-hidden="true">*</span>@endif</label>
     @if($options !== null && count($options) > 0)
@@ -27,5 +27,6 @@
     <div id="feedback-{{ $model }}">
         @error($model)<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror
         @if($help)<p class="raven-field-help">{{ $help }}</p>@endif
+        @if($secondaryHelp)<p class="raven-field-help">{{ $secondaryHelp }}</p>@endif
     </div>
 </div>

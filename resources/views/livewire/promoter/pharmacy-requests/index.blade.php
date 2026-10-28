@@ -17,13 +17,13 @@
                     </div>
                 </fieldset>
                 <fieldset class="promoter-fieldset"><legend>Ubicación</legend>
-                    <div class="raven-form-grid">
-                        <x-promoter.field model="altaDepartment" label="Departamento" :value="$altaDepartment" :options="$catalogOptions['department']" required live max="120" />
-                        <x-promoter.field model="altaCity" label="Municipio" :value="$altaCity" :options="$catalogOptions['city']" max="120" :disabled="$altaDepartment === ''" />
-                        <x-promoter.field model="altaNeighborhood" label="Barrio / zona" :value="$altaNeighborhood" max="255" />
-                        <x-promoter.field model="altaAddress" label="Dirección detallada" :value="$altaAddress" type="textarea" max="1000" />
+                    <div class="raven-form-grid promoter-grid-two">
+                        <x-promoter.searchable-select model="altaDepartment" label="Departamento o región autónoma" :value="$altaDepartment" :options="$catalogOptions['department']" required />
+                        <x-promoter.searchable-select model="altaCity" label="Municipio" :value="$altaCity" :options="$catalogOptions['city']" required :disabled="$altaDepartment === ''" />
+                        <x-promoter.field model="altaAddress" label="Dirección detallada" :value="$altaAddress" type="textarea" required max="1000"
+                            help="Indique zona, barrio, calle, número, puntos de referencia y cómo llegar, según corresponda."
+                            secondaryHelp="No es necesario repetir el departamento ni el municipio." />
                     </div>
-                    <p class="raven-field-help promoter-catalog-note">Opciones disponibles según sus establecimientos asignados.</p>
                 </fieldset>
                 <fieldset class="promoter-fieldset"><legend>Información de contacto</legend>
                     <div class="raven-form-grid promoter-grid-two">
@@ -40,21 +40,30 @@
             <div class="promoter-section-heading"><div><h2 id="baja-title" class="raven-section-title">Solicitar baja</h2><p class="raven-card-description">El establecimiento seguirá activo hasta que se apruebe la baja.</p></div><button type="button" class="promoter-subtle-link promoter-close-form" wire:click="closeForm">Cerrar formulario</button></div>
             <form wire:submit="submitBaja">
                 <div class="raven-field">
-                    <label class="raven-label" for="baja-pharmacy">Establecimiento asignado <span class="promoter-required" aria-hidden="true">*</span></label>
-                    <select id="baja-pharmacy" class="raven-select" wire:model.live="pharmacyId" required aria-invalid="{{ $errors->has('pharmacyId') ? 'true' : 'false' }}" aria-describedby="baja-pharmacy-error">
-                        <option value="">Seleccione un establecimiento</option>
-                        @foreach($pharmacies as $pharmacy)
-                            <option value="{{ $pharmacy->id }}" @selected((string) $pharmacyId === (string) $pharmacy->id)>{{ $pharmacy->name }} — {{ collect([$pharmacy->city, $pharmacy->department, $pharmacy->neighborhood])->filter()->unique()->join(' · ') ?: 'Ubicación por completar' }}</option>
-                        @endforeach
-                    </select>
-                    <div id="baja-pharmacy-error">@error('pharmacyId')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror</div>
+                    <label class="raven-label" for="baja-search">Buscar establecimiento</label>
+                    <input id="baja-search" class="raven-input" type="search" wire:model.live.debounce.300ms="bajaSearch"
+                        placeholder="Nombre, departamento, municipio o referencia" aria-describedby="baja-search-status">
+                    <span id="baja-search-status" class="promoter-baja-result-status" role="status" aria-live="polite"><span wire:loading.remove wire:target="bajaSearch">{{ $pharmacies->count() }} {{ $pharmacies->count() === 1 ? 'resultado' : 'resultados' }}{{ $pharmacies->count() === 20 ? ' · Refine la búsqueda para ver más' : '' }}</span><span wire:loading wire:target="bajaSearch">Buscando…</span></span>
                 </div>
+                <fieldset class="promoter-fieldset promoter-baja-picker" aria-describedby="baja-pharmacy-error">
+                    <legend>Seleccione un establecimiento</legend>
+                    <div class="promoter-baja-results">
+                        @forelse($pharmacies as $pharmacy)
+                            <label class="promoter-baja-option" wire:key="baja-option-{{ $pharmacy->id }}">
+                                <input type="radio" name="baja-pharmacy" value="{{ $pharmacy->id }}" wire:model.live="pharmacyId" @checked((string) $pharmacyId === (string) $pharmacy->id)>
+                                <span class="promoter-baja-option-copy"><span class="promoter-baja-option-title">{{ $pharmacy->display_name }}</span><x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" /></span>
+                            </label>
+                        @empty
+                            <p class="raven-card-description">{{ $hasAssignedPharmacies ? 'No se encontraron coincidencias. Revise los términos de búsqueda.' : 'No tiene establecimientos activos asignados.' }}</p>
+                        @endforelse
+                    </div>
+                    <div id="baja-pharmacy-error">@error('pharmacyId')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror</div>
+                </fieldset>
                 @if($selectedPharmacy)
-                    <div class="promoter-selected-record"><h3>{{ $selectedPharmacy->name }}</h3><x-promoter.location :city="$selectedPharmacy->city" :department="$selectedPharmacy->department" :neighborhood="$selectedPharmacy->neighborhood" :address="$selectedPharmacy->address" /></div>
+                    <div class="promoter-selected-record"><p class="raven-field-help">Establecimiento seleccionado</p><h3>{{ $selectedPharmacy->display_name }}</h3><x-promoter.location :city="$selectedPharmacy->city" :department="$selectedPharmacy->department" :neighborhood="$selectedPharmacy->neighborhood" :address="$selectedPharmacy->address" :reference="$selectedPharmacy->branch_summary" /></div>
                 @endif
-                @if($pharmacies->isEmpty())<p class="raven-card-description">No tiene establecimientos activos asignados.</p>@endif
                 <div class="promoter-reason-field"><x-promoter.field model="bajaReason" label="Motivo de la baja" :value="$bajaReason" type="textarea" required max="1500" help="Utilice al menos 10 caracteres." /></div>
-                <div class="raven-form-actions"><button type="submit" class="raven-button raven-button-primary" wire:loading.attr="disabled" wire:target="submitBaja" @disabled($pharmacies->isEmpty())><span wire:loading.remove wire:target="submitBaja">Enviar solicitud de baja</span><span wire:loading wire:target="submitBaja">Enviando…</span></button></div>
+                <div class="raven-form-actions"><button type="submit" class="raven-button raven-button-primary" wire:loading.attr="disabled" wire:target="submitBaja" @disabled(!$hasAssignedPharmacies)><span wire:loading.remove wire:target="submitBaja">Enviar solicitud de baja</span><span wire:loading wire:target="submitBaja">Enviando…</span></button></div>
             </form>
         </section>
     @endif
@@ -66,9 +75,11 @@
                 <article class="promoter-request-row" wire:key="request-{{ $item->id }}">
                     <div class="promoter-request-type"><span class="promoter-section-note">{{ $item->type === 'alta' ? 'Alta' : 'Baja' }}</span><time datetime="{{ $item->created_at->toIso8601String() }}">{{ $item->created_at->format('d/m/Y H:i') }}</time></div>
                     <div class="promoter-request-record">
-                        <h3>{{ $item->type === 'alta' ? ($item->data['name'] ?? 'Nuevo establecimiento') : ($item->pharmacy?->name ?? 'Establecimiento') }}</h3>
+                        <h3>{{ $item->type === 'alta' ? \App\Support\EstablishmentPresentation::title($item->data['name'] ?? 'Nuevo establecimiento', $item->data['department'] ?? null) : ($item->pharmacy?->display_name ?? 'Establecimiento sin asignación vigente') }}</h3>
                         @if($item->type === 'alta')
-                            <x-promoter.location :city="$item->data['city'] ?? null" :department="$item->data['department'] ?? null" />
+                            <x-promoter.location :city="$item->data['city'] ?? null" :department="$item->data['department'] ?? null" :address="$item->data['address'] ?? null" :neighborhood="$item->data['neighborhood'] ?? null" :reference="\App\Support\EstablishmentPresentation::reference($item->data['name'] ?? null, $item->data['department'] ?? null, $item->data['city'] ?? null)" />
+                        @elseif($item->pharmacy)
+                            <x-promoter.location :city="$item->pharmacy->city" :department="$item->pharmacy->department" :address="$item->pharmacy->address" :neighborhood="$item->pharmacy->neighborhood" :reference="$item->pharmacy->branch_summary" />
                         @endif
                         <details class="promoter-request-details"><summary>Ver motivo{{ $item->review_note ? ' y revisión' : '' }}</summary><p>{{ $item->reason }}</p>@if($item->review_note)<p><strong>Nota de revisión:</strong> {{ $item->review_note }}</p>@endif</details>
                     </div>

@@ -6,10 +6,11 @@ use App\Enums\UserRole;
 use App\Models\PharmacyRequest;
 use App\Models\User;
 use App\Services\PharmacyRequestService;
+use App\Support\EstablishmentSearch;
+use App\Support\NicaraguaGeography;
 use App\Support\PromoterCatalogOptions;
 use App\Support\PromoterValidationMessages;
 use Illuminate\Contracts\View\View;
-use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -26,8 +27,6 @@ class Index extends Component
 
     public string $altaCategory = '';
 
-    public string $altaNeighborhood = '';
-
     public string $altaAddress = '';
 
     public string $altaCity = '';
@@ -43,6 +42,8 @@ class Index extends Component
     public string $pharmacyId = '';
 
     public string $bajaReason = '';
+
+    public string $bajaSearch = '';
 
     private function promoter(): User
     {
@@ -90,16 +91,14 @@ class Index extends Component
     {
         $actor = $this->promoter();
         $this->activeForm = 'alta';
-        $cities = PromoterCatalogOptions::values($actor, 'city', $this->altaDepartment);
-        $cityRules = $cities->isEmpty() ? [] : [Rule::in($cities->all())];
+        $locationRules = NicaraguaGeography::rules($this->altaDepartment);
         $values = $this->validate([
-            'altaName' => ['required', 'string', 'max:255'],
+            'altaName' => ['required', 'string', 'max:255', 'not_regex:/·/u'],
             'altaClientType' => ['nullable', 'string', 'max:80'],
             'altaCategory' => ['nullable', 'string', 'max:20'],
-            'altaNeighborhood' => ['nullable', 'string', 'max:255'],
-            'altaAddress' => ['nullable', 'string', 'max:1000'],
-            'altaCity' => array_merge(['nullable', 'string', 'max:120'], $cityRules),
-            'altaDepartment' => ['required', 'string', 'max:120'],
+            'altaAddress' => ['required', 'string', 'max:1000'],
+            'altaCity' => $locationRules['city'],
+            'altaDepartment' => $locationRules['department'],
             'altaPhone' => ['nullable', 'string', 'max:80'],
             'altaEmail' => ['nullable', 'email', 'max:255'],
             'altaReason' => ['required', 'string', 'min:10', 'max:1500'],
@@ -109,7 +108,6 @@ class Index extends Component
             'name' => $values['altaName'],
             'client_type' => $values['altaClientType'] ?? null,
             'category' => $values['altaCategory'] ?? null,
-            'neighborhood' => $values['altaNeighborhood'] ?? null,
             'address' => $values['altaAddress'] ?? null,
             'city' => $values['altaCity'] ?? null,
             'department' => $values['altaDepartment'],
@@ -119,7 +117,7 @@ class Index extends Component
         ]);
 
         $this->reset([
-            'altaName', 'altaClientType', 'altaCategory', 'altaNeighborhood',
+            'altaName', 'altaClientType', 'altaCategory',
             'altaAddress', 'altaCity', 'altaDepartment', 'altaPhone',
             'altaEmail', 'altaReason',
         ]);
@@ -138,7 +136,7 @@ class Index extends Component
         ]);
 
         $service->submitBaja($actor, (int) $values['pharmacyId'], $values['bajaReason']);
-        $this->reset(['pharmacyId', 'bajaReason']);
+        $this->reset(['pharmacyId', 'bajaReason', 'bajaSearch']);
         $this->resetPage();
         $this->activeForm = null;
         session()->flash('success', 'Solicitud de baja registrada. La farmacia continúa activa hasta su aprobación.');
@@ -148,21 +146,23 @@ class Index extends Component
     {
         $actor = $this->promoter();
 
-        $pharmacies = $actor->assignedPharmacies()
-            ->where('pharmacies.is_active', true)
-            ->orderBy('pharmacies.name')
-            ->get(['pharmacies.id', 'pharmacies.name', 'pharmacies.city', 'pharmacies.department', 'pharmacies.neighborhood', 'pharmacies.address']);
+        $pharmacies = EstablishmentSearch::forPromoter($actor, $this->bajaSearch)
+            ->orderBy('pharmacies.name')->limit(20)->get();
+        $selectedPharmacy = EstablishmentSearch::forPromoter($actor)
+            ->whereKey((int) $this->pharmacyId)->first();
+        $hasAssignedPharmacies = EstablishmentSearch::forPromoter($actor)->exists();
 
         $requests = PharmacyRequest::query()
             ->where('promoter_id', $actor->id)
-            ->with('pharmacy:id,name')
+            ->with(['pharmacy' => fn ($query) => $query
+                ->where('is_active', true)
+                ->whereHas('assignments', fn ($assigned) => $assigned->where('promoter_id', $actor->id)->whereNull('ended_at'))])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(10);
 
         $catalogOptions = PromoterCatalogOptions::forForm($actor, $this->altaDepartment);
-        $selectedPharmacy = $pharmacies->firstWhere('id', (int) $this->pharmacyId);
 
-        return view('livewire.promoter.pharmacy-requests.index', compact('pharmacies', 'requests', 'catalogOptions', 'selectedPharmacy'));
+        return view('livewire.promoter.pharmacy-requests.index', compact('pharmacies', 'requests', 'catalogOptions', 'selectedPharmacy', 'hasAssignedPharmacies'));
     }
 }

@@ -6,6 +6,8 @@ use App\Enums\UserRole;
 use App\Models\Pharmacy;
 use App\Models\PharmacyRequest;
 use App\Models\User;
+use App\Support\NicaraguaGeography;
+use App\Support\PromoterValidationMessages;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -18,8 +20,10 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
  */
 class PharmacyRequestService
 {
+    use PromoterValidationMessages;
+
     private const ALTA_FIELDS = [
-        'name', 'client_type', 'category', 'neighborhood', 'address',
+        'name', 'client_type', 'category', 'address',
         'city', 'department', 'phone', 'email',
     ];
 
@@ -46,17 +50,16 @@ class PharmacyRequestService
         $validated = Validator::make(array_merge($draft, [
             'reason' => trim((string) ($input['reason'] ?? '')),
         ]), [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', 'not_regex:/·/u'],
             'client_type' => ['nullable', 'string', 'max:80'],
             'category' => ['nullable', 'string', 'max:20'],
-            'neighborhood' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:1000'],
-            'city' => ['nullable', 'string', 'max:120'],
-            'department' => ['required', 'string', 'max:120'],
+            'address' => ['required', 'string', 'max:1000'],
+            'city' => NicaraguaGeography::rules((string) $draft['department'])['city'],
+            'department' => NicaraguaGeography::rules((string) $draft['department'])['department'],
             'phone' => ['nullable', 'string', 'max:80'],
             'email' => ['nullable', 'email', 'max:255'],
             'reason' => ['required', 'string', 'min:10', 'max:1500'],
-        ])->validate();
+        ], $this->messages(), $this->validationAttributes())->validate();
 
         $reason = $validated['reason'];
         unset($validated['reason']);

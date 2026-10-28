@@ -87,33 +87,33 @@ class PromoterUxTest extends TestCase
         $ended->assignments()->update(['ended_at' => now()]);
 
         Livewire::actingAs($actor)->test(Show::class, ['pharmacyId' => $mine->id])
-            ->assertViewHas('catalogOptions', fn ($options) => $options['department']->all() === ['Propio'] && $options['city']->all() === ['Local'])
+            ->assertViewHas('catalogOptions', fn ($options) => $options['department']->contains('Propio') && $options['department']->contains('Boaco') && $options['city']->all() === ['Local'] && $options['client_type']->all() === ['Tipo propio'])
             ->assertDontSee('Ajeno')->assertDontSee('Privado')->assertDontSee('Inactivo')->assertDontSee('Terminado');
     }
 
     public function test_department_changes_clear_municipality_without_saving(): void
     {
         $actor = $this->promoter();
-        $mine = $this->assigned($actor, ['department' => 'Uno', 'city' => 'Municipio Uno']);
-        $this->assigned($actor, ['department' => 'Dos', 'city' => 'Municipio Dos']);
+        $mine = $this->assigned($actor, ['department' => 'Managua', 'city' => 'Managua']);
+        $this->assigned($actor, ['department' => 'Masaya', 'city' => 'Masaya']);
 
         Livewire::actingAs($actor)->test(Show::class, ['pharmacyId' => $mine->id])
-            ->assertSet('city', 'Municipio Uno')->set('department', 'Dos')->assertSet('city', '')
-            ->assertViewHas('catalogOptions', fn ($options) => $options['city']->all() === ['Municipio Dos']);
+            ->assertSet('city', 'Managua')->set('department', 'Masaya')->assertSet('city', '')
+            ->assertViewHas('catalogOptions', fn ($options) => $options['city']->contains('Masaya') && ! $options['city']->contains('Managua'));
 
-        $this->assertSame('Uno', $mine->fresh()->department);
-        $this->assertSame('Municipio Uno', $mine->fresh()->city);
+        $this->assertSame('Managua', $mine->fresh()->department);
+        $this->assertSame('Managua', $mine->fresh()->city);
         $this->assertSame(0, PharmacyChange::count());
     }
 
     public function test_edit_rejects_municipality_from_another_department(): void
     {
         $actor = $this->promoter();
-        $mine = $this->assigned($actor, ['department' => 'Uno', 'city' => 'Municipio Uno']);
-        $this->assigned($actor, ['department' => 'Dos', 'city' => 'Municipio Dos']);
+        $mine = $this->assigned($actor, ['department' => 'Managua', 'city' => 'Managua']);
+        $this->assigned($actor, ['department' => 'Masaya', 'city' => 'Masaya']);
         Livewire::actingAs($actor)->test(Show::class, ['pharmacyId' => $mine->id])
-            ->set('department', 'Dos')->set('city', 'Municipio Uno')->call('save')->assertHasErrors(['city']);
-        $this->assertSame('Uno', $mine->fresh()->department);
+            ->set('department', 'Masaya')->set('city', 'Managua')->call('save')->assertHasErrors(['city']);
+        $this->assertSame('Managua', $mine->fresh()->department);
         $this->assertSame(0, PharmacyChange::count());
     }
 
@@ -137,23 +137,25 @@ class PromoterUxTest extends TestCase
     public function test_alta_municipalities_depend_on_department_and_are_validated(): void
     {
         $actor = $this->promoter();
-        $this->assigned($actor, ['department' => 'Uno', 'city' => 'Municipio Uno']);
-        $this->assigned($actor, ['department' => 'Dos', 'city' => 'Municipio Dos']);
+        $this->assigned($actor, ['department' => 'Managua', 'city' => 'Managua']);
+        $this->assigned($actor, ['department' => 'Masaya', 'city' => 'Masaya']);
         Livewire::actingAs($actor)->test(Index::class)->call('openForm', 'alta')
-            ->set('altaDepartment', 'Uno')->set('altaCity', 'Municipio Uno')
-            ->set('altaDepartment', 'Dos')->assertSet('altaCity', '')
-            ->assertViewHas('catalogOptions', fn ($options) => $options['city']->all() === ['Municipio Dos'])
-            ->set('altaCity', 'Municipio Uno')->set('altaName', 'Nueva ficha')
+            ->set('altaDepartment', 'Managua')->set('altaCity', 'Managua')
+            ->set('altaDepartment', 'Masaya')->assertSet('altaCity', '')
+            ->assertViewHas('catalogOptions', fn ($options) => $options['city']->contains('Masaya') && ! $options['city']->contains('Managua'))
+            ->set('altaCity', 'Managua')->set('altaName', 'Nueva ficha')
+            ->set('altaAddress', 'Dirección de prueba.')
             ->set('altaReason', 'Solicitud de prueba válida.')->call('submitAlta')->assertHasErrors(['altaCity']);
         $this->assertSame(0, PharmacyRequest::count());
     }
 
-    public function test_without_reference_options_manual_entry_remains_available(): void
+    public function test_national_options_are_available_without_assigned_pharmacies(): void
     {
         Livewire::actingAs($this->promoter())->test(Index::class)->call('openForm', 'alta')
-            ->assertSeeHtml('type="text" value=""')
-            ->set('altaDepartment', 'Dato ingresado por la promotora')
-            ->set('altaCity', 'Municipio por verificar')
+            ->assertSee('Boaco')->assertSee('Región Autónoma de la Costa Caribe Norte (RACCN)')
+            ->set('altaDepartment', 'Boaco')
+            ->set('altaCity', 'Camoapa')
+            ->set('altaAddress', 'Dirección completa de prueba.')
             ->set('altaName', 'Propuesta de establecimiento')
             ->set('altaReason', 'Debe revisarse antes de incorporarlo.')
             ->call('submitAlta')->assertHasNoErrors()->assertSet('activeForm', null);

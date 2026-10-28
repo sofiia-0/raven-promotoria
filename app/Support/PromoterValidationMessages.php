@@ -8,6 +8,7 @@ trait PromoterValidationMessages
     {
         return [
             'required' => 'Complete el campo :attribute.',
+            'not_regex' => 'Ingrese únicamente el nombre del establecimiento; el departamento se muestra por separado.',
             'string' => 'Ingrese un valor válido para :attribute.',
             'email' => 'Ingrese un correo electrónico válido.',
             'integer' => 'Ingrese un número entero en :attribute.',
@@ -31,7 +32,7 @@ trait PromoterValidationMessages
             'altaCategory' => 'categoría', 'altaNeighborhood' => 'barrio / zona',
             'altaAddress' => 'dirección', 'altaCity' => 'municipio',
             'altaDepartment' => 'departamento', 'altaPhone' => 'teléfono', 'altaEmail' => 'correo',
-            'altaReason' => 'motivo', 'pharmacyId' => 'establecimiento', 'bajaReason' => 'motivo',
+            'reason' => 'motivo', 'altaReason' => 'motivo', 'pharmacyId' => 'establecimiento', 'bajaReason' => 'motivo',
         ];
     }
 }
