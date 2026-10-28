@@ -6,13 +6,20 @@ use App\Enums\UserRole;
 use App\Models\Pharmacy;
 use App\Models\PharmacyChange;
 use App\Models\User;
+use App\Support\NicaraguaGeography;
+use App\Support\PromoterCatalogOptions;
+use App\Support\PromoterValidationMessages;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /** Edita exclusivamente información de la ficha y registra cambios efectivos. */
 class PharmacyEditor
 {
+    use PromoterValidationMessages;
+
     public const EDITABLE = [
         'name', 'client_type', 'category', 'neighborhood', 'address',
         'city', 'department', 'frequency', 'dependents', 'shifts', 'phone', 'email',
@@ -24,7 +31,7 @@ class PharmacyEditor
     public function update(int $pharmacyId, User $actor, array $validated): bool
     {
         if ($actor->role !== UserRole::PROMOTER || ! $actor->is_active) {
-            throw new AccessDeniedHttpException('No podés editar establecimientos.');
+            throw new AccessDeniedHttpException('No tiene permiso para editar establecimientos.');
         }
 
         return DB::transaction(function () use ($pharmacyId, $actor, $validated): bool {
@@ -33,7 +40,18 @@ class PharmacyEditor
 
             if (! $pharmacy->is_active || ! $pharmacy->assignments()
                 ->where('promoter_id', $actor->id)->whereNull('ended_at')->exists()) {
-                throw (new ModelNotFoundException())->setModel(Pharmacy::class, [$pharmacyId]);
+                throw (new ModelNotFoundException)->setModel(Pharmacy::class, [$pharmacyId]);
+            }
+
+            $rules = NicaraguaGeography::editingRules($pharmacy, $validated);
+            if ($rules !== []) {
+                Validator::make(array_merge([
+                    'department' => $pharmacy->department, 'city' => $pharmacy->city,
+                ], $validated), $rules, $this->messages(), $this->validationAttributes())->validate();
+            }
+            if (isset($validated['name']) && trim($validated['name']) !== trim((string) $pharmacy->name)
+                && str_contains($validated['name'], '·')) {
+                throw ValidationException::withMessages(['name' => $this->messages()['not_regex']]);
             }
 
             $before = [];
@@ -42,7 +60,15 @@ class PharmacyEditor
                 if (! array_key_exists($field, $validated)) {
                     continue;
                 }
-                $next = $this->normalise($field, $validated[$field]);
+                $value = $validated[$field];
+                if (in_array($field, ['client_type', 'category'], true) && (is_string($value) || $value === null)) {
+                    $resolved = PromoterCatalogOptions::resolveCommercial($actor, $field, $value, $pharmacy->{$field});
+                    if ($resolved['proposed']) {
+                        throw ValidationException::withMessages([$field => 'Seleccione una opción disponible para este campo.']);
+                    }
+                    $value = $resolved['value'];
+                }
+                $next = $this->normalise($field, $value);
                 $previous = $this->normalise($field, $pharmacy->{$field});
                 if ($previous === $next) {
                     continue;
@@ -75,6 +101,7 @@ class PharmacyEditor
         if (in_array($field, self::NUMERIC, true)) {
             return (int) $value;
         }
+
         return is_string($value) ? (trim($value) ?: null) : $value;
     }
 }

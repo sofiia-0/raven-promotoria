@@ -1,92 +1,55 @@
 <div class="promoter-pharmacy-module">
-    <section class="raven-card" aria-label="Buscar farmacias">
+    <section class="raven-card promoter-filter-card" aria-label="Buscar farmacias">
+        <div class="promoter-filter-intro">
+            <div><h2 class="raven-section-title">Búsqueda y filtros</h2><p class="raven-card-description">Consulte los establecimientos que tiene asignados.</p></div>
+            <x-promoter.graphic class="promoter-filter-graphic" />
+        </div>
         <div class="promoter-filters">
             <div class="raven-field promoter-filter-search">
-                <label class="raven-label" for="promoter-search">Buscar</label>
-                <input id="promoter-search" class="raven-input" type="search"
-                       placeholder="Nombre, ciudad, barrio o dirección"
-                       wire:model.live.debounce.350ms="search">
+                <label class="raven-label" for="promoter-search">Buscar establecimiento</label>
+                <input id="promoter-search" class="raven-input" type="search" placeholder="Nombre, departamento, municipio o referencia" wire:model.live.debounce.350ms="search">
             </div>
             <div class="raven-field">
                 <label class="raven-label" for="promoter-department">Departamento</label>
-                <select id="promoter-department" class="raven-select" wire:model.live="department">
-                    <option value="">Todos</option>
-                    @foreach($departments as $option)
-                        <option value="{{ $option }}">{{ $option }}</option>
-                    @endforeach
-                </select>
+                <select id="promoter-department" class="raven-select" wire:model.live="department"><option value="">Todos</option>@foreach($departments as $option)<option value="{{ $option }}">{{ $option }}</option>@endforeach</select>
             </div>
             <div class="raven-field">
                 <label class="raven-label" for="promoter-category">Categoría</label>
-                <select id="promoter-category" class="raven-select" wire:model.live="category">
-                    <option value="">Todas</option>
-                    @foreach($categories as $option)
-                        <option value="{{ $option }}">{{ $option }}</option>
-                    @endforeach
-                </select>
+                <select id="promoter-category" class="raven-select" wire:model.live="category"><option value="">Todas</option>@foreach($categories as $option)<option value="{{ $option }}">{{ $option }}</option>@endforeach</select>
             </div>
-            <button type="button" class="raven-button raven-button-secondary"
-                    wire:click="clearFilters">Limpiar</button>
+            <button type="button" class="raven-button raven-button-secondary" wire:click="clearFilters">Limpiar filtros</button>
         </div>
     </section>
-
-    <div class="promoter-results-head">
-        <p class="promoter-results-count">{{ $pharmacies->total() }} establecimiento(s) encontrado(s)</p>
-        <span class="promoter-results-help">Solo tus asignaciones vigentes</span>
+    <div class="promoter-results-head" role="status" aria-live="polite">
+        <p class="promoter-results-count">{{ $pharmacies->total() }} {{ $pharmacies->total() === 1 ? 'establecimiento' : 'establecimientos' }}</p>
+        <span class="promoter-results-help" wire:loading.remove wire:target="search,department,category,clearFilters,gotoPage,nextPage,previousPage">Asignaciones vigentes</span>
+        <span class="promoter-results-help" wire:loading wire:target="search,department,category,clearFilters,gotoPage,nextPage,previousPage">Actualizando resultados…</span>
     </div>
-
     @if($pharmacies->count() === 0)
-        <section class="raven-card raven-empty">
-            <h2 class="raven-card-title">No encontramos establecimientos</h2>
-            <p class="raven-card-description">Revisá los filtros o consultá con coordinación si todavía no tenés asignaciones.</p>
-        </section>
+        <section class="raven-card raven-empty promoter-illustrated-empty"><x-promoter.graphic /><h2 class="raven-card-title">No se encontraron establecimientos</h2><p class="raven-card-description">Revise los filtros o consulte sus asignaciones con Coordinadora.</p></section>
     @else
         <div class="promoter-pharmacy-grid">
             @foreach($pharmacies as $pharmacy)
                 <article class="raven-card promoter-pharmacy-card" wire:key="pharmacy-{{ $pharmacy->id }}">
                     <div class="promoter-pharmacy-card-head">
-                        <h2 class="raven-card-title">{{ $pharmacy->name }}</h2>
+                        <h2 class="raven-card-title">{{ $pharmacy->display_name }}</h2>
                         <span class="raven-badge raven-badge-success">Activa</span>
                     </div>
-
-                    <dl class="promoter-detail-list">
-                        <div>
-                            <dt>Tipo</dt>
-                            <dd>{{ $pharmacy->client_type ?: 'Sin especificar' }}</dd>
-                        </div>
-                        <div>
-                            <dt>Categoría</dt>
-                            <dd>{{ $pharmacy->category ?: 'Sin especificar' }}</dd>
-                        </div>
-                        <div>
-                            <dt>Ubicación</dt>
-                            <dd>{{ collect([$pharmacy->city, $pharmacy->department])->filter()->join(', ') ?: 'Sin especificar' }}</dd>
-                        </div>
-                        @if($pharmacy->neighborhood)
-                            <div>
-                                <dt>Barrio / zona</dt>
-                                <dd>{{ $pharmacy->neighborhood }}</dd>
-                            </div>
-                        @endif
-                        @if($pharmacy->address)
-                            <div>
-                                <dt>Dirección</dt>
-                                <dd>{{ $pharmacy->address }}</dd>
-                            </div>
-                        @endif
-                        @if($pharmacy->frequency !== null)
-                            <div>
-                                <dt>Frecuencia del fichero</dt>
-                                <dd>{{ $pharmacy->frequency }}</dd>
-                            </div>
-                        @endif
+                    <div class="promoter-card-location">
+                    <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" />
+                    </div>
+                    <dl class="promoter-card-meta">
+                        <div><dt>Tipo</dt><dd>{{ $pharmacy->client_type ?: 'Sin especificar' }}</dd></div>
+                        <div><dt>Categoría</dt><dd>{{ $pharmacy->category ?: 'Sin especificar' }}</dd></div>
+                        @if($pharmacy->frequency !== null)<div><dt>Frecuencia del fichero</dt><dd>{{ $pharmacy->frequency }}</dd></div>@endif
                     </dl>
-                    <div class="raven-form-actions">
-                        <a class="raven-button raven-button-secondary" href="{{ route('promoter.pharmacies.show', ['pharmacy' => $pharmacy->id]) }}">Editar y ver historial</a>
+                    <div class="promoter-card-actions">
+                        <a class="raven-button raven-button-secondary" href="{{ route('promoter.pharmacies.show', $pharmacy->id) }}">Editar y ver historial <span aria-hidden="true">↗</span></a>
+                        <a class="promoter-subtle-link" href="{{ route('promoter.requests.index', ['pharmacy' => $pharmacy->id]) }}">Solicitar baja</a>
                     </div>
                 </article>
             @endforeach
         </div>
-        <div class="promoter-pagination">{{ $pharmacies->links() }}</div>
+        <div class="promoter-pagination">{{ $pharmacies->links('components.promoter.pagination') }}</div>
     @endif
 </div>

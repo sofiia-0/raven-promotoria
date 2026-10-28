@@ -32,6 +32,7 @@ class PromoterPharmacyRequestsTest extends TestCase
             'promoter_id' => $promoter->id,
             'assigned_at' => now(),
         ]);
+
         return $p;
     }
 
@@ -44,6 +45,7 @@ class PromoterPharmacyRequestsTest extends TestCase
             ->set('altaName', 'Nueva Farmacia DEMO')
             ->set('altaDepartment', 'Managua')
             ->set('altaCity', 'Managua')
+            ->set('altaAddress', 'Dirección de prueba suficiente.')
             ->set('altaReason', 'Nuevo establecimiento que necesita cobertura.')
             ->call('submitAlta')
             ->assertHasNoErrors()
@@ -101,7 +103,7 @@ class PromoterPharmacyRequestsTest extends TestCase
     {
         $promoter = $this->promoter();
         $p = $this->pharmacy($promoter);
-        $service = new PharmacyRequestService();
+        $service = new PharmacyRequestService;
         $service->submitBaja($promoter, $p->id, 'Ya no se atiende este establecimiento.');
 
         Livewire::actingAs($promoter)->test(Index::class)
@@ -119,7 +121,7 @@ class PromoterPharmacyRequestsTest extends TestCase
         $second = $this->promoter();
         $p = $this->pharmacy($first);
         $form = Livewire::actingAs($first)->test(Index::class);
-        (new PharmacyAssignmentService())->reassign($p, $second);
+        (new PharmacyAssignmentService)->reassign($p, $second);
 
         try {
             $form->set('pharmacyId', (string) $p->id)
@@ -136,15 +138,15 @@ class PromoterPharmacyRequestsTest extends TestCase
     {
         $mine = $this->promoter();
         $other = $this->promoter();
-        $service = new PharmacyRequestService();
+        $service = new PharmacyRequestService;
         $service->submitAlta($mine, [
             'name' => 'Alta Propia DEMO',
-            'department' => 'Managua',
+            'department' => 'Managua', 'city' => 'Managua', 'address' => 'Dirección de prueba.',
             'reason' => 'Necesitamos este establecimiento nuevo.',
         ]);
         $service->submitAlta($other, [
             'name' => 'Alta Ajena SECRETA',
-            'department' => 'León',
+            'department' => 'León', 'city' => 'León', 'address' => 'Dirección de prueba.',
             'reason' => 'Quiero añadir este establecimiento nuevo.',
         ]);
 
