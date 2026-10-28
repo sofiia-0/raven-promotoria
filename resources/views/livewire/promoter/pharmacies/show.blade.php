@@ -2,21 +2,23 @@
     <div class="promoter-back-row"><a class="promoter-subtle-link" href="{{ route('promoter.pharmacies.index') }}">← Mis farmacias</a><a class="promoter-subtle-link" href="{{ route('promoter.requests.index', ['pharmacy' => $pharmacy->id]) }}">Solicitar baja</a></div>
     @if(session('success'))<div class="raven-alert raven-alert-success" role="status">{{ session('success') }}</div>@endif
     <section class="raven-card promoter-record-header">
-        <span class="raven-badge raven-badge-success">Activa</span>
+        <div class="promoter-record-copy"><span class="raven-badge raven-badge-success">Activa</span>
         <h2 class="raven-section-title">{{ $pharmacy->display_name }}</h2>
         <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" />
+        </div>
+        <x-promoter.graphic variant="record" class="promoter-record-graphic" />
     </section>
     <form wire:submit="save" class="raven-stack">
-        <section class="raven-card" aria-labelledby="identification-title">
-            <h2 id="identification-title" class="promoter-form-heading">Identificación</h2>
+        <section class="raven-card promoter-edit-section promoter-edit-section--identification" aria-labelledby="identification-title">
+            <h2 id="identification-title" class="promoter-form-heading"><span class="promoter-section-symbol"><x-promoter.icon name="identity" /></span><span>Identificación</span></h2>
             <div class="raven-form-grid">
                 <x-promoter.field model="name" label="Nombre del establecimiento" :value="$name" required max="255" />
                 <x-promoter.field model="client_type" label="Tipo de establecimiento" :value="$client_type" :options="$catalogOptions['client_type']" max="80" />
                 <x-promoter.field model="category" label="Categoría" :value="$category" :options="$catalogOptions['category']" max="20" />
             </div>
         </section>
-        <section class="raven-card" aria-labelledby="location-title">
-            <h2 id="location-title" class="promoter-form-heading">Ubicación</h2>
+        <section class="raven-card promoter-edit-section promoter-edit-section--location" aria-labelledby="location-title">
+            <h2 id="location-title" class="promoter-form-heading"><span class="promoter-section-symbol"><x-promoter.icon name="location" /></span><span>Ubicación</span></h2>
             <div class="raven-form-grid">
                 <x-promoter.searchable-select model="department" label="Departamento o región autónoma" :value="$department" :options="$catalogOptions['department']" />
                 <x-promoter.searchable-select model="city" label="Municipio" :value="$city" :options="$catalogOptions['city']" :disabled="$department === ''" />
@@ -25,15 +27,15 @@
             </div>
             <p class="raven-field-help promoter-catalog-note">Los datos históricos se conservan al editar otros campos.</p>
         </section>
-        <section class="raven-card" aria-labelledby="contact-title">
-            <h2 id="contact-title" class="promoter-form-heading">Información de contacto</h2>
+        <section class="raven-card promoter-edit-section promoter-edit-section--contact" aria-labelledby="contact-title">
+            <h2 id="contact-title" class="promoter-form-heading"><span class="promoter-section-symbol"><x-promoter.icon name="contact" /></span><span>Información de contacto</span></h2>
             <div class="raven-form-grid promoter-grid-two">
                 <x-promoter.field model="phone" label="Teléfono" :value="$phone" type="tel" max="80" />
                 <x-promoter.field model="email" label="Correo electrónico" :value="$email" type="email" max="255" />
             </div>
         </section>
-        <section class="raven-card" aria-labelledby="file-title">
-            <h2 id="file-title" class="promoter-form-heading">Datos del fichero</h2>
+        <section class="raven-card promoter-edit-section promoter-edit-section--file" aria-labelledby="file-title">
+            <h2 id="file-title" class="promoter-form-heading"><span class="promoter-section-symbol"><x-promoter.icon name="file" /></span><span>Datos del fichero</span></h2>
             <div class="raven-form-grid">
                 <x-promoter.field model="frequency" label="Frecuencia del fichero" :value="$frequency" type="number" max="255" min="0" />
                 <x-promoter.field model="dependents" label="Dependientes" :value="$dependents" type="number" max="65535" min="0" />
@@ -45,8 +47,8 @@
             <button type="submit" class="raven-button raven-button-primary" wire:loading.attr="disabled" wire:target="save"><span wire:loading.remove wire:target="save">Guardar cambios</span><span wire:loading wire:target="save">Guardando…</span></button>
         </div>
     </form>
-    <section class="raven-card" aria-labelledby="edit-history-title">
-        <div class="promoter-section-heading"><h2 id="edit-history-title" class="raven-section-title">Historial de modificaciones</h2><span class="promoter-section-note">Últimos 30 cambios</span></div>
+    <section class="raven-card promoter-editor-history" aria-labelledby="edit-history-title">
+        <div class="promoter-section-heading"><h2 id="edit-history-title" class="raven-section-title"><x-promoter.icon name="history" />Historial de modificaciones</h2><span class="promoter-section-note">Últimos 30 cambios</span></div>
         @forelse($changes as $change)
             <article class="promoter-history-entry">
                 <h3>{{ $change->actor?->name ?? 'Usuario anterior' }} <time datetime="{{ $change->created_at->toIso8601String() }}">{{ $change->created_at->format('d/m/Y H:i') }}</time></h3>
@@ -57,7 +59,7 @@
                 </dl>
             </article>
         @empty
-            <p class="raven-card-description">No hay modificaciones registradas.</p>
+            <div class="promoter-inline-empty"><x-promoter.graphic variant="requests" /><p class="raven-card-description">No hay modificaciones registradas.</p></div>
         @endforelse
     </section>
 </div>

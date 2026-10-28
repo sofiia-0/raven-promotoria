@@ -1,5 +1,9 @@
 <div class="promoter-pharmacy-module">
     <section class="raven-card promoter-filter-card" aria-label="Buscar farmacias">
+        <div class="promoter-filter-intro">
+            <div><h2 class="raven-section-title">Búsqueda y filtros</h2><p class="raven-card-description">Consulte los establecimientos que tiene asignados.</p></div>
+            <x-promoter.graphic class="promoter-filter-graphic" />
+        </div>
         <div class="promoter-filters">
             <div class="raven-field promoter-filter-search">
                 <label class="raven-label" for="promoter-search">Buscar establecimiento</label>
@@ -22,7 +26,7 @@
         <span class="promoter-results-help" wire:loading wire:target="search,department,category,clearFilters,gotoPage,nextPage,previousPage">Actualizando resultados…</span>
     </div>
     @if($pharmacies->count() === 0)
-        <section class="raven-card raven-empty"><h2 class="raven-card-title">No se encontraron establecimientos</h2><p class="raven-card-description">Revise los filtros o consulte sus asignaciones con Coordinadora.</p></section>
+        <section class="raven-card raven-empty promoter-illustrated-empty"><x-promoter.graphic /><h2 class="raven-card-title">No se encontraron establecimientos</h2><p class="raven-card-description">Revise los filtros o consulte sus asignaciones con Coordinadora.</p></section>
     @else
         <div class="promoter-pharmacy-grid">
             @foreach($pharmacies as $pharmacy)
@@ -31,7 +35,9 @@
                         <h2 class="raven-card-title">{{ $pharmacy->display_name }}</h2>
                         <span class="raven-badge raven-badge-success">Activa</span>
                     </div>
+                    <div class="promoter-card-location">
                     <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" />
+                    </div>
                     <dl class="promoter-card-meta">
                         <div><dt>Tipo</dt><dd>{{ $pharmacy->client_type ?: 'Sin especificar' }}</dd></div>
                         <div><dt>Categoría</dt><dd>{{ $pharmacy->category ?: 'Sin especificar' }}</dd></div>

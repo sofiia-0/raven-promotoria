@@ -1,22 +1,30 @@
 <div class="raven-stack promoter-requests">
     @if(session('success'))<div class="raven-alert raven-alert-success" role="status">{{ session('success') }}</div>@endif
     <div class="promoter-request-actions" role="group" aria-label="Nueva solicitud">
-        <button type="button" class="raven-card promoter-request-action {{ $activeForm === 'alta' ? 'is-selected' : '' }}" wire:click="openForm('alta')" aria-expanded="{{ $activeForm === 'alta' ? 'true' : 'false' }}" aria-controls="request-form-panel"><span class="promoter-action-icon" aria-hidden="true">+</span><span>Solicitar alta</span><span aria-hidden="true">↗</span></button>
-        <button type="button" class="raven-card promoter-request-action {{ $activeForm === 'baja' ? 'is-selected' : '' }}" wire:click="openForm('baja')" aria-expanded="{{ $activeForm === 'baja' ? 'true' : 'false' }}" aria-controls="request-form-panel"><span class="promoter-action-icon promoter-action-icon-purple" aria-hidden="true">−</span><span>Solicitar baja</span><span aria-hidden="true">↗</span></button>
+        <button type="button" class="raven-card promoter-request-action promoter-request-action--alta {{ $activeForm === 'alta' ? 'is-selected' : '' }}" wire:click="openForm('alta')" aria-expanded="{{ $activeForm === 'alta' ? 'true' : 'false' }}" aria-controls="request-form-panel" aria-labelledby="request-alta-label" aria-describedby="request-alta-help">
+            <span class="promoter-action-icon " aria-hidden="true"><x-promoter.icon name="add" /></span>
+            <span class="promoter-choice-copy"><span id="request-alta-label">Solicitar alta</span><span id="request-alta-help" class="promoter-choice-help">Nuevo establecimiento</span></span>
+            <span class="promoter-choice-arrow" aria-hidden="true"><x-promoter.icon name="arrow" /></span>
+        </button>
+        <button type="button" class="raven-card promoter-request-action promoter-request-action--baja {{ $activeForm === 'baja' ? 'is-selected' : '' }}" wire:click="openForm('baja')" aria-expanded="{{ $activeForm === 'baja' ? 'true' : 'false' }}" aria-controls="request-form-panel" aria-labelledby="request-baja-label" aria-describedby="request-baja-help">
+            <span class="promoter-action-icon promoter-action-icon-purple" aria-hidden="true"><x-promoter.icon name="remove" /></span>
+            <span class="promoter-choice-copy"><span id="request-baja-label">Solicitar baja</span><span id="request-baja-help" class="promoter-choice-help">Establecimiento asignado</span></span>
+            <span class="promoter-choice-arrow" aria-hidden="true"><x-promoter.icon name="arrow" /></span>
+        </button>
     </div>
     <div id="request-form-panel" class="promoter-form-panel" aria-live="polite" @if(!$activeForm) hidden @endif>
     @if($activeForm === 'alta')
-        <section class="raven-card" aria-labelledby="alta-title" wire:key="alta-form">
-            <div class="promoter-section-heading"><div><h2 id="alta-title" class="raven-section-title">Solicitar alta</h2><p class="raven-card-description">El establecimiento se incorporará únicamente después de su aprobación.</p></div><button type="button" class="promoter-subtle-link promoter-close-form" wire:click="closeForm">Cerrar formulario</button></div>
+        <section class="raven-card promoter-request-form promoter-request-form--alta" aria-labelledby="alta-title" wire:key="alta-form">
+            <div class="promoter-section-heading promoter-request-intro"><div class="promoter-form-intro"><x-promoter.graphic variant="alta" /><div><h2 id="alta-title" class="raven-section-title">Solicitar alta</h2><p class="raven-card-description">El establecimiento se incorporará únicamente después de su aprobación.</p></div></div><button type="button" class="promoter-subtle-link promoter-close-form" wire:click="closeForm">Cerrar formulario</button></div>
             <form wire:submit="submitAlta">
-                <fieldset class="promoter-fieldset"><legend>Identificación</legend>
+                <fieldset class="promoter-fieldset"><legend><x-promoter.icon name="identity" />Identificación</legend>
                     <div class="raven-form-grid">
                         <x-promoter.field model="altaName" label="Nombre del establecimiento" :value="$altaName" required max="255" />
                         <x-promoter.field model="altaClientType" label="Tipo de establecimiento" :value="$altaClientType" :options="$catalogOptions['client_type']" max="80" />
                         <x-promoter.field model="altaCategory" label="Categoría" :value="$altaCategory" :options="$catalogOptions['category']" max="20" />
                     </div>
                 </fieldset>
-                <fieldset class="promoter-fieldset"><legend>Ubicación</legend>
+                <fieldset class="promoter-fieldset"><legend><x-promoter.icon name="location" />Ubicación</legend>
                     <div class="raven-form-grid promoter-grid-two">
                         <x-promoter.searchable-select model="altaDepartment" label="Departamento o región autónoma" :value="$altaDepartment" :options="$catalogOptions['department']" required />
                         <x-promoter.searchable-select model="altaCity" label="Municipio" :value="$altaCity" :options="$catalogOptions['city']" required :disabled="$altaDepartment === ''" />
@@ -25,7 +33,7 @@
                             secondaryHelp="No es necesario repetir el departamento ni el municipio." />
                     </div>
                 </fieldset>
-                <fieldset class="promoter-fieldset"><legend>Información de contacto</legend>
+                <fieldset class="promoter-fieldset"><legend><x-promoter.icon name="contact" />Información de contacto</legend>
                     <div class="raven-form-grid promoter-grid-two">
                         <x-promoter.field model="altaPhone" label="Teléfono" :value="$altaPhone" type="tel" max="80" />
                         <x-promoter.field model="altaEmail" label="Correo electrónico" :value="$altaEmail" type="email" max="255" />
@@ -36,8 +44,8 @@
             </form>
         </section>
     @elseif($activeForm === 'baja')
-        <section class="raven-card" aria-labelledby="baja-title" wire:key="baja-form">
-            <div class="promoter-section-heading"><div><h2 id="baja-title" class="raven-section-title">Solicitar baja</h2><p class="raven-card-description">El establecimiento seguirá activo hasta que se apruebe la baja.</p></div><button type="button" class="promoter-subtle-link promoter-close-form" wire:click="closeForm">Cerrar formulario</button></div>
+        <section class="raven-card promoter-request-form promoter-request-form--baja" aria-labelledby="baja-title" wire:key="baja-form">
+            <div class="promoter-section-heading promoter-request-intro"><div class="promoter-form-intro"><x-promoter.graphic variant="baja" /><div><h2 id="baja-title" class="raven-section-title">Solicitar baja</h2><p class="raven-card-description">El establecimiento seguirá activo hasta que se apruebe la baja.</p></div></div><button type="button" class="promoter-subtle-link promoter-close-form" wire:click="closeForm">Cerrar formulario</button></div>
             <form wire:submit="submitBaja">
                 <div class="raven-field">
                     <label class="raven-label" for="baja-search">Buscar establecimiento</label>
@@ -46,7 +54,7 @@
                     <span id="baja-search-status" class="promoter-baja-result-status" role="status" aria-live="polite"><span wire:loading.remove wire:target="bajaSearch">{{ $pharmacies->count() }} {{ $pharmacies->count() === 1 ? 'resultado' : 'resultados' }}{{ $pharmacies->count() === 20 ? ' · Refine la búsqueda para ver más' : '' }}</span><span wire:loading wire:target="bajaSearch">Buscando…</span></span>
                 </div>
                 <fieldset class="promoter-fieldset promoter-baja-picker" aria-describedby="baja-pharmacy-error">
-                    <legend>Seleccione un establecimiento</legend>
+                    <legend><x-promoter.icon name="search" />Seleccione un establecimiento</legend>
                     <div class="promoter-baja-results">
                         @forelse($pharmacies as $pharmacy)
                             <label class="promoter-baja-option" wire:key="baja-option-{{ $pharmacy->id }}">
@@ -54,7 +62,7 @@
                                 <span class="promoter-baja-option-copy"><span class="promoter-baja-option-title">{{ $pharmacy->display_name }}</span><x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" /></span>
                             </label>
                         @empty
-                            <p class="raven-card-description">{{ $hasAssignedPharmacies ? 'No se encontraron coincidencias. Revise los términos de búsqueda.' : 'No tiene establecimientos activos asignados.' }}</p>
+                            <div class="promoter-inline-empty"><x-promoter.graphic /><p class="raven-card-description">{{ $hasAssignedPharmacies ? 'No se encontraron coincidencias. Revise los términos de búsqueda.' : 'No tiene establecimientos activos asignados.' }}</p></div>
                         @endforelse
                     </div>
                     <div id="baja-pharmacy-error">@error('pharmacyId')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror</div>
@@ -68,8 +76,8 @@
         </section>
     @endif
     </div>
-    <section class="raven-card" aria-labelledby="request-history-title">
-        <div class="promoter-section-heading"><h2 id="request-history-title" class="raven-section-title">Historial de solicitudes</h2><span class="promoter-section-note">{{ $requests->total() }} {{ $requests->total() === 1 ? 'solicitud' : 'solicitudes' }}</span></div>
+    <section class="raven-card promoter-request-history-card" aria-labelledby="request-history-title">
+        <div class="promoter-section-heading"><h2 id="request-history-title" class="raven-section-title"><x-promoter.icon name="history" />Historial de solicitudes</h2><span class="promoter-section-note">{{ $requests->total() }} {{ $requests->total() === 1 ? 'solicitud' : 'solicitudes' }}</span></div>
         <div class="promoter-request-history">
             @forelse($requests as $item)
                 <article class="promoter-request-row" wire:key="request-{{ $item->id }}">
@@ -83,10 +91,10 @@
                         @endif
                         <details class="promoter-request-details"><summary>Ver motivo{{ $item->review_note ? ' y revisión' : '' }}</summary><p>{{ $item->reason }}</p>@if($item->review_note)<p><strong>Nota de revisión:</strong> {{ $item->review_note }}</p>@endif</details>
                     </div>
-                    <span class="raven-badge {{ $item->status === 'pending' ? 'raven-badge-info' : ($item->status === 'approved' ? 'raven-badge-success' : 'raven-badge-danger') }}">{{ $item->status === 'pending' ? 'Pendiente' : ($item->status === 'approved' ? 'Aprobada' : 'Rechazada') }}</span>
+                    <span class="raven-badge promoter-request-status {{ $item->status === 'pending' ? 'raven-badge-info' : ($item->status === 'approved' ? 'raven-badge-success' : 'raven-badge-danger') }}"><x-promoter.icon :name="$item->status === 'pending' ? 'clock' : ($item->status === 'approved' ? 'check' : 'remove')" />{{ $item->status === 'pending' ? 'Pendiente' : ($item->status === 'approved' ? 'Aprobada' : 'Rechazada') }}</span>
                 </article>
             @empty
-                <div class="raven-empty"><p class="raven-card-title">No ha registrado solicitudes</p><p class="raven-card-description">Seleccione Solicitar alta o Solicitar baja para comenzar.</p></div>
+                <div class="raven-empty promoter-illustrated-empty"><x-promoter.graphic variant="requests" /><p class="raven-card-title">No ha registrado solicitudes</p><p class="raven-card-description">Seleccione Solicitar alta o Solicitar baja para comenzar.</p></div>
             @endforelse
         </div>
         <div class="promoter-pagination">{{ $requests->links('components.promoter.pagination') }}</div>
