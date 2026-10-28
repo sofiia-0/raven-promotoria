@@ -17,7 +17,7 @@
                 <img src="{{ asset('images/raven-logo.png') }}" alt="Raven">
             </a>
             <p class="promoter-nav-label">Espacio de Promotora</p>
-            <nav class="raven-nav" aria-label="Navegación de promotora">
+            <nav class="raven-nav" aria-label="Navegación de promotora" x-data x-init="$nextTick(async () => { await document.fonts.ready; $el.querySelector('[aria-current=page]')?.scrollIntoView({block: 'nearest', inline: 'nearest'}); })">
                 <a href="{{ route('promoter.dashboard') }}"
                    class="raven-nav-link {{ request()->routeIs('promoter.dashboard') ? 'is-active' : '' }}"
                    @if(request()->routeIs('promoter.dashboard')) aria-current="page" @endif>
@@ -36,6 +36,24 @@
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h3"/></svg></span>
                     Mis solicitudes
                 </a>
+                <a href="{{ route('promoter.planning.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('promoter.planning.*') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('promoter.planning.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2m4 0h2M8 18h2"/></svg></span>
+                    Planificación
+                </a>
+                <a href="{{ route('promoter.visits.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('promoter.visits.index', 'promoter.visits.create') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('promoter.visits.index', 'promoter.visits.create')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2m-7 9 3 3 5-6"/></svg></span>
+                    Visitas
+                </a>
+                <a href="{{ route('promoter.visits.history') }}"
+                   class="raven-nav-link {{ request()->routeIs('promoter.visits.history', 'promoter.visits.show') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('promoter.visits.history', 'promoter.visits.show')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11a9 9 0 1 1 2.6 7M3 4v7h7m2-4v5l3 2"/></svg></span>
+                    Historial
+                </a>
             </nav>
             <div class="raven-sidebar-footer promoter-sidebar-footer-simple">
                 <p class="promoter-sidebar-signature">Laboratorio Raven</p>
@@ -44,7 +62,14 @@
         <div class="raven-main">
             <header class="raven-topbar">
                 <div class="raven-topbar-context">
-                    <p class="raven-topbar-title">Promotoría <span aria-hidden="true">/</span> <span class="promoter-topbar-section">{{ request()->routeIs('promoter.dashboard') ? 'Inicio' : (request()->routeIs('promoter.requests.*') ? 'Mis solicitudes' : 'Mis farmacias') }}</span></p>
+                    <p class="raven-topbar-title">Promotoría <span aria-hidden="true">/</span> <span class="promoter-topbar-section">{{ match (true) {
+                        request()->routeIs('promoter.dashboard') => 'Inicio',
+                        request()->routeIs('promoter.requests.*') => 'Mis solicitudes',
+                        request()->routeIs('promoter.planning.*') => 'Planificación',
+                        request()->routeIs('promoter.visits.history', 'promoter.visits.show') => 'Historial',
+                        request()->routeIs('promoter.visits.*') => 'Visitas',
+                        default => 'Mis farmacias',
+                    } }}</span></p>
                     <p class="raven-topbar-subtitle">Laboratorio Raven</p>
                 </div>
                 <div class="raven-user">

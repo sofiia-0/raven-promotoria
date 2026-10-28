@@ -62,4 +62,31 @@ Route::middleware([
     Route::get('/promoter/requests', function () {
         return view('promoter.requests');
     })->name('promoter.requests.index');
+
+    Route::get('/promoter/planning', function () {
+        return view('promoter.planning');
+    })->name('promoter.planning.index');
+
+    Route::get('/promoter/visits', function () {
+        return view('promoter.visits');
+    })->name('promoter.visits.index');
+
+    Route::get('/promoter/visits/register', function () {
+        $activity = request()->query('actividad');
+
+        return view('promoter.visit-register', [
+            'activityId' => is_string($activity) && ctype_digit($activity) ? (int) $activity : null,
+        ]);
+    })->name('promoter.visits.create');
+
+    Route::get('/promoter/visits/history', function () {
+        return view('promoter.visit-history');
+    })->name('promoter.visits.history');
+
+    Route::get('/promoter/visits/{visit}', function (int $visit) {
+        return view('promoter.visit-detail', [
+            'visitId' => $visit,
+        ]);
+    })->whereNumber('visit')
+        ->name('promoter.visits.show');
 });

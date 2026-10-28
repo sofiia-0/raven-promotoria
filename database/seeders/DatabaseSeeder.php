@@ -21,5 +21,8 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        // Catálogos que la app necesita para registrar visitas (motivos y checklist).
+        $this->call(VisitCatalogSeeder::class);
     }
 }

@@ -678,3 +678,111 @@
 
 /* Acción opcional de los selectores comerciales, con el estilo de enlace Raven. */
 .promoter-shell .promoter-combobox-clear {justify-self: start; padding: 0; border: 0; background: transparent; text-align: left; cursor: pointer;}
+
+
+/* Planificación mensual (RF-PLAN). */
+.promoter-planning {display: flex; flex-direction: column; gap: 20px;}
+.promoter-planning-nav {display: flex; align-items: center; justify-content: space-between; gap: 12px;}
+.promoter-planning-period {display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; text-align: center;}
+.promoter-planning-kpis {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;}
+.promoter-planning-kpis .raven-card {min-width: 0;}
+.promoter-planning-notes {grid-column: 1 / -1;}
+.promoter-planning-weeks {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;}
+.promoter-planning-week {min-width: 0;}
+.promoter-planning-list {list-style: none; margin: 0; padding: 0;}
+.promoter-planning-item {display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--raven-border);}
+.promoter-planning-item:last-child {border-bottom: none;}
+.promoter-planning-item.is-past {opacity: .65;}
+.promoter-planning-date {display: flex; flex-direction: column; align-items: center; min-width: 44px; padding: 6px 4px; border-radius: 10px; background: var(--raven-primary-soft); color: var(--raven-primary); font-size: 11px; font-weight: 700; text-transform: capitalize;}
+.promoter-planning-date strong {font-size: 18px; line-height: 1.1; font-variant-numeric: tabular-nums;}
+.promoter-planning-body {flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px;}
+.promoter-planning-title {margin: 0; font-size: 13px; font-weight: 750; color: var(--raven-text); overflow-wrap: anywhere;}
+.promoter-planning-submit {display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;}
+@media (max-width: 1100px) {
+    .promoter-planning-weeks {grid-template-columns: 1fr;}
+}
+.promoter-planning-status {display: flex; gap: 6px; flex-wrap: wrap;}
+
+/* Registro e historial de visitas (RF-VIS). */
+[x-cloak] {display: none !important;}
+.promoter-sr-only {position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;}
+.promoter-visits {display: flex; flex-direction: column; gap: 20px;}
+.promoter-kpi-of {font-size: 16px; font-weight: 700; color: var(--raven-text-muted);}
+.promoter-visit-row {border-bottom: 1px solid var(--raven-border);}
+.promoter-visit-row:last-child {border-bottom: none;}
+.promoter-visit-row .promoter-planning-item {border-bottom: none;}
+.promoter-visit-actions {display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;}
+.promoter-reschedule-form {margin: 0 0 14px 56px; padding: 14px; border-radius: 12px; background: var(--raven-surface-muted);}
+.promoter-visit-status {border: 0; padding: 0; margin: 0; display: flex; gap: 18px; flex-wrap: wrap; align-items: center;}
+.promoter-visit-status legend {width: 100%; margin-bottom: 6px;}
+.promoter-choice {display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 650; cursor: pointer;}
+.promoter-checklist {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;}
+.promoter-checklist-item {display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--raven-border); border-radius: 10px; cursor: pointer; font-size: 13px;}
+.promoter-checklist-item input {margin-top: 3px;}
+.promoter-checklist-item small {display: block; margin-top: 2px; color: var(--raven-text-muted); font-size: 12px;}
+.promoter-visit-badges {display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;}
+.promoter-visit-details {grid-template-columns: repeat(2, minmax(0, 1fr));}
+.promoter-history-filters {display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; align-items: end;}
+.promoter-history-search {grid-column: span 3;}
+.promoter-history-filters .raven-button {min-height: 44px;}
+.raven-table .promoter-dashboard-help {display: block;}
+@media (max-width: 750px) {
+    .promoter-planning-kpis {grid-template-columns: 1fr;}
+    .promoter-checklist, .promoter-visit-details, .promoter-history-filters {grid-template-columns: 1fr;}
+    .promoter-history-search {grid-column: auto;}
+    .promoter-reschedule-form {margin-left: 0;}
+    .promoter-planning-item {flex-wrap: wrap;}
+    .promoter-visit-actions {width: 100%; justify-content: flex-start;}
+    .promoter-planning-nav {flex-wrap: wrap;}
+    .promoter-planning-period {order: -1; width: 100%;}
+}
+
+/* Consistencia de planificación y visitas; las pantallas originales no se alteran. */
+.promoter-shell .promoter-workflow-header {justify-content: flex-start; align-items: center; gap: 16px;}
+.promoter-workflow-header > div {min-width: 0;}
+.promoter-workflow-mark {display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; border: 1px solid #e1e7f1; border-radius: 17px; background: #edf2fa; color: #426896; box-shadow: inset 0 1px 0 #fff;}
+.promoter-workflow-mark .promoter-ui-icon {width: 23px; height: 23px;}
+.promoter-shell .promoter-workflow .raven-card {border-color: #e0e4ec; box-shadow: 0 5px 18px #25324707, inset 0 1px 0 #fff;}
+.promoter-workflow .promoter-planning-nav {background: #f9fafc;}
+.promoter-workflow .promoter-planning-kpis .raven-card {position: relative; overflow: hidden;}
+.promoter-workflow .promoter-planning-kpis .raven-card::before {content: ''; position: absolute; top: 24px; left: 0; width: 3px; height: 28px; border-radius: 0 3px 3px 0; background: #9fb6d5;}
+.promoter-workflow .promoter-planning-kpis .raven-card:nth-child(2)::before {background: #b1a8c9;}
+.promoter-workflow .promoter-planning-kpis .raven-card:nth-child(3)::before {background: #9bbfbd;}
+.promoter-workflow .promoter-kpi-value {margin-top: 8px; font-size: 36px; font-weight: 650; letter-spacing: -.045em; color: #253044; font-variant-numeric: tabular-nums;}
+.promoter-workflow .raven-section-title {font-size: 18px; line-height: 1.4; letter-spacing: -.025em;}
+.promoter-workflow .raven-section-header {padding-bottom: 18px; border-bottom: 1px solid #ebedf2; margin-bottom: 22px;}
+.promoter-workflow .promoter-planning-title {font-size: 14px; line-height: 1.5; margin: 4px 0;}
+.promoter-workflow .promoter-location {margin-top: 5px;}
+.promoter-workflow .promoter-locality {font-size: 12px;}
+.promoter-workflow .promoter-street, .promoter-workflow .promoter-reference {font-size: 11px;}
+.promoter-workflow .promoter-planning-date {border: 1px solid #e4eaf3; background: #f1f5fa; color: #42648e;}
+.promoter-workflow .promoter-reschedule-form {border: 1px solid #e2e5ee; background: #f7f8fb;}
+.promoter-workflow .promoter-checklist-item {background: #fafbfd; border-color: #e1e6ef; line-height: 1.5;}
+.promoter-workflow .promoter-checklist-item:has(input:checked) {background: #eef4fc; border-color: #a7bddc;}
+.promoter-workflow .promoter-choice input, .promoter-workflow .promoter-checklist input {accent-color: #2f66b0; width: 18px; height: 18px; flex-shrink: 0;}
+.promoter-workflow .promoter-choice {min-height: 44px;}
+.promoter-workflow .raven-table-shell {border: 1px solid #e0e4ec; border-radius: 20px; box-shadow: 0 5px 18px #25324707;}
+.promoter-workflow .raven-table th {background: #f6f8fb;}
+.promoter-workflow .raven-table-name {font-weight: 750; color: #253044;}
+.promoter-workflow .raven-table td {vertical-align: top;}
+.promoter-workflow .raven-table .promoter-location {max-width: 310px;}
+@media (max-width: 650px) {
+    .promoter-shell .promoter-workflow-header {gap: 12px; align-items: flex-start;}
+    .promoter-workflow-mark {flex-basis: 42px; width: 42px; height: 42px; border-radius: 14px;}
+    .promoter-workflow .promoter-planning-nav {gap: 14px;}
+    .promoter-workflow .promoter-planning-period {gap: 8px;}
+    .promoter-workflow .raven-section-title {font-size: 17px;}
+}
+.promoter-workflow .promoter-dashboard-help, .promoter-workflow .promoter-locality, .promoter-workflow .raven-field-help, .promoter-workflow .raven-section-description {color: #5d6878;}
+.promoter-workflow {--raven-text-muted: #657080;}
+.promoter-workflow .promoter-planning-item.is-past {opacity: 1;}
+.promoter-workflow fieldset.raven-field {min-width: 0; margin: 0; padding: 0; border: 0;}
+.promoter-workflow fieldset.raven-field > legend {padding: 0; margin-bottom: 10px;}
+.promoter-workflow .promoter-visit-status {flex-direction: row; justify-content: flex-start;}
+.promoter-workflow {min-width: 0; max-width: 100%;}
+.promoter-workflow .raven-table-shell {min-width: 0; max-width: 100%; overflow-x: auto;}
+.promoter-workflow .raven-table {min-width: 640px;}
+.promoter-workflow .raven-table .promoter-location {overflow-wrap: anywhere;}
+.promoter-workflow .raven-table-shell {position: relative;}
+.promoter-shell .promoter-workflow-header {flex-wrap: nowrap; flex-direction: row;}
+.promoter-workflow-header > div {flex: 1;}

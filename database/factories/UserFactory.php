@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -31,6 +32,27 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    public function promoter(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::PROMOTER,
+            'is_active' => true,
+        ]);
+    }
+
+    public function coordinator(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::COORDINATOR,
+            'is_active' => true,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => ['is_active' => false]);
     }
 
     /**

@@ -52,6 +52,11 @@ class User extends Authenticatable
         $this->notify(new RavenPasswordResetNotification($token));
     }
 
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class, 'promoter_id');
+    }
+
     public function pharmacyAssignments(): HasMany
     {
         return $this->hasMany(PharmacyAssignment::class, 'promoter_id');

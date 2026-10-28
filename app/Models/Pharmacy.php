@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Support\EstablishmentPresentation;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pharmacy extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'source_reference',
         'name',
@@ -46,6 +49,11 @@ class Pharmacy extends Model
     public function assignments(): HasMany
     {
         return $this->hasMany(PharmacyAssignment::class);
+    }
+
+    public function visits(): HasMany
+    {
+        return $this->hasMany(Visit::class);
     }
 
     public function currentAssignment(): HasOne
