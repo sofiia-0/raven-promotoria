@@ -1,4 +1,4 @@
-<div class="promoter-workflow raven-stack promoter-visit-register">
+<div class="promoter-workflow raven-stack promoter-visit-register" x-data="{ evidenceBusy: false, evidenceProblem: false }" @evidence-state.window="evidenceBusy = $event.detail.busy; evidenceProblem = $event.detail.problem">
     <div><a class="raven-button raven-button-secondary" href="{{ route('promoter.visits.index') }}">Volver a Visitas</a></div>
     @if($blockedMessage)
         <section class="raven-card raven-empty"><h2 class="raven-card-title">No se puede registrar esta visita</h2><p class="raven-card-description">{{ $blockedMessage }}</p></section>
@@ -69,9 +69,11 @@
                     </div>
 
 
+                    @if($evidenceAvailable)<x-promoter.evidence-upload :ids="$evidenceIds" :files="$evidenceFiles" :batch-key="$idempotencyKey" />@endif
+                    @error('evidence')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror
                     </div>
                     <div class="raven-form-actions promoter-record-submit">
-                        <button type="submit" class="raven-button raven-button-primary" wire:loading.attr="disabled" wire:target="save"><x-promoter.icon name="check" />Registrar visita</button>
+                        <button type="submit" class="raven-button raven-button-primary" :disabled="evidenceBusy || evidenceProblem" wire:loading.attr="disabled" wire:target="save"><x-promoter.icon name="check" />Registrar visita</button>
                         <span class="raven-field-help" wire:loading wire:target="save">Guardando…</span>
                     </div>
                 </form>

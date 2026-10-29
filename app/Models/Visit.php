@@ -25,6 +25,11 @@ class Visit extends Model
         'visited_at',
     ];
 
+    public function evidences(): HasMany
+    {
+        return $this->hasMany(VisitEvidence::class)->orderBy('uploaded_at')->orderBy('id');
+    }
+
     protected function casts(): array
     {
         return [

@@ -41,7 +41,7 @@
                 <dd>
                     @if($visit->hasLocation())
                         {{ $visit->latitude }}, {{ $visit->longitude }}
-                        @if($visit->location_accuracy !== null) (± {{ $visit->location_accuracy }} m) @endif
+
                     @else
                         No registrada
                     @endif
@@ -55,6 +55,15 @@
             @endif
         </dl>
     </section>
+
+    @if($mapUrl)<x-promoter.visit-map :visit="$visit" :url="$mapUrl" />@endif
+    @if($evidenceAvailable)
+        <section class="raven-card promoter-visit-evidences" aria-labelledby="visit-evidences-title"><div class="promoter-evidence-heading"><h2 id="visit-evidences-title" class="raven-section-title">Evidencias de la visita</h2><span class="raven-badge raven-badge-info">{{ $evidences->count() }}</span></div>
+            @if($evidences->isEmpty())<p class="raven-card-description">No hay evidencias adjuntas.</p>@else<ul class="promoter-saved-evidences">
+                @foreach($evidences as $file)<li><div class="promoter-saved-evidence-image">@if($file->previewable())<img src="{{ route('promoter.visits.evidence.preview', ['visit'=>$visit->id, 'evidence'=>$file->id]) }}" alt="Vista previa de {{ $file->original_name }}" loading="lazy">@else<x-promoter.icon name="file" />@endif</div><div><strong>{{ $file->original_name }}</strong><p>{{ strtoupper($file->extension) }} · {{ $file->displaySize() }}</p><time datetime="{{ $file->uploaded_at?->toIso8601String() }}">{{ $file->uploaded_at?->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</time></div><a class="raven-button raven-button-secondary" href="{{ route('promoter.visits.evidence.download', ['visit'=>$visit->id, 'evidence'=>$file->id]) }}">Descargar<span class="promoter-sr-only"> {{ $file->original_name }}</span></a></li>@endforeach
+            </ul>@endif
+        </section>
+    @endif
 
     @if($visit->checklist->isNotEmpty())
         <section class="raven-card" aria-labelledby="checklist-title">

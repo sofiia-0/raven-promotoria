@@ -7,10 +7,14 @@ use App\Enums\VisitStatus;
 use App\Models\ChecklistItem;
 use App\Models\PlannedActivity;
 use App\Models\User;
+use App\Models\VisitEvidence;
 use App\Models\VisitReason;
+use App\Services\VisitEvidenceStorage;
 use App\Services\VisitRecorder;
+use App\Services\VisitWithEvidenceRecorder;
 use App\Support\PharmacyAutocomplete;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -49,6 +53,39 @@ class Register extends Component
     #[Locked]
     public ?string $blockedMessage = null;
 
+    #[Locked]
+    public array $evidenceIds = [];
+
+    public function addEvidenceUpload(string $id, VisitEvidenceStorage $storage): bool
+    {
+        abort_if($this->blockedMessage !== null, 409);
+        if (in_array($id, $this->evidenceIds, true)) {
+            return true;
+        }
+        $storage->staged($this->promoter(), $this->idempotencyKey, [...$this->evidenceIds, $id]);
+        $this->evidenceIds[] = $id;
+        $this->resetValidation('evidence');
+
+        return true;
+    }
+
+    public function removeEvidenceUpload(string $id, VisitEvidenceStorage $storage): bool
+    {
+        if (! in_array($id, $this->evidenceIds, true)) {
+            return true;
+        }
+        try {
+            $storage->discard($this->promoter(), $this->idempotencyKey, $id);
+        } catch (ModelNotFoundException) { /* Un pendiente ya caducado no impide quitarlo de la selección. */
+        } catch (\Throwable) {
+            throw ValidationException::withMessages(['evidence' => 'No se pudo quitar el archivo. Inténtelo de nuevo.']);
+        }
+        $this->evidenceIds = array_values(array_filter($this->evidenceIds, fn ($value) => $value !== $id));
+        $this->resetValidation('evidence');
+
+        return true;
+    }
+
     public function mount(VisitRecorder $recorder, ?int $actividad = null): void
     {
         $promoter = $this->promoter();
@@ -73,7 +110,7 @@ class Register extends Component
         return $user;
     }
 
-    public function save(VisitRecorder $recorder): void
+    public function save(VisitWithEvidenceRecorder $recorder): void
     {
         $promoter = $this->promoter();
         abort_if($this->blockedMessage !== null, 409);
@@ -109,7 +146,7 @@ class Register extends Component
             'longitude' => $validated['longitude'],
             'location_accuracy' => $validated['locationAccuracy'],
             'checklist' => $validated['checklist'],
-        ]);
+        ], $this->evidenceIds);
 
         session()->flash('success', 'Visita registrada.');
         $this->redirectRoute('promoter.visits.show', ['visit' => $visit->id]);
@@ -127,8 +164,15 @@ class Register extends Component
             ? PharmacyAutocomplete::options($promoter, $this->pharmacySearch, $this->pharmacyId)
             : ['pharmacyOptions' => collect(), 'selectedPharmacy' => null, 'hasMorePharmacies' => false];
 
+        $evidenceAvailable = app(VisitEvidenceStorage::class)->available();
+        $evidenceFiles = $evidenceAvailable && $this->evidenceIds
+            ? VisitEvidence::whereKey($this->evidenceIds)->where('uploaded_by', $promoter->id)->where('batch_key', $this->idempotencyKey)->whereNull('visit_id')->where('status', 'staged')->get()->keyBy('id')
+            : collect();
+
         return view('livewire.promoter.visits.register', [
             'activity' => $activity,
+            'evidenceAvailable' => $evidenceAvailable,
+            'evidenceFiles' => $evidenceFiles,
             ...$picker,
             'checklistItems' => ChecklistItem::query()->active()->get(),
             'reasons' => VisitReason::query()->active()->get(['id', 'name']),

@@ -252,14 +252,16 @@ class Index extends Component
     {
         $schedule = $this->schedule() ?? abort(404);
         if (in_array($id, $this->selectedPharmacyIds, true)) {
-            throw ValidationException::withMessages(['pharmacyId' => 'Esta farmacia ya está en su selección.']);
+            $this->removeStagedPharmacy($id);
+
+            return;
         }
         $preview = $productivity->previewVisits($this->promoter(), $schedule->id, $this->scheduledDate, [...$this->selectedPharmacyIds, $id], $this->notes);
         if ($preview['conflicts']) {
             throw ValidationException::withMessages(['pharmacyId' => collect($preview['rows'])->firstWhere('status', 'conflict')['message']]);
         }
         $this->selectedPharmacyIds[] = $id;
-        $this->reset(['pharmacyId', 'pharmacySearch', 'batchPreview']);
+        $this->reset(['pharmacyId', 'batchPreview']);
         $this->resetValidation(['pharmacyId', 'selectedPharmacyIds', 'batch']);
     }
 

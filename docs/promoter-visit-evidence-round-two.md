@@ -1,18 +1,28 @@
-# Pendiente de Ronda 2: múltiples evidencias por visita
+# Ronda 2: evidencias opcionales y ubicación de visitas
 
-Requerimiento documentado, sin implementación, migraciones ni endpoints de carga en esta entrega.
+Implementado para nuevas visitas planificadas y fuera de plan. No modifica visitas históricas, establecimientos, asignaciones, solicitudes, reprogramaciones ni el servicio original `VisitRecorder`.
 
-Se necesita adjuntar varias evidencias a una visita. Los formatos por evaluar son imágenes, PDF, documentos, presentaciones y ZIP. No deben habilitarse todos por defecto ni confiar únicamente en la extensión o el MIME declarado por el navegador.
+## Uso y límites
 
-## Decisiones pendientes
+- Hasta 10 archivos, 10 MiB por archivo y 40 MiB por visita. Hasta 20 pendientes y 80 MiB por promotora para limitar formularios abandonados.
+- JPG, PNG, WEBP, HEIC/HEIF, PDF, DOCX, XLSX, PPTX, ZIP y TXT UTF-8. El MIME real, estructura, extensión, tamaño y nombres se comprueban en el servidor. HEIC/HEIF se conserva y descarga; no se convierte ni previsualiza sin un decodificador adecuado.
+- Cámara o galería en dispositivos compatibles; la cámara depende del navegador y dispositivo. Se muestra la lista, tamaño y vista previa de imágenes compatibles, con opción de quitar archivos.
+- Los documentos se descargan como adjuntos. Solo JPG/PNG/WEBP tienen previsualización privada. No se ejecutan ni se extraen documentos a rutas del ZIP.
+- Se rechazan ejecutables, scripts, HTML, SVG, doble extensión peligrosa, macros, cifrado, relaciones externas de Office, rutas ZIP inseguras, enlaces simbólicos, ZIP anidados y expansión abusiva. ZIP: máximo 200 entradas, 100 MiB expandidos y relación de expansión 100:1. Office: XML limitado a 2 MiB por entrada. Documentos legítimos con estas características deben exportarse a un formato admitido; no se relajan validaciones automáticamente.
+- La inspección estructural no sustituye un antivirus ni garantiza ausencia de malware. No se incorporó un servicio antimalware externo ni se transmiten archivos a terceros. Antes de ampliar el acceso o admitir contenido más complejo, evaluar escaneo y cuarentena con el alojamiento.
 
-- Definir una lista explícita de extensiones y tipos comprobados en servidor para cada formato aprobado; decidir si se admitirán archivos con macros, contenido activo o cifrado. ZIP requiere tratamiento específico de archivos anidados, tamaño descomprimido, rutas internas y contenido no permitido. No extraerlo automáticamente.
-- Acordar número de archivos por visita, tamaño por archivo y acumulado, cuotas y restricciones de imágenes y documentos. Rechazar incompatibilidades entre contenido, extensión y tipo declarado.
-- Evaluar análisis antimalware, cuarentena y estado de revisión antes de permitir descarga o previsualización. No ejecutar documentos ni servir contenido activo como parte de la aplicación.
-- Almacenar en disco privado con nombres generados, conservar metadatos y nombre original saneado. No crear rutas públicas ni utilizar el nombre enviado como ruta de almacenamiento.
-- Autorizar cada carga, consulta y descarga a partir de la visita y los permisos vigentes. Resolver expresamente el acceso al historial tras una reasignación, según las reglas actuales. Evitar accesos directos por IDs de otra promotora.
-- Definir auditoría, retención, eliminación y recuperación; comprobar qué ocurre si falla el guardado de la visita o una carga parcial. Decidir si las evidencias se agregan durante el registro o también después.
-- Diseñar un selector múltiple accesible con estados de carga, errores por archivo y alternativa en móvil, conservando la composición actual.
-- Probar formatos manipulados, archivos con doble extensión, contenido malicioso, ZIP de expansión abusiva, cuotas, permisos, descargas y recuperación de fallos usando almacenamiento y bases aislados.
+## Autorización y consistencia
 
-Los límites concretos, formatos finales y herramientas de inspección deben aprobarse antes de implementar. Este requerimiento continúa en Ronda 2 junto con carga rápida, copia de semanas, calendario y mapa.
+Los endpoints requieren sesión, rol Promotora activo, CSRF en cargas y límite de solicitudes. Los UUID pendientes están ligados a su propietaria y al identificador idempotente del formulario, bloqueados en Livewire. Una promotora solo puede ver evidencias de sus propias visitas, incluso tras una reasignación; no obtiene acceso al historial ajeno al compartir un establecimiento. La política central permite desarrollar Coordinadora posteriormente, sin concederle acceso en esta entrega.
+
+Se reservan metadatos antes de escribir un objeto con UUID en disco privado. Se comprueban tamaño y SHA-256 después de cargar y antes de registrar. Visita, checklist, asociación y auditoría se confirman en una transacción. Si falla el registro, los pendientes permanecen disponibles para reintentar; no se añade información a una visita histórica. Repetir la misma confirmación es idempotente. Los pendientes abandonados se limpian explícitamente tras 24 horas; nunca se eliminan evidencias asociadas mediante ese proceso. Si falla una eliminación física, se conserva el registro para poder reintentar.
+
+Los nombres originales saneados se usan como metadatos, nunca como rutas. Las respuestas no exponen disco ni ruta física; los enlaces comprueban visita, propietaria y archivo en cada solicitud. Las descargas incluyen `nosniff`, caché privada sin almacenamiento y disposición de adjunto.
+
+## Mapa con consentimiento
+
+El detalle usa únicamente coordenadas ya guardadas y válidas; no captura ubicación ni hace seguimiento. La precisión se muestra cuando existe. Antes de pulsar «Mostrar mapa de OpenStreetMap» no se crea el iframe ni se realizan solicitudes al proveedor. El aviso informa que se compartirán coordenadas e IP. Ocultar el mapa retira el iframe. No hay claves, nueva dependencia, pago ni bloqueo del registro si se deniega geolocalización.
+
+OpenStreetMap ofrece la [incrustación mediante iframe](https://wiki.openstreetmap.org/wiki/Export). Se conserva atribución visible y referente limitado al origen, de acuerdo con la [política de teselas](https://operations.osmfoundation.org/policies/tiles/) y las [indicaciones de atribución](https://osmfoundation.org/wiki/Attribution_Guidelines). No existe garantía de disponibilidad del proveedor; el detalle y las evidencias funcionan sin él.
+
+Consulte [las instrucciones de despliegue](promoter-round-two-deployment.md) antes de habilitar evidencias en una base real.

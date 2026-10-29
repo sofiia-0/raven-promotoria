@@ -1,0 +1,7 @@
+@props(['visit','url'])
+<section class="raven-card promoter-visit-map" aria-labelledby="visit-map-title" x-data="{ active: false }">
+    <div class="promoter-evidence-heading"><div><h2 id="visit-map-title" class="raven-section-title">Ubicación registrada</h2>@if($visit->location_accuracy !== null && $visit->location_accuracy >= 0)<p>Precisión aproximada indicada por el dispositivo: ± {{ $visit->location_accuracy }} m.</p>@endif</div><x-promoter.icon name="location" /></div>
+    <p class="raven-card-description">La ubicación es información complementaria; no acredita por sí sola la realización de la visita.</p>
+    <div class="promoter-map-consent" x-show="!active"><p>Al mostrar el mapa, OpenStreetMap recibirá estas coordenadas y su dirección IP. No se cargará contenido externo hasta que usted lo active.</p><button type="button" class="raven-button raven-button-secondary" @click="active = true">Mostrar mapa de OpenStreetMap</button></div>
+    <template x-if="active"><div class="promoter-map-loaded"><iframe src="{{ $url }}" title="Mapa de la ubicación registrada de la visita" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-popups" class="promoter-map-frame"></iframe><div class="promoter-map-footer"><span>© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a></span><button type="button" class="raven-button raven-button-secondary" @click="active = false">Ocultar mapa</button></div></div></template>
+</section>
