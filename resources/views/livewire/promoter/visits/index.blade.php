@@ -3,30 +3,20 @@
         <div class="raven-alert raven-alert-success" role="status">{{ session('success') }}</div>
     @endif
 
-    <section class="promoter-planning-kpis" aria-label="Resumen del mes">
-        <article class="raven-card">
-            <p class="promoter-kpi-label">Para hoy</p>
-            <p class="promoter-kpi-value">{{ $dueToday->count() }}</p>
-            <p class="raven-card-description">{{ ucfirst($today->locale('es')->translatedFormat('l j \d\e F')) }}</p>
-        </article>
-        <article class="raven-card">
-            <p class="promoter-kpi-label">Atrasadas</p>
-            <p class="promoter-kpi-value">{{ $overdue->count() }}</p>
-            <p class="raven-card-description">Planificadas antes de hoy y sin registro.</p>
-        </article>
-        <article class="raven-card">
-            <p class="promoter-kpi-label">Realizadas este mes</p>
-            <p class="promoter-kpi-value">{{ $doneThisMonth }} <span class="promoter-kpi-of">de {{ $plannedThisMonth }}</span></p>
-            <p class="raven-card-description">Visitas planificadas en cronogramas enviados.</p>
-        </article>
-    </section>
-
-    <section class="raven-card promoter-planning-submit">
-        <div>
-            <h2 class="raven-card-title">¿Visitó una farmacia que no estaba en el plan?</h2>
-            <p class="raven-card-description">Regístrela como visita fuera de plan; queda separada en su historial.</p>
+    <section class="promoter-agenda-tools promoter-agenda-composition" aria-label="Agenda de visitas">
+        <div class="promoter-agenda-copy">
+            <p class="promoter-eyebrow">{{ ucfirst($today->locale('es')->translatedFormat('l j \d\e F')) }}</p>
+            <h2 class="raven-section-title">Su agenda de visitas</h2>
+            <p class="raven-section-description">Comience con las visitas de hoy y los registros pendientes.</p>
         </div>
-        <a class="raven-button raven-button-secondary" href="{{ route('promoter.visits.create') }}">Registrar fuera de plan</a>
+        <x-promoter.graphic variant="visits" class="promoter-agenda-art" />
+        <a class="raven-button raven-button-secondary promoter-agenda-new-visit" href="{{ route('promoter.visits.create') }}"><x-promoter.icon name="add" />Registrar fuera de plan</a>
+        <nav class="promoter-agenda-shortcuts" aria-label="Secciones de la agenda">
+            <a href="#visits-today">Para hoy <strong>{{ $dueToday->count() }}</strong></a>
+            <a href="#visits-overdue">Atrasadas <strong>{{ $overdue->count() }}</strong></a>
+            <a href="#visits-failed">No realizadas <strong>{{ $failed->count() }}</strong></a>
+            <a href="#visits-upcoming">Próximas <strong>{{ $upcoming->count() }}</strong></a>
+        </nav>
     </section>
 
     @php
@@ -39,10 +29,10 @@
     @endphp
 
     @foreach($sections as $section)
-        <section class="raven-card" aria-labelledby="visits-{{ $section['id'] }}">
+        <section class="raven-card promoter-agenda-section promoter-agenda-{{ $section['id'] }}" aria-labelledby="visits-{{ $section['id'] }}">
             <div class="promoter-dashboard-section-head">
                 <div>
-                    <h2 id="visits-{{ $section['id'] }}" class="raven-card-title">{{ $section['title'] }}</h2>
+                    <h2 id="visits-{{ $section['id'] }}" class="raven-card-title promoter-agenda-heading"><x-promoter.icon :name="$section['id'] === 'today' ? 'check' : 'clock'" />{{ $section['title'] }}</h2>
                     <p class="promoter-dashboard-help">{{ $section['help'] }}</p>
                 </div>
                 <span class="raven-badge raven-badge-info">{{ $section['items']->count() }}</span>
@@ -62,7 +52,7 @@
                                 </div>
                                 <div class="promoter-planning-body">
                                     <p class="promoter-planning-title">{{ $activity->pharmacy?->display_name ?? 'Farmacia' }}</p>
-                                    @if($activity->pharmacy)<x-promoter.location :department="$activity->pharmacy->department" :city="$activity->pharmacy->city" :neighborhood="$activity->pharmacy->neighborhood" :address="$activity->pharmacy->address" :reference="$activity->pharmacy->branch_summary" />@endif
+                                    @if($activity->pharmacy)<x-promoter.location :department="$activity->pharmacy->department" :city="$activity->pharmacy->city" :neighborhood="$activity->pharmacy->neighborhood" :address="$activity->pharmacy->address" />@endif
                                     @if($activity->reschedule_count > 0)
                                         <span class="raven-badge raven-badge-rose">Reprogramada {{ $activity->reschedule_count }} {{ $activity->reschedule_count === 1 ? 'vez' : 'veces' }}</span>
                                     @endif
@@ -123,4 +113,5 @@
             @endif
         </section>
     @endforeach
+    <p class="promoter-agenda-month-note">Este mes: {{ $doneThisMonth }} de {{ $plannedThisMonth }} visitas planificadas realizadas. <a href="{{ route('promoter.visits.history') }}">Consultar historial</a></p>
 </div>

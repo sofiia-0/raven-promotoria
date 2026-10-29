@@ -74,7 +74,7 @@ class Dashboard extends Component
         // Si hay una transferencia, el responsable anterior deja de ver sus cambios.
         $recentChanges = PharmacyChange::query()
             ->whereIn('pharmacy_id', $active()->select('pharmacies.id'))
-            ->with(['pharmacy:id,name,department', 'actor:id,name'])
+            ->with(['pharmacy:id,name,department,city,address,neighborhood', 'actor:id,name'])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->limit(5)

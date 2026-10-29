@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Enums\VisitStatus;
 use App\Models\User;
 use App\Services\SchedulePlanner;
+use App\Support\EstablishmentSearch;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -93,11 +94,10 @@ class History extends Component
         } elseif ($this->origin === 'fuera') {
             $query->whereNull('planned_activity_id');
         }
-        if (trim($this->search) !== '') {
-            $term = '%'.trim($this->search).'%';
-            $query->whereHas('pharmacy', fn (Builder $q) => $q->where(fn (Builder $w) => $w
-                ->where('name', 'like', $term)
-                ->orWhere('city', 'like', $term)));
+        // El historial conserva visitas propias de establecimientos transferidos o inactivos.
+        // El alcance de propiedad está en la consulta padre; aquí solo se aplica la búsqueda.
+        if (EstablishmentSearch::terms($this->search) !== []) {
+            $query->whereHas('pharmacy', fn (Builder $pharmacy) => EstablishmentSearch::apply($pharmacy, $this->search));
         }
 
         $summary = (clone $query)
@@ -115,6 +115,9 @@ class History extends Component
                 ->paginate(15),
             'summary' => $summary,
             'statuses' => VisitStatus::cases(),
+            'hasCustomFilters' => $this->status !== '' || $this->origin !== ''
+                || $this->from !== SchedulePlanner::today()->startOfMonth()->toDateString()
+                || $this->to !== SchedulePlanner::today()->toDateString(),
         ]);
     }
 }

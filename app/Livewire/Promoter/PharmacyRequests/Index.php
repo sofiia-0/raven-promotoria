@@ -6,11 +6,13 @@ use App\Enums\UserRole;
 use App\Models\PharmacyRequest;
 use App\Models\User;
 use App\Services\PharmacyRequestService;
+use App\Services\PromoterReasonCategories;
 use App\Support\EstablishmentSearch;
 use App\Support\NicaraguaGeography;
 use App\Support\PromoterCatalogOptions;
 use App\Support\PromoterValidationMessages;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -42,6 +44,10 @@ class Index extends Component
     public string $altaEmail = '';
 
     public string $altaReason = '';
+
+    public string $altaReasonCategoryId = '';
+
+    public string $bajaReasonCategoryId = '';
 
     public string $pharmacyId = '';
 
@@ -125,8 +131,9 @@ class Index extends Component
             'altaDepartment' => $locationRules['department'],
             'altaPhone' => ['nullable', 'string', 'max:80'],
             'altaEmail' => ['nullable', 'email', 'max:255'],
-            'altaReason' => ['required', 'string', 'min:10', 'max:1500'],
-        ]);
+            'altaReasonCategoryId' => [Rule::requiredIf((new PromoterReasonCategories)->options('request_alta')->isNotEmpty()), 'nullable', 'integer', 'min:1'],
+            'altaReason' => (new PromoterReasonCategories)->requestExplanationRules('request_alta'),
+        ], $this->messages(), $this->validationAttributes() + ['altaReasonCategoryId' => 'categoría del motivo de alta']);
 
         foreach (['altaClientType' => 'client_type', 'altaCategory' => 'category'] as $property => $field) {
             if ($values[$property] !== PromoterCatalogOptions::OTHER
@@ -148,12 +155,13 @@ class Index extends Component
             'phone' => $values['altaPhone'] ?? null,
             'email' => $values['altaEmail'] ?? null,
             'reason' => $values['altaReason'],
+            'reason_category_id' => $values['altaReasonCategoryId'] ?? null,
         ]);
 
         $this->reset([
             'altaName', 'altaClientType', 'altaCategory', 'altaClientTypeOther', 'altaCategoryOther',
             'altaAddress', 'altaCity', 'altaDepartment', 'altaPhone',
-            'altaEmail', 'altaReason',
+            'altaEmail', 'altaReason', 'altaReasonCategoryId',
         ]);
         $this->resetPage();
         $this->activeForm = null;
@@ -166,11 +174,12 @@ class Index extends Component
         $this->activeForm = 'baja';
         $values = $this->validate([
             'pharmacyId' => ['required', 'integer', 'min:1'],
-            'bajaReason' => ['required', 'string', 'min:10', 'max:1500'],
-        ]);
+            'bajaReasonCategoryId' => [Rule::requiredIf((new PromoterReasonCategories)->options('request_baja')->isNotEmpty()), 'nullable', 'integer', 'min:1'],
+            'bajaReason' => (new PromoterReasonCategories)->requestExplanationRules('request_baja'),
+        ], $this->messages(), $this->validationAttributes() + ['bajaReasonCategoryId' => 'categoría del motivo de baja']);
 
-        $service->submitBaja($actor, (int) $values['pharmacyId'], $values['bajaReason']);
-        $this->reset(['pharmacyId', 'bajaReason', 'bajaSearch']);
+        $service->submitBaja($actor, (int) $values['pharmacyId'], $values['bajaReason'], $values['bajaReasonCategoryId'] ?? null);
+        $this->reset(['pharmacyId', 'bajaReason', 'bajaSearch', 'bajaReasonCategoryId']);
         $this->resetPage();
         $this->activeForm = null;
         session()->flash('success', 'Solicitud de baja registrada. La farmacia continúa activa hasta su aprobación.');
@@ -197,6 +206,10 @@ class Index extends Component
 
         $catalogOptions = PromoterCatalogOptions::forForm($actor, $this->altaDepartment);
 
-        return view('livewire.promoter.pharmacy-requests.index', compact('pharmacies', 'requests', 'catalogOptions', 'selectedPharmacy', 'hasAssignedPharmacies'));
+        $reasonCatalog = new PromoterReasonCategories;
+        $altaReasonOptions = $reasonCatalog->options('request_alta');
+        $bajaReasonOptions = $reasonCatalog->options('request_baja');
+
+        return view('livewire.promoter.pharmacy-requests.index', ['altaReasonOptions' => $altaReasonOptions, 'bajaReasonOptions' => $bajaReasonOptions] + compact('pharmacies', 'requests', 'catalogOptions', 'selectedPharmacy', 'hasAssignedPharmacies'));
     }
 }

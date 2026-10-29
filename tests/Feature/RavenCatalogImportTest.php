@@ -33,6 +33,7 @@ class RavenCatalogImportTest extends TestCase
         ])."\n".
             'REV-9001,"Farmacia Ejemplo · Sucursal 1",Cadena,AAA,Centro,Frente al parque,Managua,Managua,2,4,2,,,Promotora Ficticia'."\n".
             'REV-9002,"Farmacia Ejemplo · Sucursal 2",Cadena,AA,Centro,Plaza Dos,Managua,Managua,1,,,,,Promotora Ficticia'."\n");
+
         return $file;
     }
 
@@ -50,7 +51,7 @@ class RavenCatalogImportTest extends TestCase
         $this->assertSame(0, Artisan::call('raven:import-catalog', $args));
         $this->assertSame(2, Pharmacy::count());
         $this->assertSame(2, Pharmacy::whereNotNull('source_reference')->distinct()->count());
-        $this->assertSame('Centro · Managua | Frente al parque', Pharmacy::where('source_reference', 'REV-9001')->first()->location_summary);
+        $this->assertSame('Managua, Managua | Centro, Frente al parque', Pharmacy::where('source_reference', 'REV-9001')->first()->location_summary);
 
         Pharmacy::where('source_reference', 'REV-9001')->update(['name' => 'Nombre corregido en Raven']);
         $this->assertSame(0, Artisan::call('raven:import-catalog', $args));

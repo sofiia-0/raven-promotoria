@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\Promoter\VisitEvidenceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -57,7 +58,7 @@ Route::middleware([
             'pharmacyId' => $pharmacy,
         ]);
     })->whereNumber('pharmacy')
-      ->name('promoter.pharmacies.show');
+        ->name('promoter.pharmacies.show');
 
     Route::get('/promoter/requests', function () {
         return view('promoter.requests');
@@ -82,6 +83,13 @@ Route::middleware([
     Route::get('/promoter/visits/history', function () {
         return view('promoter.visit-history');
     })->name('promoter.visits.history');
+
+    Route::post('/promoter/visit-evidence/uploads', [VisitEvidenceController::class, 'upload'])
+        ->middleware('throttle:20,1')->name('promoter.visits.evidence.upload');
+    Route::get('/promoter/visits/{visit}/evidence/{evidence}/download', [VisitEvidenceController::class, 'download'])
+        ->whereNumber('visit')->whereUuid('evidence')->name('promoter.visits.evidence.download');
+    Route::get('/promoter/visits/{visit}/evidence/{evidence}/preview', [VisitEvidenceController::class, 'preview'])
+        ->whereNumber('visit')->whereUuid('evidence')->name('promoter.visits.evidence.preview');
 
     Route::get('/promoter/visits/{visit}', function (int $visit) {
         return view('promoter.visit-detail', [

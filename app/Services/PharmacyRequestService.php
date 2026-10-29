@@ -48,6 +48,7 @@ class PharmacyRequestService
             $draft[$field] = is_string($value) ? trim($value) : $value;
         }
 
+        $categories = new PromoterReasonCategories;
         $validated = Validator::make(array_merge($draft, [
             'reason' => trim((string) ($input['reason'] ?? '')),
         ]), [
@@ -59,10 +60,13 @@ class PharmacyRequestService
             'department' => NicaraguaGeography::rules((string) $draft['department'])['department'],
             'phone' => ['nullable', 'string', 'max:80'],
             'email' => ['nullable', 'email', 'max:255'],
-            'reason' => ['required', 'string', 'min:10', 'max:1500'],
+            'reason' => $categories->requestExplanationRules('request_alta'),
         ], $this->messages(), $this->validationAttributes())->validate();
 
         $reason = $validated['reason'];
+        $reasonCategory = $categories->resolveRequest('request_alta', $input['reason_category_id'] ?? null, $reason, 'altaReasonCategoryId', 'altaReason');
+        // El campo histórico no admite NULL: sin observaciones conserva el motivo seleccionado.
+        $reason = $reason !== '' ? $reason : $reasonCategory['label'];
         unset($validated['reason']);
         $proposedOptions = [];
         foreach (['client_type', 'category'] as $field) {
@@ -73,6 +77,10 @@ class PharmacyRequestService
             }
         }
         $proposal = collect($validated)->map(fn ($v) => $v === '' ? null : $v)->all();
+
+        if ($reasonCategory !== null) {
+            $proposal['reason_category'] = $reasonCategory;
+        }
 
         if ($proposedOptions !== []) {
             $proposal['catalog_proposals'] = $proposedOptions;
@@ -88,16 +96,20 @@ class PharmacyRequestService
         ]);
     }
 
-    public function submitBaja(User $actor, int $pharmacyId, string $reason): PharmacyRequest
+    public function submitBaja(User $actor, int $pharmacyId, string $reason, mixed $reasonCategoryId = null): PharmacyRequest
     {
         $this->ensurePromoter($actor);
         $reason = trim($reason);
 
+        $categories = new PromoterReasonCategories;
         Validator::make(['reason' => $reason], [
-            'reason' => ['required', 'string', 'min:10', 'max:1500'],
+            'reason' => $categories->requestExplanationRules('request_baja'),
         ])->validate();
 
-        return DB::transaction(function () use ($actor, $pharmacyId, $reason): PharmacyRequest {
+        $reasonCategory = $categories->resolveRequest('request_baja', $reasonCategoryId, $reason, 'bajaReasonCategoryId', 'bajaReason');
+        $reason = $reason !== '' ? $reason : $reasonCategory['label'];
+
+        return DB::transaction(function () use ($actor, $pharmacyId, $reason, $reasonCategory): PharmacyRequest {
             // Mismo bloqueo de ficha que usan la edición y las reasignaciones.
             // Ni un ID inventado ni una asignación terminada dan acceso.
             $pharmacy = Pharmacy::query()
@@ -124,7 +136,7 @@ class PharmacyRequestService
                 'pharmacy_id' => $pharmacy->id,
                 'type' => PharmacyRequest::TYPE_BAJA,
                 'status' => PharmacyRequest::PENDING,
-                'data' => null,
+                'data' => $reasonCategory !== null ? ['reason_category' => $reasonCategory] : null,
                 'reason' => $reason,
             ]);
         });

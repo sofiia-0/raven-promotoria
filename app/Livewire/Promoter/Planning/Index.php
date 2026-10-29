@@ -6,11 +6,16 @@ use App\Enums\ActivityType;
 use App\Enums\UserRole;
 use App\Models\MonthlySchedule;
 use App\Models\User;
+use App\Services\PlanningProductivity;
 use App\Services\SchedulePlanner;
+use App\Support\EstablishmentSearch;
+use App\Support\PharmacyAutocomplete;
+use App\Support\PlanningCalendar;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -29,6 +34,25 @@ class Index extends Component
     public string $pharmacySearch = '';
 
     public string $notes = '';
+
+    public string $planningView = 'calendar';
+
+    public string $selectedDate = '';
+
+    public string $copySourceWeek = '';
+
+    public string $copyTargetWeek = '';
+
+    public bool $acknowledgeOmissions = false;
+
+    #[Locked]
+    public array $selectedPharmacyIds = [];
+
+    #[Locked]
+    public ?array $batchPreview = null;
+
+    #[Locked]
+    public ?array $copyPreview = null;
 
     public function mount(): void
     {
@@ -81,7 +105,7 @@ class Index extends Component
     private function goTo(CarbonImmutable $month): void
     {
         $this->period = $month->format('Y-m');
-        $this->reset(['scheduledDate', 'pharmacyId', 'pharmacySearch', 'notes']);
+        $this->clearMonthState();
         $this->resetValidation();
     }
 
@@ -89,12 +113,16 @@ class Index extends Component
     {
         $month = $this->month();
         $planner->create($this->promoter(), $month->year, $month->month);
+        if ($this->validDay($this->selectedDate)) {
+            $this->scheduledDate = $this->selectedDate;
+        }
         session()->flash('success', 'Cronograma creado. Ya puede agregar actividades.');
     }
 
     public function updatedActivityType(): void
     {
         $this->resetValidation('pharmacyId');
+        $this->batchPreview = null;
     }
 
     public function addActivity(SchedulePlanner $planner): void
@@ -135,7 +163,7 @@ class Index extends Component
         ]);
 
         // Se conserva la fecha para cargar varias visitas del mismo día seguidas.
-        $this->reset(['pharmacyId', 'notes']);
+        $this->reset(['pharmacyId', 'pharmacySearch', 'notes']);
         session()->flash('success', 'Actividad agregada al cronograma.');
     }
 
@@ -148,8 +176,157 @@ class Index extends Component
     public function submit(SchedulePlanner $planner): void
     {
         $schedule = $this->schedule() ?? abort(404);
+        if ($this->selectedPharmacyIds || $this->copyPreview) {
+            throw ValidationException::withMessages(['submit' => 'Confirme o descarte su selección de visitas y la vista previa de copia antes de enviar el cronograma.']);
+        }
         $planner->submit($this->promoter(), $schedule->id);
         session()->flash('success', 'Cronograma enviado. Ya no admite cambios.');
+    }
+
+    public function updatedPeriod(): void
+    {
+        $this->month();
+        $this->clearMonthState();
+    }
+
+    private function clearMonthState(): void
+    {
+        $this->reset(['scheduledDate', 'pharmacyId', 'pharmacySearch', 'notes', 'selectedDate', 'selectedPharmacyIds', 'batchPreview', 'copyPreview', 'copySourceWeek', 'copyTargetWeek', 'acknowledgeOmissions']);
+        $this->resetValidation();
+    }
+
+    public function updated(string $property): void
+    {
+        if (in_array($property, ['scheduledDate', 'notes', 'activityType'], true)) {
+            $this->batchPreview = null;
+        }
+        if (in_array($property, ['copySourceWeek', 'copyTargetWeek'], true)) {
+            $this->copyPreview = null;
+            $this->acknowledgeOmissions = false;
+        }
+        if ($property === 'scheduledDate' && $this->validDay($this->scheduledDate)) {
+            $this->selectedDate = $this->scheduledDate;
+        }
+        if ($property === 'selectedDate') {
+            $this->selectDay($this->selectedDate);
+        }
+    }
+
+    private function validDay(string $value): bool
+    {
+        try {
+            $day = CarbonImmutable::createFromFormat('!Y-m-d', $value);
+
+            return $day && $day->toDateString() === $value && $day->format('Y-m') === $this->month()->format('Y-m');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    public function selectDay(string $date): void
+    {
+        if (! $this->validDay($date)) {
+            throw ValidationException::withMessages(['selectedDate' => 'Seleccione un día válido del mes visible.']);
+        }
+        $this->selectedDate = $date;
+        if ($this->schedule()?->isDraft()) {
+            $this->scheduledDate = $date;
+            $this->batchPreview = null;
+        }
+        $this->resetValidation(['selectedDate', 'scheduledDate']);
+    }
+
+    public function selectWeek(int $weekId): void
+    {
+        $week = $this->schedule()?->weeks()->whereKey($weekId)->firstOrFail() ?? abort(404);
+        $this->selectDay($week->starts_on->toDateString());
+    }
+
+    public function setPlanningView(string $view): void
+    {
+        abort_unless(in_array($view, ['calendar', 'weeks'], true), 422);
+        $this->planningView = $view;
+    }
+
+    public function stagePharmacy(int $id, PlanningProductivity $productivity): void
+    {
+        $schedule = $this->schedule() ?? abort(404);
+        if (in_array($id, $this->selectedPharmacyIds, true)) {
+            $this->removeStagedPharmacy($id);
+
+            return;
+        }
+        $preview = $productivity->previewVisits($this->promoter(), $schedule->id, $this->scheduledDate, [...$this->selectedPharmacyIds, $id], $this->notes);
+        if ($preview['conflicts']) {
+            throw ValidationException::withMessages(['pharmacyId' => collect($preview['rows'])->firstWhere('status', 'conflict')['message']]);
+        }
+        $this->selectedPharmacyIds[] = $id;
+        $this->reset(['pharmacyId', 'batchPreview']);
+        $this->resetValidation(['pharmacyId', 'selectedPharmacyIds', 'batch']);
+    }
+
+    public function removeStagedPharmacy(int $id): void
+    {
+        $this->selectedPharmacyIds = array_values(array_filter($this->selectedPharmacyIds, fn ($value) => $value !== $id));
+        $this->batchPreview = null;
+        $this->resetValidation(['pharmacyId', 'selectedPharmacyIds', 'batch']);
+    }
+
+    public function clearSelection(): void
+    {
+        $this->reset(['selectedPharmacyIds', 'batchPreview', 'pharmacyId', 'pharmacySearch']);
+        $this->resetValidation(['batch', 'pharmacyId', 'selectedPharmacyIds']);
+    }
+
+    public function cancelCopy(): void
+    {
+        $this->reset(['copyPreview', 'acknowledgeOmissions']);
+        $this->resetValidation('copy');
+    }
+
+    public function reviewBatch(PlanningProductivity $productivity): void
+    {
+        $this->batchPreview = null;
+        $schedule = $this->schedule() ?? abort(404);
+        $this->batchPreview = $productivity->previewVisits($this->promoter(), $schedule->id, $this->scheduledDate, $this->selectedPharmacyIds, $this->notes);
+        $this->resetValidation('batch');
+        $this->dispatch('planning-focus', target: 'batch-preview-title');
+    }
+
+    public function confirmBatch(PlanningProductivity $productivity): void
+    {
+        if (! $this->batchPreview || $this->activityType !== 'VISITA') {
+            throw ValidationException::withMessages(['batch' => 'Revise la selección antes de confirmar.']);
+        }
+        $schedule = $this->schedule() ?? abort(404);
+        $ids = $productivity->addVisits($this->promoter(), $schedule->id, $this->scheduledDate, $this->selectedPharmacyIds, $this->notes, $this->batchPreview['hash']);
+        $this->reset(['selectedPharmacyIds', 'batchPreview', 'pharmacyId', 'pharmacySearch', 'notes']);
+        session()->flash('success', count($ids).' visitas incorporadas al cronograma.');
+        $this->dispatch('planning-focus', target: 'planning-agenda-title');
+    }
+
+    public function reviewCopy(PlanningProductivity $productivity): void
+    {
+        $this->reset(['copyPreview', 'acknowledgeOmissions']);
+        $this->validate(['copySourceWeek' => ['required', 'integer'], 'copyTargetWeek' => ['required', 'integer']], ['required' => 'Seleccione la :attribute.', 'integer' => 'Seleccione una :attribute válida.'], ['copySourceWeek' => 'semana de origen', 'copyTargetWeek' => 'semana de destino']);
+        $schedule = $this->schedule() ?? abort(404);
+        $this->copyPreview = $productivity->previewWeek($this->promoter(), $schedule->id, (int) $this->copySourceWeek, (int) $this->copyTargetWeek);
+        $this->resetValidation('copy');
+        $this->dispatch('planning-focus', target: 'copy-preview-title');
+    }
+
+    public function confirmCopy(PlanningProductivity $productivity): void
+    {
+        if (! $this->copyPreview) {
+            throw ValidationException::withMessages(['copy' => 'Revise la vista previa antes de confirmar.']);
+        }
+        $schedule = $this->schedule() ?? abort(404);
+        $ids = $productivity->copyWeek($this->promoter(), $schedule->id, (int) $this->copySourceWeek, (int) $this->copyTargetWeek, $this->copyPreview['hash'], $this->acknowledgeOmissions);
+        $this->selectDay(collect($this->copyPreview['rows'])->where('status', 'ready')->min('date'));
+        $this->copyPreview = null;
+        $this->acknowledgeOmissions = false;
+        session()->flash('success', count($ids).' actividades copiadas. Las actividades existentes se conservaron.');
+        $this->dispatch('planning-focus', target: 'planning-agenda-title');
     }
 
     public function render(): View
@@ -166,37 +343,37 @@ class Index extends Component
         $activities = $schedule?->weeks->flatMap->activities ?? collect();
         $visits = $activities->where('activity_type', ActivityType::VISITA);
 
-        $pharmacyOptions = collect();
-        if ($schedule?->isDraft()) {
-            $query = $promoter->assignedPharmacies()
-                ->where('pharmacies.is_active', true)
-                ->select('pharmacies.id', 'pharmacies.name', 'pharmacies.city', 'pharmacies.department');
+        $picker = ($schedule?->isDraft() && $this->activityType === 'VISITA')
+            ? PharmacyAutocomplete::options($promoter, $this->pharmacySearch, $this->pharmacyId)
+            : ['pharmacyOptions' => collect(), 'selectedPharmacy' => null, 'hasMorePharmacies' => false];
 
-            if (trim($this->pharmacySearch) !== '') {
-                $term = '%'.trim($this->pharmacySearch).'%';
-                $query->where(function (Builder $q) use ($term): void {
-                    $q->where('pharmacies.name', 'like', $term)
-                        ->orWhere('pharmacies.city', 'like', $term)
-                        ->orWhere('pharmacies.neighborhood', 'like', $term);
-                });
-            }
-
-            $pharmacyOptions = $query->orderBy('pharmacies.name')->limit(50)->get();
-
-            // La farmacia ya elegida sigue visible aunque el filtro de búsqueda cambie.
-            if ($this->pharmacyId !== '' && ! $pharmacyOptions->contains('id', (int) $this->pharmacyId)) {
-                $selected = $promoter->assignedPharmacies()
-                    ->where('pharmacies.id', (int) $this->pharmacyId)
-                    ->select('pharmacies.id', 'pharmacies.name', 'pharmacies.city', 'pharmacies.department')
-                    ->first();
-                if ($selected) {
-                    $pharmacyOptions->prepend($selected);
-                }
+        $initializeDay = ! $this->validDay($this->selectedDate);
+        if ($initializeDay) {
+            $this->selectedDate = $month->format('Y-m') === $today->format('Y-m') ? $today->toDateString() : $month->toDateString();
+        }
+        if ($initializeDay && $schedule?->isDraft() && $this->scheduledDate === '') {
+            $this->scheduledDate = $this->selectedDate;
+        }
+        $day = CarbonImmutable::parse($this->selectedDate);
+        $selectedWeek = $schedule?->weeks->first(fn ($w) => $day->betweenIncluded($w->starts_on, $w->ends_on));
+        $weekDays = [];
+        if ($selectedWeek) {
+            for ($cursor = $selectedWeek->starts_on; $cursor->lte($selectedWeek->ends_on); $cursor = $cursor->addDay()) {
+                $weekDays[] = $cursor;
             }
         }
+        $byDate = $activities->groupBy(fn ($a) => $a->scheduled_date->toDateString());
+        $selectedPharmacies = EstablishmentSearch::forPromoter($promoter)->whereKey($this->selectedPharmacyIds)->get()->keyBy('id');
 
         return view('livewire.promoter.planning.index', [
             'schedule' => $schedule,
+            'calendarDays' => PlanningCalendar::days($month),
+            'selectedDay' => $day,
+            'selectedWeek' => $selectedWeek,
+            'weekDays' => $weekDays,
+            'activitiesByDate' => $byDate,
+            'dayActivities' => $byDate->get($this->selectedDate, collect()),
+            'selectedPharmacies' => $selectedPharmacies,
             'monthLabel' => SchedulePlanner::monthLabel($month),
             'canCreate' => $month->format('Y-m') >= $today->format('Y-m'),
             'monthStart' => $month->startOfMonth()->toDateString(),
@@ -205,7 +382,7 @@ class Index extends Component
             'totalVisits' => $visits->count(),
             'distinctPharmacies' => $visits->pluck('pharmacy_id')->unique()->count(),
             'otherActivities' => $activities->count() - $visits->count(),
-            'pharmacyOptions' => $pharmacyOptions,
+            ...$picker,
             'activityTypes' => ActivityType::cases(),
         ]);
     }

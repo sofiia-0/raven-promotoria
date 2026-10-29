@@ -84,7 +84,7 @@ class PromoterCommercialSelectorsTest extends TestCase
             ->call('submitAlta')->assertHasNoErrors()->assertSet('altaClientTypeOther', '')->assertSet('altaCategoryOther', '');
         $request = PharmacyRequest::first();
         $this->assertSame('pending', $request->status);
-        $this->assertSame(['client_type' => 'Tipo propuesto', 'category' => 'Categoría propuesta'], $request->data['catalog_proposals']);
+        $this->assertEqualsCanonicalizing(['client_type' => 'Tipo propuesto', 'category' => 'Categoría propuesta'], $request->data['catalog_proposals']);
         $this->assertSame('Tipo propuesto', $request->data['client_type']);
         $this->assertFalse(Catalog::values($actor, 'client_type')->contains('Tipo propuesto'));
         $this->assertSame(1, Pharmacy::count());

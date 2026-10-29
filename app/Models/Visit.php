@@ -6,6 +6,7 @@ use App\Enums\VisitStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /** Se crea solo mediante VisitRecorder (idempotencia, checklist y bitácora). */
 class Visit extends Model
@@ -24,6 +25,16 @@ class Visit extends Model
         'location_accuracy',
         'visited_at',
     ];
+
+    public function objective(): HasOne
+    {
+        return $this->hasOne(VisitObjective::class);
+    }
+
+    public function evidences(): HasMany
+    {
+        return $this->hasMany(VisitEvidence::class)->orderBy('uploaded_at')->orderBy('id');
+    }
 
     protected function casts(): array
     {

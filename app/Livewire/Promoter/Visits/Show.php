@@ -4,12 +4,18 @@ namespace App\Livewire\Promoter\Visits;
 
 use App\Enums\UserRole;
 use App\Models\Visit;
+use App\Services\VisitEvidenceStorage;
+use App\Support\VisitMap;
+use App\Support\VisitMapConsent;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Show extends Component
 {
+    use VisitMapConsent;
+
     #[Locked]
     public int $visitId;
 
@@ -38,6 +44,10 @@ class Show extends Component
 
     public function render(): View
     {
-        return view('livewire.promoter.visits.show', ['visit' => $this->visit()]);
+        $visit = $this->visit();
+        $evidenceAvailable = app(VisitEvidenceStorage::class)->available();
+        $evidences = $evidenceAvailable ? $visit->evidences()->get() : collect();
+
+        return view('livewire.promoter.visits.show', ['visit' => $visit, 'evidences' => $evidences, 'evidenceAvailable' => $evidenceAvailable, 'mapUrl' => VisitMap::url($visit), 'mapAuthorized' => $this->mapAuthorized(), 'objective' => Schema::hasTable('visit_objectives') ? $visit->objective : null]);
     }
 }

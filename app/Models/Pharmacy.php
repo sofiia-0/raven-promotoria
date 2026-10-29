@@ -71,18 +71,20 @@ class Pharmacy extends Model
         return EstablishmentPresentation::reference($this->name, $this->department, $this->city);
     }
 
-    /** Texto de ubicación calculado: NO es otra columna editable. */
+    public function getDisplayLocalityAttribute(): string
+    {
+        return EstablishmentPresentation::locality($this->department, $this->city);
+    }
+
+    public function getDisplayAddressAttribute(): string
+    {
+        return EstablishmentPresentation::address($this->address, $this->neighborhood, $this->department, $this->city);
+    }
+
+    /** Resumen de lectura; los identificadores comerciales no se convierten en dirección. */
     public function getLocationSummaryAttribute(): string
     {
-        $pieces = collect([$this->neighborhood, $this->city, $this->department])
-            ->filter(fn ($value) => is_string($value) && trim($value) !== '')
-            ->unique(fn ($value) => mb_strtolower(trim($value)))
-            ->values()
-            ->all();
-
-        $place = implode(' · ', $pieces);
-        $address = trim((string) $this->address);
-
-        return $address === '' ? $place : trim($place.' | '.$address, ' |');
+        return collect([$this->display_locality, $this->display_address])
+            ->filter(fn ($value) => $value !== '')->join(' | ');
     }
 }

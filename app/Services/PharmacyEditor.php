@@ -68,6 +68,14 @@ class PharmacyEditor
                     }
                     $value = $resolved['value'];
                 }
+                // Editar el nombre comercial no descarta los identificadores del nombre histórico.
+                if ($field === 'name' && is_string($value) && ! str_contains($value, '·')
+                    && str_contains((string) $pharmacy->name, '·')) {
+                    $suffix = substr($pharmacy->name, strpos($pharmacy->name, '·'));
+                    $value = trim($value).' '.$suffix;
+                    Validator::make(['name' => $value], ['name' => ['string', 'max:255']],
+                        $this->messages(), $this->validationAttributes())->validate();
+                }
                 $next = $this->normalise($field, $value);
                 $previous = $this->normalise($field, $pharmacy->{$field});
                 if ($previous === $next) {

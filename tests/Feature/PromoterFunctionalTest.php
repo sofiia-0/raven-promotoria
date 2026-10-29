@@ -274,15 +274,15 @@ class PromoterFunctionalTest extends TestCase
     {
         $actor = $this->promoter();
         $mine = $this->assigned($actor, ['name' => 'Acuña · Villa Fontana · Sucursal 2', 'city' => 'Ciudad Sandino']);
-        $this->assertSame('Acuña · Managua', $mine->display_name);
+        $this->assertSame('Acuña', $mine->display_name);
         $this->assertSame('Villa Fontana · Sucursal 2', $mine->branch_summary);
         $html = Livewire::actingAs($actor)->test(Pharmacies::class)->html();
-        $this->assertStringContainsString('Acuña · Managua', $html);
+        $this->assertStringContainsString('Acuña', $html);
         $this->assertStringContainsString('Managua, Ciudad Sandino', $html);
-        $this->assertStringContainsString('Referencia: Villa Fontana · Sucursal 2', $html);
+        $this->assertStringNotContainsString('promoter-branch-label', $html);
         $this->assertSame('Acuña · Villa Fontana · Sucursal 2', $mine->fresh()->name);
         $this->assertSame(0, PharmacyChange::count());
-        $this->assertSame('Acuña · León', EstablishmentPresentation::title('Acuña · León', 'León'));
+        $this->assertSame('Acuña', EstablishmentPresentation::title('Acuña · León', 'León'));
     }
 
     public function test_mysql_search_compiles_with_explicit_collation_and_bound_literal_terms(): void

@@ -7,10 +7,16 @@ use App\Enums\VisitStatus;
 use App\Models\ChecklistItem;
 use App\Models\PlannedActivity;
 use App\Models\User;
+use App\Models\VisitEvidence;
 use App\Models\VisitReason;
+use App\Services\PromoterReasonCategories;
+use App\Services\VisitContextRecorder;
+use App\Services\VisitEvidenceStorage;
 use App\Services\VisitRecorder;
+use App\Support\PharmacyAutocomplete;
+use App\Support\VisitMapConsent;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +26,18 @@ use Livewire\Component;
 /** Formulario de registro: visita planificada (`actividad`) o fuera de plan (RF-VIS). */
 class Register extends Component
 {
+    use VisitMapConsent;
+
+    public string $objectiveId = '';
+
+    public string $objectiveExplanation = '';
+
+    public function updatedObjectiveId(): void
+    {
+        $this->objectiveExplanation = '';
+        $this->resetValidation(['objectiveId', 'objectiveExplanation']);
+    }
+
     #[Locked]
     public ?int $activityId = null;
 
@@ -49,6 +67,39 @@ class Register extends Component
     #[Locked]
     public ?string $blockedMessage = null;
 
+    #[Locked]
+    public array $evidenceIds = [];
+
+    public function addEvidenceUpload(string $id, VisitEvidenceStorage $storage): bool
+    {
+        abort_if($this->blockedMessage !== null, 409);
+        if (in_array($id, $this->evidenceIds, true)) {
+            return true;
+        }
+        $storage->staged($this->promoter(), $this->idempotencyKey, [...$this->evidenceIds, $id]);
+        $this->evidenceIds[] = $id;
+        $this->resetValidation('evidence');
+
+        return true;
+    }
+
+    public function removeEvidenceUpload(string $id, VisitEvidenceStorage $storage): bool
+    {
+        if (! in_array($id, $this->evidenceIds, true)) {
+            return true;
+        }
+        try {
+            $storage->discard($this->promoter(), $this->idempotencyKey, $id);
+        } catch (ModelNotFoundException) { /* Un pendiente ya caducado no impide quitarlo de la selección. */
+        } catch (\Throwable) {
+            throw ValidationException::withMessages(['evidence' => 'No se pudo quitar el archivo. Inténtelo de nuevo.']);
+        }
+        $this->evidenceIds = array_values(array_filter($this->evidenceIds, fn ($value) => $value !== $id));
+        $this->resetValidation('evidence');
+
+        return true;
+    }
+
     public function mount(VisitRecorder $recorder, ?int $actividad = null): void
     {
         $promoter = $this->promoter();
@@ -73,7 +124,7 @@ class Register extends Component
         return $user;
     }
 
-    public function save(VisitRecorder $recorder): void
+    public function save(VisitContextRecorder $recorder): void
     {
         $promoter = $this->promoter();
         abort_if($this->blockedMessage !== null, 409);
@@ -82,6 +133,8 @@ class Register extends Component
             'status' => ['required', Rule::enum(VisitStatus::class)],
             'pharmacyId' => [Rule::requiredIf($this->activityId === null), 'nullable', 'integer'],
             'reasonId' => [Rule::requiredIf($this->status === VisitStatus::NO_REALIZADA->value), 'nullable', 'integer'],
+            'objectiveId' => ['nullable', 'integer', 'min:1'],
+            'objectiveExplanation' => ['nullable', 'string', 'max:1500'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'checklist' => ['array'],
             'checklist.*' => ['boolean'],
@@ -109,7 +162,7 @@ class Register extends Component
             'longitude' => $validated['longitude'],
             'location_accuracy' => $validated['locationAccuracy'],
             'checklist' => $validated['checklist'],
-        ]);
+        ], $this->evidenceIds, $validated['objectiveId'] ?? null, $validated['objectiveExplanation'] ?? '');
 
         session()->flash('success', 'Visita registrada.');
         $this->redirectRoute('promoter.visits.show', ['visit' => $visit->id]);
@@ -123,39 +176,25 @@ class Register extends Component
             ? PlannedActivity::query()->with(['pharmacy', 'reschedules'])->find($this->activityId)
             : null;
 
-        $pharmacyOptions = collect();
-        if (! $activity) {
-            $query = $promoter->assignedPharmacies()
-                ->where('pharmacies.is_active', true)
-                ->select('pharmacies.id', 'pharmacies.name', 'pharmacies.city', 'pharmacies.department');
+        $picker = (! $activity && $this->blockedMessage === null)
+            ? PharmacyAutocomplete::options($promoter, $this->pharmacySearch, $this->pharmacyId)
+            : ['pharmacyOptions' => collect(), 'selectedPharmacy' => null, 'hasMorePharmacies' => false];
 
-            if (trim($this->pharmacySearch) !== '') {
-                $term = '%'.trim($this->pharmacySearch).'%';
-                $query->where(function (Builder $q) use ($term): void {
-                    $q->where('pharmacies.name', 'like', $term)
-                        ->orWhere('pharmacies.city', 'like', $term)
-                        ->orWhere('pharmacies.neighborhood', 'like', $term);
-                });
-            }
-
-            $pharmacyOptions = $query->orderBy('pharmacies.name')->limit(50)->get();
-
-            if ($this->pharmacyId !== '' && ! $pharmacyOptions->contains('id', (int) $this->pharmacyId)) {
-                $selected = $promoter->assignedPharmacies()
-                    ->where('pharmacies.id', (int) $this->pharmacyId)
-                    ->select('pharmacies.id', 'pharmacies.name', 'pharmacies.city', 'pharmacies.department')
-                    ->first();
-                if ($selected) {
-                    $pharmacyOptions->prepend($selected);
-                }
-            }
-        }
+        $evidenceAvailable = app(VisitEvidenceStorage::class)->available();
+        $evidenceFiles = $evidenceAvailable && $this->evidenceIds
+            ? VisitEvidence::whereKey($this->evidenceIds)->where('uploaded_by', $promoter->id)->where('batch_key', $this->idempotencyKey)->whereNull('visit_id')->where('status', 'staged')->get()->keyBy('id')
+            : collect();
 
         return view('livewire.promoter.visits.register', [
             'activity' => $activity,
-            'pharmacyOptions' => $pharmacyOptions,
+            'evidenceAvailable' => $evidenceAvailable,
+            'evidenceFiles' => $evidenceFiles,
+            ...$picker,
             'checklistItems' => ChecklistItem::query()->active()->get(),
             'reasons' => VisitReason::query()->active()->get(['id', 'name']),
+            'objectiveOptions' => (new PromoterReasonCategories)->options('visit_objective'),
+            'mapAuthorized' => $this->mapAuthorized(),
+            'reasonExplanationRequired' => $this->status === VisitStatus::NO_REALIZADA->value && app(VisitContextRecorder::class)->requiresReasonExplanation($this->reasonId),
         ]);
     }
 }
