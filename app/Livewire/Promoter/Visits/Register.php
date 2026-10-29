@@ -9,10 +9,12 @@ use App\Models\PlannedActivity;
 use App\Models\User;
 use App\Models\VisitEvidence;
 use App\Models\VisitReason;
+use App\Services\PromoterReasonCategories;
+use App\Services\VisitContextRecorder;
 use App\Services\VisitEvidenceStorage;
 use App\Services\VisitRecorder;
-use App\Services\VisitWithEvidenceRecorder;
 use App\Support\PharmacyAutocomplete;
+use App\Support\VisitMapConsent;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
@@ -24,6 +26,18 @@ use Livewire\Component;
 /** Formulario de registro: visita planificada (`actividad`) o fuera de plan (RF-VIS). */
 class Register extends Component
 {
+    use VisitMapConsent;
+
+    public string $objectiveId = '';
+
+    public string $objectiveExplanation = '';
+
+    public function updatedObjectiveId(): void
+    {
+        $this->objectiveExplanation = '';
+        $this->resetValidation(['objectiveId', 'objectiveExplanation']);
+    }
+
     #[Locked]
     public ?int $activityId = null;
 
@@ -110,7 +124,7 @@ class Register extends Component
         return $user;
     }
 
-    public function save(VisitWithEvidenceRecorder $recorder): void
+    public function save(VisitContextRecorder $recorder): void
     {
         $promoter = $this->promoter();
         abort_if($this->blockedMessage !== null, 409);
@@ -119,6 +133,8 @@ class Register extends Component
             'status' => ['required', Rule::enum(VisitStatus::class)],
             'pharmacyId' => [Rule::requiredIf($this->activityId === null), 'nullable', 'integer'],
             'reasonId' => [Rule::requiredIf($this->status === VisitStatus::NO_REALIZADA->value), 'nullable', 'integer'],
+            'objectiveId' => ['nullable', 'integer', 'min:1'],
+            'objectiveExplanation' => ['nullable', 'string', 'max:1500'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'checklist' => ['array'],
             'checklist.*' => ['boolean'],
@@ -146,7 +162,7 @@ class Register extends Component
             'longitude' => $validated['longitude'],
             'location_accuracy' => $validated['locationAccuracy'],
             'checklist' => $validated['checklist'],
-        ], $this->evidenceIds);
+        ], $this->evidenceIds, $validated['objectiveId'] ?? null, $validated['objectiveExplanation'] ?? '');
 
         session()->flash('success', 'Visita registrada.');
         $this->redirectRoute('promoter.visits.show', ['visit' => $visit->id]);
@@ -176,6 +192,9 @@ class Register extends Component
             ...$picker,
             'checklistItems' => ChecklistItem::query()->active()->get(),
             'reasons' => VisitReason::query()->active()->get(['id', 'name']),
+            'objectiveOptions' => (new PromoterReasonCategories)->options('visit_objective'),
+            'mapAuthorized' => $this->mapAuthorized(),
+            'reasonExplanationRequired' => $this->status === VisitStatus::NO_REALIZADA->value && app(VisitContextRecorder::class)->requiresReasonExplanation($this->reasonId),
         ]);
     }
 }

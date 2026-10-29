@@ -310,11 +310,11 @@ class VisitEvidenceTest extends TestCase
     {
         $visit = (new VisitRecorder)->register($this->actor, [...$this->data(), 'latitude' => '12.1234567', 'longitude' => '-86.1234567', 'location_accuracy' => 25]);
         $before = $visit->fresh()->getAttributes();
-        $response = $this->actingAs($this->actor)->get('/promoter/visits/'.$visit->id)->assertOk()->assertSee('Mostrar mapa de OpenStreetMap')->assertSee('dirección IP')->assertSee('± 25 m');
+        $response = $this->actingAs($this->actor)->get('/promoter/visits/'.$visit->id)->assertOk()->assertSee('Autorizar mapas de OpenStreetMap')->assertSee('dirección IP')->assertSee('± 25 m');
         $dom = new \DOMDocument;
         @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$response->getContent());
         $x = new \DOMXPath($dom);
-        $this->assertSame(1, $x->query('//template[@x-if="active"]//iframe')->length);
+        $this->assertSame(1, $x->query('//template[@x-if="authorized && valid()"]//iframe')->length);
         $this->assertSame(0, $x->query('//iframe[not(ancestor::template)]')->length);
         $this->assertStringNotContainsString('getCurrentPosition', $response->getContent());
         $this->assertSame($before, $visit->fresh()->getAttributes());
@@ -328,7 +328,7 @@ class VisitEvidenceTest extends TestCase
     public function test_without_coordinates_no_map_is_loaded_and_denied_location_does_not_prevent_recording(): void
     {
         $visit = (new VisitWithEvidenceRecorder)->register($this->actor, $this->data());
-        $this->actingAs($this->actor)->get('/promoter/visits/'.$visit->id)->assertOk()->assertDontSee('Mostrar mapa de OpenStreetMap')->assertSee('No registrada');
+        $this->actingAs($this->actor)->get('/promoter/visits/'.$visit->id)->assertOk()->assertDontSee('Autorizar mapas de OpenStreetMap')->assertSee('No registrada');
         $this->assertFalse($visit->hasLocation());
     }
 

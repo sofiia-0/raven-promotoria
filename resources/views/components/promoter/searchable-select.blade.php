@@ -1,23 +1,25 @@
-@props(['model', 'label', 'value' => '', 'options' => [], 'required' => false, 'disabled' => false, 'allowOther' => false, 'clearable' => false])
+@props(['model', 'label', 'value' => '', 'options' => [], 'required' => false, 'disabled' => false, 'allowOther' => false, 'clearable' => false, 'labels' => []])
 @php
     $items = collect($options)->values()->all();
     if ($allowOther) {
         $items[] = \App\Support\PromoterCatalogOptions::OTHER;
     }
     $controlId = 'geo-'.$model;
+    $selectedText = $allowOther && $value === \App\Support\PromoterCatalogOptions::OTHER ? 'Otro (especificar)' : ($labels[$value] ?? $value);
 @endphp
 <div class="raven-field promoter-combobox"
-    wire:key="{{ $controlId }}-{{ md5(json_encode($items)) }}"
+    wire:key="{{ $controlId }}-{{ md5(json_encode([$items,$labels])) }}"
     x-data="{
         options: @js($items),
+        labels: @js((object)$labels),
         other: @js($allowOther ? \App\Support\PromoterCatalogOptions::OTHER : null),
         selected: $wire.entangle(@js($model)).live,
-        query: @js($allowOther && $value === \App\Support\PromoterCatalogOptions::OTHER ? 'Otro (especificar)' : $value), open: false, active: -1,
-        labelFor(value) { return this.other !== null && value === this.other ? 'Otro (especificar)' : (value || ''); },
+        query: @js($selectedText), open: false, active: -1,
+        labelFor(value) { return this.other !== null && value === this.other ? 'Otro (especificar)' : (this.labels[value] || value || ''); },
         normalize(value) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); },
         filtered() {
             const term = this.query === this.labelFor(this.selected) ? '' : this.normalize(this.query);
-            return this.options.filter(option => option === this.other || this.normalize(option).includes(term));
+            return this.options.filter(option => option === this.other || this.normalize(this.labelFor(option)).includes(term));
         },
         choose(option) {
             if (typeof option !== 'string') return;
@@ -40,7 +42,7 @@
     @focusout="if (!$el.contains($event.relatedTarget)) { open = false; query = labelFor(selected); }">
     <label class="raven-label" for="{{ $controlId }}">{{ $label }} @if($required)<span class="promoter-required" aria-hidden="true">*</span>@endif</label>
     <div class="promoter-combobox-control">
-        <input id="{{ $controlId }}" x-ref="input" class="raven-input" type="text" value="{{ $allowOther && $value === \App\Support\PromoterCatalogOptions::OTHER ? 'Otro (especificar)' : $value }}" x-model="query"
+        <input id="{{ $controlId }}" x-ref="input" class="raven-input" type="text" value="{{ $selectedText }}" x-model="query"
             role="combobox" autocomplete="off" aria-autocomplete="list"
             aria-controls="{{ $controlId }}-list" :aria-expanded="open.toString()"
             :aria-activedescendant="open && active >= 0 ? @js($controlId).concat('-option-', active) : null"

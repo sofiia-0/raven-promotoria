@@ -31,12 +31,13 @@
                     @if($status === 'NO_REALIZADA')
                         <div class="raven-field promoter-planning-notes">
                             <label class="raven-label" for="visit-reason">Motivo</label>
-                            <select id="visit-reason" class="raven-select" wire:model="reasonId">
+                            <select id="visit-reason" class="raven-select" wire:model.live="reasonId" required>
                                 <option value="">Seleccione el motivo</option>
                                 @foreach($reasons as $reason)
                                     <option value="{{ $reason->id }}">{{ $reason->name }}</option>
                                 @endforeach
                             </select>
+                            @if($reasons->isEmpty())<p class="raven-field-help" role="status">No hay motivos disponibles. Consulte con Coordinadora.</p>@endif
                             @error('reasonId') <span class="raven-field-error">{{ $message }}</span> @enderror
                         </div>
                     @elseif($checklistItems->isNotEmpty())
@@ -62,9 +63,19 @@
                         <p class="raven-field-help promoter-planning-notes" role="status">El checklist todavía no está configurado. Consulte con Coordinadora.</p>
                     @endif
 
+                    @if($status === 'REALIZADA' && $objectiveOptions->isNotEmpty())
+                        <div class="raven-field promoter-planning-notes">
+                            <x-promoter.reason-select model="objectiveId" label="Objetivo general de la visita (opcional)" :value="$objectiveId" :options="$objectiveOptions" />
+                            @if($objectiveOptions->firstWhere('id',(int)$objectiveId)?->is_other)
+                                <x-promoter.field model="objectiveExplanation" label="Explique el objetivo" :value="$objectiveExplanation" type="textarea" required max="1500" help="Utilice al menos 10 caracteres." />
+                            @endif
+                        </div>
+                    @endif
+
                     <div class="raven-field promoter-planning-notes">
-                        <label class="raven-label" for="visit-notes">Observaciones (opcional)</label>
-                        <textarea id="visit-notes" class="raven-textarea" rows="3" maxlength="1000" wire:model="notes"></textarea>
+                        <label class="raven-label" for="visit-notes">{{ $reasonExplanationRequired ? 'Explique el motivo' : 'Observaciones (opcional)' }}</label>
+                        <textarea id="visit-notes" class="raven-textarea" rows="3" maxlength="1000" wire:model="notes" @required($reasonExplanationRequired)></textarea>
+                        @if($reasonExplanationRequired)<p class="raven-field-help">Al seleccionar Otro motivo, utilice al menos 10 caracteres.</p>@endif
                         @error('notes') <span class="raven-field-error">{{ $message }}</span> @enderror
                     </div>
 
@@ -133,7 +144,7 @@
                         <span class="raven-label">Ubicación del registro</span>
                         <p class="raven-field-help" x-show="state === 'loading'">Obteniendo ubicación…</p>
                         <p class="raven-field-help" x-show="state === 'ok'" x-cloak>
-                            Ubicación capturada (precisión aprox. <span x-text="$wire.locationAccuracy"></span> m).
+                            Ubicación capturada.
                         </p>
                         <p class="raven-field-help" x-show="state === 'denied' || state === 'unsupported'" x-cloak>
                             No se pudo obtener la ubicación. La visita se registrará sin ella.
@@ -144,6 +155,7 @@
                         </div>
                         @error('latitude') <span class="raven-field-error">{{ $message }}</span> @enderror
                     </div>
+                    <x-promoter.visit-map live :authorized="$mapAuthorized" />
                 </section>
             </aside>
         </div>

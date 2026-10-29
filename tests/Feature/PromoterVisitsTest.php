@@ -462,7 +462,7 @@ class PromoterVisitsTest extends TestCase
 
         Livewire::actingAs($this->promoter)->test(Show::class, ['visitId' => $visit->id])
             ->assertSee('Precios visibles')
-            ->assertSee('1 de 1 puntos cumplidos');
+            ->assertSee('1 de 1 actividades registradas');
     }
 
     public function test_audit_log_is_append_only_and_records_schedule_submission(): void

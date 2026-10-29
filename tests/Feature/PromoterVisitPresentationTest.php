@@ -58,7 +58,8 @@ class PromoterVisitPresentationTest extends TestCase
         $this->assertSame(2, $x->query('//form[@id="promoter-record-form"]//input[@type="radio"]')->length);
         $this->assertSame(1, $x->query('//form[@id="promoter-record-form"]//textarea[@id="visit-notes"]')->length);
         $this->assertSame(0, $x->query('//aside//input')->length);
-        $this->assertSame(1, $x->query('//aside//button[@type="button"]')->length);
+        $this->assertSame(3, $x->query('//aside//button[@type="button"]')->length);
+        $this->assertSame(0, $x->query('//aside//button[@type="submit"]')->length);
         $this->assertSame($before, $this->pharmacy->fresh()->getAttributes());
         $this->assertSame(0, Visit::count());
     }

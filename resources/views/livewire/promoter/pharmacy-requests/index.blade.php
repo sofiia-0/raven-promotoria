@@ -47,7 +47,8 @@
                         <x-promoter.field model="altaEmail" label="Correo electrónico" :value="$altaEmail" type="email" max="255" />
                     </div>
                 </fieldset>
-                <x-promoter.field model="altaReason" label="Motivo de la solicitud" :value="$altaReason" type="textarea" required max="1500" help="Utilice al menos 10 caracteres." />
+                @if($altaReasonOptions->isNotEmpty())<x-promoter.reason-select model="altaReasonCategoryId" label="Categoría del motivo de alta" required :value="$altaReasonCategoryId" :options="$altaReasonOptions" />@endif
+                <x-promoter.field model="altaReason" label="Observaciones o explicación" :value="$altaReason" type="textarea" :required="$altaReasonOptions->isEmpty() || ($altaReasonOptions->firstWhere('id',(int)$altaReasonCategoryId)?->is_other ?? false)" max="1500" :help="$altaReasonOptions->isNotEmpty() ? 'Opcionales. Si selecciona Otro, explique el motivo con al menos 10 caracteres.' : 'Utilice al menos 10 caracteres.'" />
                 <div class="raven-form-actions"><button type="submit" class="raven-button raven-button-primary" wire:loading.attr="disabled" wire:target="submitAlta"><span wire:loading.remove wire:target="submitAlta">Enviar solicitud de alta</span><span wire:loading wire:target="submitAlta">Enviando…</span></button></div>
             </form>
         </section>
@@ -79,7 +80,8 @@
                 @if($selectedPharmacy)
                     <div class="promoter-selected-record"><p class="raven-field-help">Establecimiento seleccionado</p><h3>{{ $selectedPharmacy->display_name }}</h3><x-promoter.location :city="$selectedPharmacy->city" :department="$selectedPharmacy->department" :neighborhood="$selectedPharmacy->neighborhood" :address="$selectedPharmacy->address" /></div>
                 @endif
-                <div class="promoter-reason-field"><x-promoter.field model="bajaReason" label="Motivo de la baja" :value="$bajaReason" type="textarea" required max="1500" help="Utilice al menos 10 caracteres." /></div>
+                <div class="promoter-reason-field">@if($bajaReasonOptions->isNotEmpty())<x-promoter.reason-select model="bajaReasonCategoryId" label="Categoría del motivo de baja" required :value="$bajaReasonCategoryId" :options="$bajaReasonOptions" />@endif
+                <x-promoter.field model="bajaReason" label="Observaciones o explicación" :value="$bajaReason" type="textarea" :required="$bajaReasonOptions->isEmpty() || ($bajaReasonOptions->firstWhere('id',(int)$bajaReasonCategoryId)?->is_other ?? false)" max="1500" :help="$bajaReasonOptions->isNotEmpty() ? 'Opcionales. Si selecciona Otro, explique el motivo con al menos 10 caracteres.' : 'Utilice al menos 10 caracteres.'" /></div>
                 <div class="raven-form-actions"><button type="submit" class="raven-button raven-button-primary" wire:loading.attr="disabled" wire:target="submitBaja" @disabled(!$hasAssignedPharmacies)><span wire:loading.remove wire:target="submitBaja">Enviar solicitud de baja</span><span wire:loading wire:target="submitBaja">Enviando…</span></button></div>
             </form>
         </section>
@@ -103,7 +105,7 @@
                                 @if(isset($item->data['catalog_proposals'][$field]))<p class="raven-card-description"><strong>{{ $label }}:</strong> {{ $item->data['catalog_proposals'][$field] }}</p>@endif
                             @endforeach
                         @endif
-                        <details class="promoter-request-details"><summary>Ver motivo{{ $item->review_note ? ' y revisión' : '' }}</summary><p>{{ $item->reason }}</p>@if($item->review_note)<p><strong>Nota de revisión:</strong> {{ $item->review_note }}</p>@endif</details>
+                        <details class="promoter-request-details"><summary>Ver motivo{{ $item->review_note ? ' y revisión' : '' }}</summary>@if(isset($item->data['reason_category']))<p><strong>Categoría del motivo:</strong> {{ $item->data['reason_category']['label'] }}@if($item->data['reason_category']['is_provisional'] ?? false) · Provisional @endif</p>@endif@if(!isset($item->data['reason_category']) || $item->reason !== $item->data['reason_category']['label'])<p>{{ $item->reason }}</p>@endif@if($item->review_note)<p><strong>Nota de revisión:</strong> {{ $item->review_note }}</p>@endif</details>
                     </div>
                     <span class="raven-badge promoter-request-status {{ $item->status === 'pending' ? 'raven-badge-info' : ($item->status === 'approved' ? 'raven-badge-success' : 'raven-badge-danger') }}"><x-promoter.icon :name="$item->status === 'pending' ? 'clock' : ($item->status === 'approved' ? 'check' : 'remove')" />{{ $item->status === 'pending' ? 'Pendiente' : ($item->status === 'approved' ? 'Aprobada' : 'Rechazada') }}</span>
                 </article>

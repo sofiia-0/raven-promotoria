@@ -47,6 +47,9 @@
                     @endif
                 </dd>
             </div>
+            @if($objective)
+                <div><dt>Objetivo general</dt><dd>{{ $objective->category_label }}@if($objective->is_provisional)<span class="raven-field-help"> · Provisional</span>@endif @if($objective->explanation)<p>{{ $objective->explanation }}</p>@endif</dd></div>
+            @endif
             @if($visit->notes)
                 <div>
                     <dt>Observaciones</dt>
@@ -56,7 +59,7 @@
         </dl>
     </section>
 
-    @if($mapUrl)<x-promoter.visit-map :visit="$visit" :url="$mapUrl" />@endif
+    @if($mapUrl)<x-promoter.visit-map :visit="$visit" :url="$mapUrl" :authorized="$mapAuthorized" />@endif
     @if($evidenceAvailable)
         <section class="raven-card promoter-visit-evidences" aria-labelledby="visit-evidences-title"><div class="promoter-evidence-heading"><h2 id="visit-evidences-title" class="raven-section-title">Evidencias de la visita</h2><span class="raven-badge raven-badge-info">{{ $evidences->count() }}</span></div>
             @if($evidences->isEmpty())<p class="raven-card-description">No hay evidencias adjuntas.</p>@else<ul class="promoter-saved-evidences">
@@ -69,13 +72,13 @@
         <section class="raven-card" aria-labelledby="checklist-title">
             <h2 id="checklist-title" class="raven-section-title">Checklist</h2>
             <p class="raven-section-description">
-                {{ $visit->checklist->where('checked', true)->count() }} de {{ $visit->checklist->count() }} puntos cumplidos.
+                {{ $visit->checklist->where('checked', true)->count() }} de {{ $visit->checklist->count() }} actividades registradas.
             </p>
             <ul class="promoter-planning-list">
                 @foreach($visit->checklist as $entry)
                     <li class="promoter-dashboard-activity">
                         <span>{{ $entry->item?->name }}</span>
-                        <span class="raven-badge {{ $entry->checked ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $entry->checked ? 'Cumplido' : 'No cumplido' }}</span>
+                        <span class="raven-badge {{ $entry->checked ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $entry->checked ? 'Realizada' : 'Sin marcar' }}</span>
                     </li>
                 @endforeach
             </ul>
