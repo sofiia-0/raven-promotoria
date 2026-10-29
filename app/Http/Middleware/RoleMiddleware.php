@@ -21,7 +21,7 @@ class RoleMiddleware
         }
 
         if (! in_array($user->role->value, $roles, true)) {
-            abort(403, 'No tienes permisos para acceder a esta sección.');
+            abort(403, 'No tiene permisos para acceder a esta sección.');
         }
 
         return $next($request);

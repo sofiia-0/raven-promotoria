@@ -21,7 +21,7 @@ Los nombres originales saneados se usan como metadatos, nunca como rutas. Las re
 
 ## Mapa con consentimiento
 
-El detalle usa únicamente coordenadas ya guardadas y válidas; no captura ubicación ni hace seguimiento. La precisión se muestra cuando existe. Antes de pulsar «Mostrar mapa de OpenStreetMap» no se crea el iframe ni se realizan solicitudes al proveedor. El aviso informa que se compartirán coordenadas e IP. Ocultar el mapa retira el iframe. No hay claves, nueva dependencia, pago ni bloqueo del registro si se deniega geolocalización.
+Registro muestra un mapa compacto cuando hay coordenadas válidas; Detalle usa solo las ya guardadas y nunca captura ubicación ni inicia seguimiento. La precisión se muestra cuando existe. Antes de autorizar OpenStreetMap no se crea el iframe ni se contacta con el proveedor. El aviso informa sobre coordenadas e IP. La autorización se conserva durante la sesión de la persona autenticada, se comparte entre Registro y Detalle y puede retirarse. Al retirarla se elimina el iframe; no se solicita otra geolocalización. El registro sigue funcionando si se deniega ubicación o no se autoriza el mapa.
 
 OpenStreetMap ofrece la [incrustación mediante iframe](https://wiki.openstreetmap.org/wiki/Export). Se conserva atribución visible y referente limitado al origen, de acuerdo con la [política de teselas](https://operations.osmfoundation.org/policies/tiles/) y las [indicaciones de atribución](https://osmfoundation.org/wiki/Attribution_Guidelines). No existe garantía de disponibilidad del proveedor; el detalle y las evidencias funcionan sin él.
 

@@ -171,4 +171,16 @@ class PromoterUxTest extends TestCase
             ->assertSeeHtml('aria-invalid="true"')
             ->assertSeeHtml('aria-describedby="feedback-altaName"');
     }
+
+    public function test_denied_promoter_access_uses_formal_language_without_changing_permissions(): void
+    {
+        foreach ([UserRole::ADMIN, UserRole::COORDINATOR] as $role) {
+            $this->actingAs(User::factory()->create(['role' => $role, 'is_active' => true]))
+                ->getJson('/promoter')->assertForbidden()
+                ->assertJsonPath('message', 'No tiene permisos para acceder a esta sección.');
+        }
+        $this->actingAs(User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => false]))
+            ->getJson('/promoter')->assertForbidden()
+            ->assertJsonPath('message', 'Esta cuenta se encuentra desactivada.');
+    }
 }
