@@ -9,8 +9,8 @@ use App\Models\PlannedActivity;
 use App\Models\User;
 use App\Models\VisitReason;
 use App\Services\VisitRecorder;
+use App\Support\PharmacyAutocomplete;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -123,37 +123,13 @@ class Register extends Component
             ? PlannedActivity::query()->with(['pharmacy', 'reschedules'])->find($this->activityId)
             : null;
 
-        $pharmacyOptions = collect();
-        if (! $activity) {
-            $query = $promoter->assignedPharmacies()
-                ->where('pharmacies.is_active', true)
-                ->select('pharmacies.id', 'pharmacies.name', 'pharmacies.city', 'pharmacies.department');
-
-            if (trim($this->pharmacySearch) !== '') {
-                $term = '%'.trim($this->pharmacySearch).'%';
-                $query->where(function (Builder $q) use ($term): void {
-                    $q->where('pharmacies.name', 'like', $term)
-                        ->orWhere('pharmacies.city', 'like', $term)
-                        ->orWhere('pharmacies.neighborhood', 'like', $term);
-                });
-            }
-
-            $pharmacyOptions = $query->orderBy('pharmacies.name')->limit(50)->get();
-
-            if ($this->pharmacyId !== '' && ! $pharmacyOptions->contains('id', (int) $this->pharmacyId)) {
-                $selected = $promoter->assignedPharmacies()
-                    ->where('pharmacies.id', (int) $this->pharmacyId)
-                    ->select('pharmacies.id', 'pharmacies.name', 'pharmacies.city', 'pharmacies.department')
-                    ->first();
-                if ($selected) {
-                    $pharmacyOptions->prepend($selected);
-                }
-            }
-        }
+        $picker = (! $activity && $this->blockedMessage === null)
+            ? PharmacyAutocomplete::options($promoter, $this->pharmacySearch, $this->pharmacyId)
+            : ['pharmacyOptions' => collect(), 'selectedPharmacy' => null, 'hasMorePharmacies' => false];
 
         return view('livewire.promoter.visits.register', [
             'activity' => $activity,
-            'pharmacyOptions' => $pharmacyOptions,
+            ...$picker,
             'checklistItems' => ChecklistItem::query()->active()->get(),
             'reasons' => VisitReason::query()->active()->get(['id', 'name']),
         ]);

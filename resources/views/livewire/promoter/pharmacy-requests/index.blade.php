@@ -64,10 +64,11 @@
                 <fieldset class="promoter-fieldset promoter-baja-picker" aria-describedby="baja-pharmacy-error">
                     <legend><x-promoter.icon name="search" />Seleccione un establecimiento</legend>
                     <div class="promoter-baja-results">
+                        @php $selectionIdentifiers = \App\Support\EstablishmentPresentation::selectionIdentifiers($pharmacies); @endphp
                         @forelse($pharmacies as $pharmacy)
                             <label class="promoter-baja-option" wire:key="baja-option-{{ $pharmacy->id }}">
                                 <input type="radio" name="baja-pharmacy" value="{{ $pharmacy->id }}" wire:model.live="pharmacyId" @checked((string) $pharmacyId === (string) $pharmacy->id)>
-                                <span class="promoter-baja-option-copy"><span class="promoter-baja-option-title">{{ $pharmacy->display_name }}</span><x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" /></span>
+                                <span class="promoter-baja-option-copy"><span class="promoter-baja-option-title">{{ $pharmacy->display_name }}@if(isset($selectionIdentifiers[$pharmacy->id])) <span class="promoter-picker-identifier">— {{ $selectionIdentifiers[$pharmacy->id] }}</span>@endif</span><x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" /></span>
                             </label>
                         @empty
                             <div class="promoter-inline-empty"><x-promoter.graphic /><p class="raven-card-description">{{ $hasAssignedPharmacies ? 'No se encontraron coincidencias. Revise los términos de búsqueda.' : 'No tiene establecimientos activos asignados.' }}</p></div>
@@ -76,7 +77,7 @@
                     <div id="baja-pharmacy-error">@error('pharmacyId')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror</div>
                 </fieldset>
                 @if($selectedPharmacy)
-                    <div class="promoter-selected-record"><p class="raven-field-help">Establecimiento seleccionado</p><h3>{{ $selectedPharmacy->display_name }}</h3><x-promoter.location :city="$selectedPharmacy->city" :department="$selectedPharmacy->department" :neighborhood="$selectedPharmacy->neighborhood" :address="$selectedPharmacy->address" :reference="$selectedPharmacy->branch_summary" /></div>
+                    <div class="promoter-selected-record"><p class="raven-field-help">Establecimiento seleccionado</p><h3>{{ $selectedPharmacy->display_name }}</h3><x-promoter.location :city="$selectedPharmacy->city" :department="$selectedPharmacy->department" :neighborhood="$selectedPharmacy->neighborhood" :address="$selectedPharmacy->address" /></div>
                 @endif
                 <div class="promoter-reason-field"><x-promoter.field model="bajaReason" label="Motivo de la baja" :value="$bajaReason" type="textarea" required max="1500" help="Utilice al menos 10 caracteres." /></div>
                 <div class="raven-form-actions"><button type="submit" class="raven-button raven-button-primary" wire:loading.attr="disabled" wire:target="submitBaja" @disabled(!$hasAssignedPharmacies)><span wire:loading.remove wire:target="submitBaja">Enviar solicitud de baja</span><span wire:loading wire:target="submitBaja">Enviando…</span></button></div>
@@ -93,9 +94,9 @@
                     <div class="promoter-request-record">
                         <h3>{{ $item->type === 'alta' ? \App\Support\EstablishmentPresentation::title($item->data['name'] ?? 'Nuevo establecimiento', $item->data['department'] ?? null) : ($item->pharmacy?->display_name ?? 'Establecimiento sin asignación vigente') }}</h3>
                         @if($item->type === 'alta')
-                            <x-promoter.location :city="$item->data['city'] ?? null" :department="$item->data['department'] ?? null" :address="$item->data['address'] ?? null" :neighborhood="$item->data['neighborhood'] ?? null" :reference="\App\Support\EstablishmentPresentation::reference($item->data['name'] ?? null, $item->data['department'] ?? null, $item->data['city'] ?? null)" />
+                            <x-promoter.location :city="$item->data['city'] ?? null" :department="$item->data['department'] ?? null" :address="$item->data['address'] ?? null" :neighborhood="$item->data['neighborhood'] ?? null" />
                         @elseif($item->pharmacy)
-                            <x-promoter.location :city="$item->pharmacy->city" :department="$item->pharmacy->department" :address="$item->pharmacy->address" :neighborhood="$item->pharmacy->neighborhood" :reference="$item->pharmacy->branch_summary" />
+                            <x-promoter.location :city="$item->pharmacy->city" :department="$item->pharmacy->department" :address="$item->pharmacy->address" :neighborhood="$item->pharmacy->neighborhood" />
                         @endif
                         @if($item->type === 'alta')
                             @foreach(['client_type' => 'Tipo propuesto', 'category' => 'Categoría propuesta'] as $field => $label)

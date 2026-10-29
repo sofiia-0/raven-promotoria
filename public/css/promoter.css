@@ -564,8 +564,6 @@
 .promoter-editor .raven-textarea::placeholder,
 .promoter-requests .raven-input::placeholder,
 .promoter-requests .raven-textarea::placeholder {color: #68768a; opacity: 1;}
-.promoter-pharmacy-module .promoter-card-location {padding-left: 13px; border-left: 2px solid #bdd5d8;}
-.promoter-pharmacy-module .promoter-pharmacy-card-head {padding-bottom: 14px; border-bottom: 1px solid #e9edf3;}
 .promoter-pharmacy-module .promoter-card-actions {padding-top: 16px; border-top: 1px solid #e9edf3;}
 .promoter-pharmacy-module .promoter-card-meta {margin-top: 2px;}
 .promoter-illustrated-empty {display: flex; flex-direction: column; align-items: center; gap: 10px; padding-block: 32px !important; text-align: center;}
@@ -786,3 +784,340 @@
 .promoter-workflow .raven-table-shell {position: relative;}
 .promoter-shell .promoter-workflow-header {flex-wrap: nowrap; flex-direction: row;}
 .promoter-workflow-header > div {flex: 1;}
+/* Ronda 1: selección de establecimientos y agenda de trabajo de Promotora. */
+.promoter-pharmacy-picker {position: relative; grid-column: span 1;}
+.promoter-picker-control {position: relative;}
+.promoter-picker-control > .promoter-ui-icon {position: absolute; left: 14px; top: 14px; width: 18px; height: 18px; color: #657080; pointer-events: none;}
+.promoter-shell .promoter-picker-control .raven-input {padding-left: 42px; padding-right: 40px;}
+.promoter-picker-clear {position: absolute; right: 2px; top: 2px; width: 42px; height: 42px; border: 0; background: transparent; color: #586373; font-size: 22px; cursor: pointer; border-radius: 10px;}
+.promoter-picker-results {background: #fff; border: 1px solid #ccd7e7; border-radius: 15px; box-shadow: 0 12px 28px #25324716; overflow: hidden;}
+.promoter-picker-results ul {list-style: none; padding: 4px; margin: 0; max-height: 330px; overflow-y: auto; overscroll-behavior: contain;}
+.promoter-picker-results [role=option] {width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 13px; border: 1px solid transparent; border-radius: 11px; background: #fff; text-align: left; cursor: pointer; line-height: 1.5; color: #253044; overflow-wrap: anywhere;}
+.promoter-picker-results [role=option] strong {font-size: 12px; font-weight: 750;}
+.promoter-picker-results [role=option] span {font-size: 11px; color: #586373;}
+.promoter-picker-results [role=option] small {font-size: 11px; color: #657080;}
+.promoter-picker-results [role=option]:hover, .promoter-picker-results [role=option].is-highlighted {background: #eef4fc; border-color: #bbcee9;}
+.promoter-picker-results [role=option][aria-selected=true] {background: #f1f6fa;}
+.promoter-picker-results [role=option]:disabled {cursor: progress;}
+.promoter-picker-status {margin: 0; padding: 12px 14px; font-size: 12px; color: #586373;}
+.promoter-picker-selected {display: flex; gap: 10px; align-items: flex-start; padding: 12px; border: 1px solid #dce8e6; border-radius: 12px; background: #f4f9f8;}
+.promoter-picker-selected > .promoter-ui-icon {color: #477875; width: 17px; height: 17px; flex-shrink: 0; margin-top: 2px;}
+.promoter-picker-selected strong, .promoter-picker-selected span {display: block; font-size: 11px; color: #253044; line-height: 1.6; overflow-wrap: anywhere;}
+.promoter-picker-selected span {color: #586373; margin-top: 3px;}
+.promoter-plan-overview {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0 8px;}
+.promoter-plan-overview > div {display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid #dce2eb; padding: 4px 12px 16px;}
+.promoter-plan-overview dt {font-size: 12px; color: #586373;}
+.promoter-plan-overview dd {margin: 0; color: #253044; font-size: 24px; line-height: 1.2; font-weight: 700; font-variant-numeric: tabular-nums;}
+.promoter-agenda-tools {display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; padding: 4px 0 12px;}
+.promoter-agenda-tools .raven-section-description {margin: 5px 0 0;}
+.promoter-agenda-shortcuts {display: flex; gap: 9px; flex-wrap: wrap; width: 100%;}
+.promoter-agenda-shortcuts a {display: inline-flex; align-items: center; gap: 14px; padding: 10px 13px; color: #3b5374; background: #f9fafc; border: 1px solid #dce3ed; border-radius: 12px; min-height: 44px; font-size: 12px;}
+.promoter-agenda-shortcuts a strong {display: inline-flex; min-width: 22px; justify-content: center; color: #253044; font-variant-numeric: tabular-nums;}
+.promoter-agenda-shortcuts a:first-child {color: #2b5896; background: #edf3fc; border-color: #d0def1;}
+.promoter-agenda-shortcuts a:hover {border-color: #9eb4d2;}
+.promoter-agenda-heading {display: flex; align-items: center; gap: 10px; scroll-margin-top: 24px;}
+.promoter-agenda-heading .promoter-ui-icon {width: 18px; height: 18px; color: #65799a;}
+.promoter-shell .promoter-agenda-today {border-color: #cad9ed;}
+.promoter-shell .promoter-agenda-overdue {border-color: #dfd8e9;}
+.promoter-agenda-month-note {margin: 0; color: #657080; font-size: 12px; line-height: 1.7;}
+.promoter-agenda-month-note a {color: #2b5896; text-decoration: underline; text-underline-offset: 3px; margin-left: 6px;}
+.promoter-checklist-intro {display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 14px;}
+.promoter-checklist-intro p {margin: 0;}
+.promoter-checklist-intro .raven-badge {flex-shrink: 0;}
+.promoter-official-checklist .promoter-checklist-item {min-height: 78px; align-items: center; padding: 15px; position: relative; gap: 12px;}
+.promoter-official-checklist .promoter-checklist-item > span:not(.promoter-checklist-state) {flex: 1; min-width: 0;}
+.promoter-official-checklist .promoter-checklist-item input {width: 22px; height: 22px; margin: 0;}
+.promoter-checklist-state {flex-shrink: 0; font-size: 10px; color: #657080;}
+.promoter-checklist-yes {display: none; color: #3d6b62; font-weight: 750; align-items: center; gap: 4px;}
+.promoter-checklist-yes .promoter-ui-icon {width: 14px; height: 14px;}
+.promoter-checklist-item:has(input:checked) .promoter-checklist-yes {display: inline-flex;}
+.promoter-checklist-item:has(input:checked) .promoter-checklist-no {display: none;}
+.promoter-history-search-heading {display: flex; gap: 12px; align-items: flex-start; margin-bottom: 20px;}
+.promoter-history-search-heading > .promoter-ui-icon {color: #65799a; width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0;}
+.promoter-history-search-heading h2, .promoter-history-search-heading p {margin: 0;}
+.promoter-history-search-heading p {margin-top: 5px;}
+.promoter-history-filter-panel {margin: 16px 0 12px; border-top: 1px solid #e5e8ee;}
+.promoter-history-filter-panel > summary {display: flex; justify-content: space-between; align-items: center; padding: 14px 0; cursor: pointer; font-size: 12px; font-weight: 700; color: #3b5374; list-style: none; min-height: 44px;}
+.promoter-history-filter-panel > summary::-webkit-details-marker {display: none;}
+.promoter-history-filter-panel > summary > span {display: inline-flex; gap: 10px; align-items: center;}
+.promoter-history .promoter-history-filters {grid-template-columns: repeat(4, minmax(0, 1fr));}
+.promoter-history .promoter-subtle-link {min-height: 36px;}
+@media (max-width: 1100px) and (min-width: 751px) {
+    .promoter-planning-form .promoter-pharmacy-picker {grid-column: 1 / -1;}
+    .promoter-official-checklist .promoter-checklist-item {flex-wrap: wrap;}
+}
+@media (max-width: 750px) {
+    .promoter-plan-overview {gap: 0; padding: 0;}
+    .promoter-plan-overview > div {flex-direction: column-reverse; align-items: flex-start; justify-content: flex-end; gap: 7px; padding: 0 9px 12px;}
+    .promoter-plan-overview > div + div {border-left: 1px solid #dce2eb;}
+    .promoter-plan-overview dt {font-size: 11px; line-height: 1.6;}
+    .promoter-history .promoter-history-filters {grid-template-columns: repeat(2, minmax(0, 1fr));}
+    .promoter-workflow .promoter-history-table {display: block; min-width: 0; width: 100%;}
+    .promoter-history-table thead {position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;}
+    .promoter-history-table tbody {display: block;}
+    .promoter-history-table tbody tr {display: grid; grid-template-columns: 1fr 1fr; padding: 18px; gap: 12px; border-bottom: 1px solid #e3e7ee;}
+    .promoter-history-table tbody tr:last-child {border-bottom: 0;}
+    .promoter-workflow .promoter-history-table td {display: flex; flex-direction: column; gap: 5px; padding: 0; border: 0; min-width: 0; font-size: 12px;}
+    .promoter-history-table td[data-label=Fecha], .promoter-history-table .promoter-history-pharmacy, .promoter-history-table td[data-label=Acciones] {grid-column: 1 / -1;}
+    .promoter-history-table td[data-label=Resultado]::before, .promoter-history-table td[data-label=Origen]::before {content: attr(data-label); font-size: 10px; color: #657080; font-weight: 700;}
+    .promoter-history-table td[data-label=Fecha] {font-size: 11px; color: #657080;}
+    .promoter-history-table .raven-table-name {font-size: 14px;}
+    .promoter-workflow .promoter-history-table .promoter-location {max-width: none;}
+    .promoter-history-table .raven-table-actions .raven-button {align-self: flex-start; margin-top: 4px;}
+    .promoter-agenda-tools {gap: 16px;}
+    .promoter-agenda-shortcuts {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));}
+    .promoter-agenda-shortcuts a {justify-content: space-between; gap: 5px;}
+    .promoter-agenda-tools > .raven-button {width: 100%; justify-content: center;}
+    .promoter-checklist-intro {align-items: flex-start; flex-direction: column; gap: 10px;}
+    .promoter-official-checklist .promoter-checklist-item {font-size: 12px; min-height: 74px;}
+    .promoter-checklist-state {font-size: 9px;}
+}
+@media (max-width: 359px) {
+    .promoter-history .promoter-history-filters {grid-template-columns: 1fr;}
+    .promoter-official-checklist .promoter-checklist-item {flex-wrap: wrap;}
+}
+
+.promoter-picker-results {position: absolute; top: 76px; left: 0; right: 0; z-index: 30;}
+.promoter-picker-results ul {max-height: min(330px, 45vh);}
+.promoter-shell .promoter-picker-control .raven-input::placeholder, .promoter-history #history-search::placeholder {color: #657080; opacity: 1;}
+.promoter-history .promoter-subtle-link {border: 0; padding: 0; background: transparent; cursor: pointer; font-family: inherit; text-align: left;}
+/* Revisión final Ronda 1: composición editorial y gráficos propios de Raven. */
+.promoter-month-header {display: grid; grid-template-columns: minmax(0, 1fr) 184px; gap: 14px 24px; align-items: center; border: 1px solid #dbe3ef; border-radius: 24px; background: #eef3fa; padding: 24px 28px; box-shadow: inset 0 1px 0 #fff;}
+.promoter-month-title {display: flex; align-items: center; flex-wrap: wrap; gap: 12px;}
+.promoter-month-title h2 {margin: 0; font-size: 27px; font-weight: 700; letter-spacing: -.035em; line-height: 1.25; color: #253044;}
+.promoter-month-copy > p:last-child {margin: 9px 0 0; font-size: 12px; line-height: 1.6; color: #586b83;}
+.promoter-shell .promoter-month-art {width: 172px; height: 129px; justify-self: end;}
+.promoter-month-navigation {grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid #dce4ef; padding-top: 17px;}
+.promoter-month-navigation .raven-button {background: #fff;}
+.promoter-plan-entry-heading {align-items: flex-start; gap: 13px;}
+.promoter-plan-entry-symbol {display: grid; place-items: center; flex-shrink: 0; width: 38px; height: 38px; border-radius: 13px; background: #edf4f3; color: #557f7b; border: 1px solid #dce8e6;}
+.promoter-plan-entry-symbol .promoter-ui-icon {width: 18px; height: 18px;}
+.promoter-month-weeks {border: 1px solid #dce3ee; background: #edf1f7; border-radius: 24px; padding: 22px;}
+.promoter-month-weeks-heading {display: flex; justify-content: space-between; align-items: center; gap: 15px; margin: 0 0 20px;}
+.promoter-month-weeks-heading h2 {margin: 0;}
+.promoter-month-weeks-heading > .promoter-ui-icon {color: #8395b2; width: 26px; height: 26px;}
+.promoter-shell .promoter-month-weeks .promoter-planning-week {box-shadow: none; border-color: #e0e6ef; padding: 20px;}
+.promoter-week-heading {align-items: center; gap: 12px; border-bottom: 1px solid #e9edf4; padding-bottom: 15px;}
+.promoter-week-heading > div {flex: 1; min-width: 0;}
+.promoter-week-heading h3 {margin: 0;}
+.promoter-week-number {display: grid; place-items: center; width: 36px; height: 42px; flex-shrink: 0; font-size: 18px; font-weight: 700; color: #687f9e; background: #f1f5fa; border-radius: 10px; border: 1px solid #e0e8f3; font-variant-numeric: tabular-nums;}
+.promoter-week-heading .raven-badge {font-size: 10px;}
+.promoter-agenda-composition {display: grid; grid-template-columns: minmax(0, 1fr) auto 170px; gap: 18px 24px; align-items: center; padding: 22px 26px; border: 1px solid #dce4ee; background: #f1f5f9; border-radius: 24px;}
+.promoter-agenda-copy {grid-column: 1; grid-row: 1;}
+.promoter-agenda-copy h2 {margin: 0;}
+.promoter-agenda-copy .raven-section-description {max-width: 350px;}
+.promoter-shell .promoter-agenda-art {grid-column: 3; grid-row: 1 / 3; width: 160px; height: 120px; justify-self: end;}
+.promoter-agenda-new-visit {grid-column: 2; grid-row: 1;}
+.promoter-agenda-composition .promoter-agenda-shortcuts {grid-column: 1 / 3; grid-row: 2; gap: 8px;}
+.promoter-agenda-composition .promoter-agenda-shortcuts a {background: #fff;}
+.promoter-agenda-composition .promoter-agenda-shortcuts a:first-child {background: #e9f0fb;}
+.promoter-agenda-section .promoter-dashboard-section-head {padding-bottom: 16px; border-bottom: 1px solid #e8edf4;}
+.promoter-shell .promoter-agenda-today {border-left: 3px solid #9cb7da;}
+.promoter-shell .promoter-agenda-overdue {border-left: 3px solid #bbadd0;}
+.promoter-visit-register-grid {display: grid; grid-template-columns: minmax(0, 1fr) minmax(268px, .48fr); gap: 22px; align-items: start;}
+.promoter-visit-register-grid > * {min-width: 0;}
+.promoter-shell .promoter-record-main {padding: 26px; border-color: #dce3ee;}
+.promoter-record-form-heading {padding: 0 0 20px; margin: 0 0 22px; border-bottom: 1px solid #e5eaf2;}
+.promoter-record-form-heading h2 {margin: 0; font-size: 20px;}
+.promoter-record-form-heading .raven-section-description {margin-bottom: 0;}
+.promoter-record-mobile-target {display: none;}
+.promoter-record-main .promoter-pharmacy-picker {grid-column: 1 / -1;}
+.promoter-record-main .promoter-visit-status {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;}
+.promoter-record-main .promoter-choice {padding: 12px 14px; min-height: 54px; border-radius: 13px; border: 1px solid #dfe5ee; background: #fafbfd; font-size: 13px;}
+.promoter-record-main .promoter-choice:has(input:checked) {border-color: #a8bedb; background: #edf3fb; color: #2c568f;}
+.promoter-record-main .promoter-official-checklist {padding-top: 10px;}
+.promoter-record-main .promoter-checklist-intro {flex-direction: column; align-items: flex-start; gap: 10px;}
+.promoter-record-main .promoter-official-checklist .promoter-checklist-item {font-size: 12px; min-height: 84px; padding: 13px; gap: 10px;}
+.promoter-record-main .promoter-checklist-state {font-size: 9px;}
+.promoter-record-submit {padding-top: 20px; margin-top: 24px; border-top: 1px solid #e5eaf2;}
+.promoter-record-side {display: flex; flex-direction: column; gap: 16px;}
+.promoter-record-context {padding: 22px; border: 1px solid #d9e2ed; border-radius: 24px; background: #eff3f8; box-shadow: inset 0 1px 0 #fff;}
+.promoter-record-illustration {padding: 0 0 14px; margin-bottom: 14px; border-bottom: 1px solid #dce4ef;}
+.promoter-record-illustration .promoter-ui-graphic {display: block; width: 220px; max-width: 100%; height: auto; margin: auto;}
+.promoter-context-title {margin: 0 0 18px; font-size: 18px; line-height: 1.45; letter-spacing: -.025em; color: #253044; overflow-wrap: anywhere;}
+.promoter-context-mobile-label {display: none;}
+.promoter-context-location {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0;}
+.promoter-context-location > div {min-width: 0;}
+.promoter-context-location dt {color: #657080; font-size: 10px; line-height: 1.5; font-weight: 700; margin-bottom: 4px;}
+.promoter-context-location dd {color: #3a485c; margin: 0; font-size: 12px; line-height: 1.65; overflow-wrap: anywhere;}
+.promoter-context-location dd span {display: block;}
+.promoter-context-address {grid-column: 1 / -1;}
+.promoter-context-reference {margin: 14px 0 0; font-size: 11px; color: #65547e; line-height: 1.65; overflow-wrap: anywhere;}
+.promoter-context-plan {display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid #dce4ef; margin-top: 20px; padding-top: 18px;}
+.promoter-context-symbol {display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid #dbe3ef; background: #f8fafc; color: #7387a3; border-radius: 9px; flex-shrink: 0;}
+.promoter-context-symbol .promoter-ui-icon {width: 16px; height: 16px;}
+.promoter-context-plan p {margin: 6px 0 0; color: #58667b; font-size: 12px; line-height: 1.65;}
+.promoter-shell .promoter-record-geo {padding: 20px 22px; background: #f8fafb;}
+.promoter-record-geo .raven-field-help {margin: 0;}
+.promoter-record-geo .raven-button {padding-left: 0;}
+.promoter-history .promoter-history-search-panel {background: #f7f9fc; border-color: #dce4ef;}
+.promoter-history-intro {display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-bottom: 18px; border-bottom: 1px solid #e0e7f1; margin-bottom: 20px;}
+.promoter-history-intro > div {min-width: 0;}
+.promoter-history-intro .promoter-eyebrow {margin-bottom: 7px;}
+.promoter-history-intro .raven-section-title {font-size: 20px;}
+.promoter-shell .promoter-history-art {width: 142px; height: 106px; flex-shrink: 0;}
+.promoter-history .promoter-history-search-panel #history-search {background: #fff;}
+.promoter-history .raven-table-name {font-size: 13px;}
+.promoter-history .raven-table-actions .raven-button {gap: 6px;}
+.promoter-history .raven-table-actions .promoter-ui-icon {width: 14px; height: 14px;}
+.promoter-history-empty {padding-top: 32px; padding-bottom: 32px;}
+.promoter-history-empty > .promoter-ui-graphic {width: 172px; height: 129px; margin: 0 auto 15px; display: block;}
+@media (max-width: 1350px) and (min-width: 1001px) {
+    .promoter-record-main .promoter-checklist {grid-template-columns: 1fr;}
+    .promoter-agenda-composition {grid-template-columns: minmax(0, 1fr) 140px; gap: 14px 20px;}
+    .promoter-shell .promoter-agenda-art {grid-column: 2; grid-row: 1 / 3; width: 132px; height: 99px;}
+    .promoter-agenda-new-visit {grid-column: 1; grid-row: 2; justify-self: start;}
+    .promoter-agenda-composition .promoter-agenda-shortcuts {grid-row: 3; grid-column: 1 / -1;}
+}
+@media (max-width: 1000px) {
+    .promoter-visit-register-grid {grid-template-columns: 1fr;}
+    .promoter-record-mobile-target {display: flex; flex-direction: column; gap: 5px; margin-top: 16px; padding: 12px 14px; border-radius: 12px; border: 1px solid #dce7e6; background: #f4f9f8;}
+    .promoter-record-mobile-target strong {font-size: 12px; color: #344960; line-height: 1.6;}
+    .promoter-record-mobile-target span {font-size: 11px; color: #65547e;}
+    .promoter-record-context.has-pharmacy .promoter-context-title {display: none;}
+    .promoter-context-mobile-label {display: block; font-size: 15px; font-weight: 750; color: #253044; margin-bottom: 16px;}
+    .promoter-record-side {display: grid; grid-template-columns: 1fr 1fr; gap: 18px;}
+    .promoter-record-illustration .promoter-ui-graphic {width: 156px;}
+    .promoter-agenda-composition {grid-template-columns: minmax(0, 1fr) 132px; gap: 16px;}
+    .promoter-shell .promoter-agenda-art {grid-column: 2; grid-row: 1 / 3; width: 132px; height: 99px;}
+    .promoter-agenda-new-visit {grid-column: 1; grid-row: 2; justify-self: start;}
+    .promoter-agenda-composition .promoter-agenda-shortcuts {grid-column: 1 / -1; grid-row: 3;}
+}
+@media (max-width: 650px) {
+    .promoter-month-header {grid-template-columns: minmax(0, 1fr) 94px; gap: 14px 10px; padding: 20px; border-radius: 22px;}
+    .promoter-month-title {gap: 8px;}
+    .promoter-month-title h2 {font-size: 22px;}
+    .promoter-shell .promoter-month-art {width: 94px; height: 71px;}
+    .promoter-month-navigation .raven-button {padding: 9px 11px; font-size: 11px;}
+    .promoter-month-weeks {padding: 16px 12px; border-radius: 22px;}
+    .promoter-month-weeks-heading {margin: 0 5px 16px;}
+    .promoter-shell .promoter-month-weeks .promoter-planning-week {padding: 16px; border-radius: 17px;}
+    .promoter-week-heading {gap: 9px; flex-wrap: wrap;}
+    .promoter-week-number {width: 30px; height: 38px; font-size: 16px;}
+    .promoter-week-heading h3 {font-size: 14px;}
+    .promoter-week-heading .raven-badge {font-size: 9px;}
+    .promoter-agenda-composition {grid-template-columns: minmax(0, 1fr) 96px; gap: 16px 10px; padding: 20px 16px;}
+    .promoter-agenda-copy {grid-column: 1; grid-row: 1;}
+    .promoter-shell .promoter-agenda-art {grid-column: 2; grid-row: 1; width: 96px; height: 72px;}
+    .promoter-agenda-new-visit {grid-column: 1 / -1; grid-row: 2; width: 100%;}
+    .promoter-shell .promoter-record-main {padding: 20px;}
+    .promoter-record-form-heading {padding-bottom: 18px; margin-bottom: 20px;}
+    .promoter-record-form-heading h2 {font-size: 18px;}
+    .promoter-record-side {display: flex;}
+    .promoter-record-context {padding: 20px;}
+    .promoter-record-main .promoter-choice {font-size: 12px; padding: 11px 10px; gap: 8px;}
+    .promoter-record-main .promoter-checklist {grid-template-columns: 1fr;}
+    .promoter-record-main .promoter-official-checklist .promoter-checklist-item {min-height: 76px;}
+    .promoter-record-submit .raven-button {width: 100%; justify-content: center;}
+    .promoter-history-intro {gap: 14px;}
+    .promoter-shell .promoter-history-art {width: 88px; height: 66px;}
+    .promoter-history-intro .raven-section-title {font-size: 18px;}
+}
+@media (max-width: 359px) {
+    .promoter-record-main .promoter-visit-status {grid-template-columns: 1fr;}
+    .promoter-agenda-composition {grid-template-columns: minmax(0, 1fr) 76px;}
+    .promoter-shell .promoter-agenda-art {width: 76px; height: 57px;}
+    .promoter-shell .promoter-history-art {width: 64px; height: 48px;}
+}
+.promoter-month-header .promoter-eyebrow, .promoter-month-weeks .promoter-eyebrow, .promoter-record-context .promoter-eyebrow, .promoter-agenda-composition .promoter-eyebrow {color: #58687d;}
+.promoter-context-location dt {color: #5e6b7c;}
+
+.promoter-plan-entry-heading {justify-content: flex-start;}
+.promoter-plan-entry-heading > div {flex: 1;}
+
+@media (max-width: 1000px) {
+    .promoter-record-context.has-pharmacy > .promoter-location {display: none;}
+}
+
+/* Ubicación en edición: dos controles iguales y dirección a ancho completo. */
+.promoter-editor .promoter-location-fields {grid-template-columns: repeat(2, minmax(0, 1fr));}
+.promoter-editor .promoter-location-fields .promoter-field-wide {grid-column: 1 / -1;}
+@media (max-width: 650px) {
+    .promoter-editor .promoter-location-fields {grid-template-columns: minmax(0, 1fr);}
+}
+
+/* Desambiguación textual exclusivamente en opciones del selector, sin badges. */
+.promoter-shell .promoter-pharmacy-picker .promoter-picker-identifier,
+.promoter-shell .promoter-baja-option .promoter-picker-identifier {display: inline; color: #586373; background: none; border: 0; padding: 0; font-size: 11px; font-weight: 500;}
+
+/* Ronda 2: calendario y preparación de actividades, sin librerías de calendario. */
+.promoter-planning-productivity {display: flex; flex-direction: column; gap: 22px;}
+.promoter-planning-productivity .promoter-month-header {padding: 22px 26px; gap: 16px;}
+.promoter-shell .promoter-planning-productivity .promoter-month-art {width: 120px; height: 90px;}
+.promoter-calendar-panel {overflow: hidden;}
+.promoter-calendar-heading {display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px;}
+.promoter-calendar-heading h2, .promoter-calendar-heading h3 {margin: 0;}
+.promoter-calendar-heading h3 {font-size: 15px;}
+.promoter-calendar-tabs {display: flex; padding: 4px; border: 1px solid #e0e6f0; border-radius: 12px; background: #f5f7fb;}
+.promoter-calendar-tabs button {border: 0; border-radius: 8px; padding: 9px 13px; min-height: 42px; background: transparent; color: #52627a; font: inherit; font-size: 12px; cursor: pointer;}
+.promoter-calendar-tabs button[aria-pressed=true] {background: white; color: #234f8a; box-shadow: 0 2px 7px #233e6410;}
+.promoter-calendar-week-nav {display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; margin-bottom: 22px;}
+.promoter-calendar-week-nav button {display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; border: 1px solid #e0e6ee; border-radius: 11px; color: #52627a; background: #fafbfd; font: inherit; text-align: left; cursor: pointer; min-height: 64px;}
+.promoter-calendar-week-nav strong {font-size: 12px; color: #344960;}
+.promoter-calendar-week-nav span {font-size: 11px;}
+.promoter-calendar-week-nav button[aria-pressed=true] {border-color: #b6cbe6; background: #eef4fc;}
+.promoter-calendar-weekdays, .promoter-calendar-grid {display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 7px;}
+.promoter-calendar-weekdays {margin: 0 0 10px; font-size: 11px; font-weight: 650; color: #58677c; text-align: center;}
+.promoter-calendar-day {position: relative; min-width: 0; min-height: 88px; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px; border: 1px solid #e2e8f1; border-radius: 11px; background: #fafbfd; color: #314762; font: inherit; cursor: pointer; text-align: left; transition: background-color .15s ease, border-color .15s ease;}
+.promoter-calendar-number {font-size: 15px; font-weight: 750;}
+.promoter-calendar-count {font-size: 10px; color: #3e6087; line-height: 1.4;}
+.promoter-calendar-completed {font-size: 10px; color: #43634f;}
+.promoter-calendar-day.has-activities {border-color: #d7e0ef; background: #f0f5fb;}
+.promoter-calendar-day.has-activities::after {content: ''; position: absolute; width: 5px; height: 5px; border-radius: 50%; top: 15px; right: 12px; background: #7993b5;}
+.promoter-calendar-day[aria-pressed=true] {border-color: #6993c9; background: #e8f0fc; box-shadow: inset 0 0 0 1px #6993c9;}
+.promoter-calendar-day.is-today .promoter-calendar-number {text-decoration: underline; text-underline-offset: 4px;}
+.promoter-calendar-outside {min-height: 88px; border-radius: 11px; background: #f6f7f9; opacity: .65;}
+.promoter-calendar-summary {display: flex; justify-content: space-between; gap: 14px; margin-top: 18px; font-size: 11px; color: #5e6c80;}
+.promoter-calendar-mobile {display: none;}
+.promoter-planning-day-empty {display: flex; align-items: center; gap: 12px; padding: 16px 0; color: #657389; font-size: 13px;}
+.promoter-planning-day-empty .promoter-ui-icon {width: 22px; height: 22px;}
+.promoter-planning-productivity .promoter-plan-controls {grid-template-columns: repeat(2,minmax(0,1fr)); margin-bottom: 18px;}
+.promoter-plan-picker-fieldset {border: 0; margin: 0; padding: 0; min-width: 0;}
+.promoter-plan-selection {margin: 20px 0; border: 1px solid #e0e7ef; border-radius: 14px; background: #f8fafd; padding: 16px;}
+.promoter-plan-selection .promoter-calendar-heading {margin-bottom: 8px;}
+.promoter-plan-selection [role=status] {font-size: 11px; color: #596b82;}
+.promoter-plan-selection ul {list-style: none; padding: 0; margin: 0; max-height: 360px; overflow-y: auto;}
+.promoter-plan-selection li {display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 12px 0; border-top: 1px solid #e5eaf1;}
+.promoter-plan-selection li:first-child {border-top: 0;}
+.promoter-plan-selection strong {font-size: 13px; color: #314762;}
+.promoter-plan-selection .promoter-locality {font-size: 11px; font-weight: 500; margin-top: 4px;}
+.promoter-plan-selection .promoter-street {font-size: 11px; margin-top: 3px;}
+.promoter-plan-selection .promoter-subtle-link {flex-shrink: 0; min-height: 44px; padding-inline: 8px;}
+.promoter-plan-selection-empty {font-size: 12px; color: #5b6d85;}
+.promoter-planning-preview {margin-top: 22px; padding: 20px; border: 1px solid #d8e4e7; border-radius: 14px; background: #f4f8fa;}
+.promoter-planning-preview > h3 {font-size: 16px; margin: 0 0 8px; color: #30475f;}
+.promoter-planning-preview > p {font-size: 12px; color: #53667d;}
+.promoter-planning-preview-list {padding: 0; margin: 16px 0 20px; list-style: none; max-height: 440px; overflow-y: auto;}
+.promoter-planning-preview-list li {display: grid; grid-template-columns: minmax(0,1fr) minmax(140px,.5fr); gap: 18px; padding: 14px 0; border-top: 1px solid #dde6eb;}
+.promoter-planning-preview-list strong {font-size: 13px; color: #314762;}
+.promoter-planning-preview-list li > div > span:not(.raven-badge) {display: block; font-size: 11px; color: #586b82; margin-top: 5px; overflow-wrap: anywhere;}
+.promoter-copy-acknowledgement {display: flex; gap: 12px; align-items: flex-start; font-size: 12px; color: #405a72; margin: 0 0 18px; cursor: pointer;}
+.promoter-copy-acknowledgement input {width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; accent-color: #315e99;}
+.promoter-calendar-panel button:focus-visible, .promoter-plan-selection button:focus-visible {outline: 3px solid #4776ad; outline-offset: 3px;}
+@media (hover: hover) {.promoter-calendar-day:hover {border-color: #9db6d7; background: #edf3fc;}}
+@media (max-width: 1000px) {.promoter-calendar-day {min-height: 80px; padding: 10px 8px;} .promoter-calendar-count {font-size: 10px;}}
+@media (max-width: 650px) {
+    .promoter-planning-productivity {gap: 16px;}
+    .promoter-planning-productivity .promoter-month-header {padding: 18px;}
+    .promoter-calendar-heading {align-items: flex-start; flex-wrap: wrap; gap: 12px;}
+    .promoter-calendar-tabs {width: 100%;} .promoter-calendar-tabs button {flex: 1;}
+    .promoter-calendar-week-nav {display: flex; overflow-x: auto; padding: 3px 3px 10px; margin-inline: -3px; gap: 7px;}
+    .promoter-calendar-week-nav button {flex: 0 0 102px;}
+    .promoter-calendar-desktop {display: none;}
+    .promoter-calendar-mobile {display: grid; gap: 10px;}
+    .promoter-calendar-day-strip {display: flex; gap: 8px; overflow-x: auto; padding: 4px 3px 12px; scroll-snap-type: x proximity;}
+    .promoter-calendar-day-strip button {flex: 0 0 66px; display: flex; flex-direction: column; gap: 5px; align-items: center; padding: 10px 6px; border: 1px solid #dfe6ef; border-radius: 12px; background: #fafbfd; color: #4b607b; font: inherit; scroll-snap-align: center;}
+    .promoter-calendar-day-strip button[aria-pressed=true] {border-color: #799ecb; background: #eaf1fc;}
+    .promoter-calendar-day-strip span {font-size: 11px;} .promoter-calendar-day-strip strong {font-size: 17px; color: #304968;}
+    .promoter-calendar-summary {flex-direction: column; gap: 6px;}
+    .promoter-planning-productivity .promoter-plan-controls {grid-template-columns: minmax(0,1fr);}
+    .promoter-planning-preview {padding: 15px;} .promoter-planning-preview-list li {grid-template-columns: minmax(0,1fr); gap: 10px;}
+    .promoter-plan-selection {padding: 14px;}
+}
+@media (prefers-reduced-motion: reduce) {.promoter-calendar-day {transition: none;}}
+
+
+
+.promoter-plan-selection button.promoter-subtle-link {border: 0; background: transparent; cursor: pointer; font: inherit; font-size: 12px; color: #526b89;}
+.promoter-copy-actions {display: flex; flex-wrap: wrap; gap: 10px;}
+@media (max-width: 650px) {.promoter-copy-actions {flex-direction: column; align-items: stretch;} .promoter-copy-actions .raven-button {width: 100%; justify-content: center;}}

@@ -23,8 +23,6 @@ class Show extends Component
 
     public string $category = '';
 
-    public string $neighborhood = '';
-
     public string $address = '';
 
     public string $city = '';
@@ -45,8 +43,8 @@ class Show extends Component
     {
         $this->pharmacyId = $pharmacyId;
         $pharmacy = $this->allowedPharmacy();
-        foreach (PharmacyEditor::EDITABLE as $field) {
-            $this->{$field} = (string) ($pharmacy->{$field} ?? '');
+        foreach (array_diff(PharmacyEditor::EDITABLE, ['neighborhood']) as $field) {
+            $this->{$field} = $field === 'name' ? $pharmacy->display_name : (string) ($pharmacy->{$field} ?? '');
         }
     }
 
@@ -78,7 +76,6 @@ class Show extends Component
             'name' => array_merge(['required', 'string', 'max:255'], $nameRules),
             'client_type' => ['nullable', 'string', 'max:80'],
             'category' => ['nullable', 'string', 'max:20'],
-            'neighborhood' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
             'city' => $locationRules['city'] ?? ['nullable', 'string', 'max:120'],
             'department' => $locationRules['department'] ?? ['nullable', 'string', 'max:120'],
@@ -88,6 +85,11 @@ class Show extends Component
             'phone' => ['nullable', 'string', 'max:80'],
             'email' => ['nullable', 'email', 'max:255'],
         ]);
+
+        // Un nombre proyectado sin cambios no normaliza el valor histórico guardado.
+        if ($validated['name'] === $pharmacy->display_name) {
+            unset($validated['name']);
+        }
 
         $changed = $editor->update($this->pharmacyId, auth()->user(), $validated);
         session()->flash('success', $changed ? 'Cambios guardados con historial.' : 'No había cambios que guardar.');

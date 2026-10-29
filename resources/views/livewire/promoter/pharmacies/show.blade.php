@@ -4,7 +4,7 @@
     <section class="raven-card promoter-record-header">
         <div class="promoter-record-copy"><span class="raven-badge raven-badge-success">Activa</span>
         <h2 class="raven-section-title">{{ $pharmacy->display_name }}</h2>
-        <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" />
+        <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" />
         </div>
         <x-promoter.graphic variant="record" class="promoter-record-graphic" />
     </section>
@@ -19,13 +19,11 @@
         </section>
         <section class="raven-card promoter-edit-section promoter-edit-section--location" aria-labelledby="location-title">
             <h2 id="location-title" class="promoter-form-heading"><span class="promoter-section-symbol"><x-promoter.icon name="location" /></span><span>Ubicación</span></h2>
-            <div class="raven-form-grid">
+            <div class="raven-form-grid promoter-location-fields">
                 <x-promoter.searchable-select model="department" label="Departamento o región autónoma" :value="$department" :options="$catalogOptions['department']" />
                 <x-promoter.searchable-select model="city" label="Municipio" :value="$city" :options="$catalogOptions['city']" :disabled="$department === ''" />
-                <x-promoter.field model="neighborhood" label="Barrio / zona" :value="$neighborhood" max="255" />
-                <x-promoter.field model="address" label="Dirección detallada" :value="$address" type="textarea" max="1000" />
+                <x-promoter.field model="address" label="Dirección detallada" :value="$address" type="textarea" max="1000" help="Indique zona, barrio, calle, número, puntos de referencia y cómo llegar, según corresponda. No es necesario repetir el departamento ni el municipio" />
             </div>
-            <p class="raven-field-help promoter-catalog-note">Los datos históricos se conservan al editar otros campos.</p>
         </section>
         <section class="raven-card promoter-edit-section promoter-edit-section--contact" aria-labelledby="contact-title">
             <h2 id="contact-title" class="promoter-form-heading"><span class="promoter-section-symbol"><x-promoter.icon name="contact" /></span><span>Información de contacto</span></h2>

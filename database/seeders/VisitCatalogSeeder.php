@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\ChecklistItem;
 use App\Models\VisitReason;
+use App\Services\OfficialVisitChecklist;
 use Illuminate\Database\Seeder;
 
 /**
- * Catálogos base de motivos y checklist. Idempotente: no pisa cambios hechos después.
- * Contenido GENÉRICO de referencia: validar con coordinación de Raven antes de producción.
+ * Checklist oficial confirmado por Coordinadora. Los motivos genéricos requieren validación.
+ * No actualiza catálogos existentes: para ello utilice raven:checklist con revisión y respaldo.
  */
 class VisitCatalogSeeder extends Seeder
 {
@@ -22,26 +22,15 @@ class VisitCatalogSeeder extends Seeder
         'Otro motivo',
     ];
 
-    public const CHECKLIST = [
-        ['Exhibición de productos', 'Productos visibles en góndola o mostrador.'],
-        ['Inventario disponible', 'Existencias suficientes de la línea promovida.'],
-        ['Precios visibles', 'Precios rotulados y vigentes.'],
-        ['Material promocional', 'Material POP colocado y en buen estado.'],
-        ['Capacitación al personal', 'Se informó al dependiente sobre la línea promovida.'],
-        ['Productos próximos a vencer', 'Se revisaron fechas de vencimiento.'],
-    ];
+    public const CHECKLIST = OfficialVisitChecklist::ITEMS;
 
     public function run(): void
     {
+        (new OfficialVisitChecklist)->seedFresh();
+
         foreach (self::REASONS as $order => $name) {
             VisitReason::query()->firstOrCreate(['name' => $name], ['sort_order' => ($order + 1) * 10]);
         }
 
-        foreach (self::CHECKLIST as $order => [$name, $description]) {
-            ChecklistItem::query()->firstOrCreate(['name' => $name], [
-                'description' => $description,
-                'sort_order' => ($order + 1) * 10,
-            ]);
-        }
     }
 }

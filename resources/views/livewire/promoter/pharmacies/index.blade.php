@@ -36,7 +36,7 @@
                         <span class="raven-badge raven-badge-success">Activa</span>
                     </div>
                     <div class="promoter-card-location">
-                    <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" :reference="$pharmacy->branch_summary" />
+                    <x-promoter.location :city="$pharmacy->city" :department="$pharmacy->department" :neighborhood="$pharmacy->neighborhood" :address="$pharmacy->address" />
                     </div>
                     <dl class="promoter-card-meta">
                         <div><dt>Tipo</dt><dd>{{ $pharmacy->client_type ?: 'Sin especificar' }}</dd></div>

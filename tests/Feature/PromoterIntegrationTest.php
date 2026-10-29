@@ -76,7 +76,7 @@ class PromoterIntegrationTest extends TestCase
         $visit = (new VisitRecorder)->register($actor, [
             'idempotency_key' => (string) Str::uuid(), 'status' => 'REALIZADA', 'planned_activity_id' => $activity->id,
         ]);
-        $this->assertSame('Ensayo 7 · León', $pharmacy->fresh()->display_name);
+        $this->assertSame('Ensayo 7', $pharmacy->fresh()->display_name);
         $this->assertSame('', $pharmacy->fresh()->branch_summary);
         $this->assertSame($visit->id, $pharmacy->visits()->sole()->id);
         $this->assertSame($visit->id, $actor->visits()->sole()->id);
@@ -85,7 +85,7 @@ class PromoterIntegrationTest extends TestCase
         $this->actingAs($actor)->get('/promoter/visits/'.$visit->id)->assertOk();
         $this->actingAs($other)->get('/promoter/visits/'.$visit->id)->assertNotFound();
         $branch = Pharmacy::factory()->make(['name' => 'Ensayo 7 · Sucursal Central', 'department' => 'León', 'city' => 'León']);
-        $this->assertSame('Ensayo 7 · León', $branch->display_name);
+        $this->assertSame('Ensayo 7', $branch->display_name);
         $this->assertSame('Sucursal Central', $branch->branch_summary);
     }
 
@@ -154,17 +154,17 @@ class PromoterIntegrationTest extends TestCase
         $planner->submit($actor, $schedule->id);
         $this->actingAs($actor);
         foreach (['/promoter/planning?mes=2026-10', '/promoter/visits', '/promoter/visits/register?actividad='.$activity->id] as $path) {
-            $this->get($path)->assertOk()->assertSee('Ensayo 74 · León')->assertSee('Referencia: Sucursal Central')
+            $this->get($path)->assertOk()->assertSee('Ensayo 74')
                 ->assertSee('Barrio de prueba')->assertSee('Dirección de prueba conservada.');
         }
         $this->get('/promoter/visits/register')->assertOk()
-            ->assertSee('Ensayo 74 · León')->assertSee('Sucursal Central')
+            ->assertSee('Ensayo 74')
             ->assertSee('Solo puede elegir farmacias activas que tiene asignadas.');
         $visit = (new VisitRecorder)->register($actor, [
             'idempotency_key' => (string) Str::uuid(), 'status' => 'REALIZADA', 'planned_activity_id' => $activity->id,
         ]);
         foreach (['/promoter/visits/history', '/promoter/visits/'.$visit->id] as $path) {
-            $this->get($path)->assertOk()->assertSee('Ensayo 74 · León')->assertSee('Referencia: Sucursal Central')
+            $this->get($path)->assertOk()->assertSee('Ensayo 74')
                 ->assertSee('Dirección de prueba conservada.');
         }
         $this->assertSame($before, $pharmacy->fresh()->getAttributes());

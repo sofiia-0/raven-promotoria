@@ -15,7 +15,7 @@
                     <span class="raven-badge {{ $visit->isUnplanned() ? 'raven-badge-rose' : 'raven-badge-neutral' }}">{{ $visit->isUnplanned() ? 'Fuera de plan' : 'Planificada' }}</span>
                 </div>
                 <h2 class="raven-section-title">{{ $visit->pharmacy->display_name }}</h2>
-                @if($visit->pharmacy)<x-promoter.location :department="$visit->pharmacy->department" :city="$visit->pharmacy->city" :neighborhood="$visit->pharmacy->neighborhood" :address="$visit->pharmacy->address" :reference="$visit->pharmacy->branch_summary" />@endif
+                @if($visit->pharmacy)<x-promoter.location :department="$visit->pharmacy->department" :city="$visit->pharmacy->city" :neighborhood="$visit->pharmacy->neighborhood" :address="$visit->pharmacy->address" />@endif
             </div>
         </div>
 
