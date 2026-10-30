@@ -18,11 +18,11 @@ class RavenPasswordResetNotification extends ResetPassword
         $minutes = (int) config('auth.passwords.users.expire', 60);
 
         return (new MailMessage)
-            ->subject('Raven | Configura o recupera tu acceso')
+            ->subject('Raven | Configure o recupere su acceso')
             ->greeting('Hola, '.$notifiable->name)
-            ->line('Este correo contiene un enlace seguro para configurar o restablecer tu contraseña de Raven.')
-            ->action('Configurar mi contraseña', $url)
+            ->line('Este correo contiene un enlace seguro para configurar o restablecer su contraseña de Raven.')
+            ->action('Configurar contraseña', $url)
             ->line('Por seguridad, el enlace caduca en '.$minutes.' minutos.')
-            ->line('Si no esperabas este mensaje, podés ignorarlo. No compartás el enlace con otras personas.');
+            ->line('Si no esperaba este mensaje, puede ignorarlo. No comparta el enlace con otras personas.');
     }
 }

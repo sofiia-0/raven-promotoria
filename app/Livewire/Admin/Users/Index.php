@@ -14,14 +14,22 @@ class Index extends Component
 {
     use WithPagination;
 
+    public bool $showCreate = false;
+
     public string $name = '';
+
     public string $email = '';
+
     public string $role = 'promoter';
+
     public string $search = '';
 
     public ?int $editingUserId = null;
+
     public string $editName = '';
+
     public string $editEmail = '';
+
     public string $editRole = '';
 
     public function mount(): void
@@ -47,8 +55,8 @@ class Index extends Component
             session()->flash(
                 'warning',
                 $newUser
-                    ? 'Cuenta creada, pero no se pudo procesar el enlace de acceso. Revisá la configuración del correo o intentá reenviarlo más tarde.'
-                    : 'No se pudo procesar el enlace. Si lo acabás de solicitar, esperá un minuto antes de intentar de nuevo.'
+                    ? 'Cuenta creada, pero no se pudo procesar el enlace de acceso. Revise la configuración del correo o intente reenviarlo más tarde.'
+                    : 'No se pudo procesar el enlace. Si lo acaba de solicitar, espere un minuto antes de intentar de nuevo.'
             );
 
             return;
@@ -65,8 +73,43 @@ class Index extends Component
 
         session()->flash(
             'success',
-            ($newUser ? 'Cuenta creada. ' : '').'Envío del enlace de acceso procesado. Comprobá la bandeja de entrada o la configuración del proveedor de correo.'
+            ($newUser ? 'Cuenta creada. ' : '').'Envío del enlace de acceso procesado. Compruebe la bandeja de entrada o la configuración del proveedor de correo.'
         );
+    }
+
+    public function openCreate(): void
+    {
+        $this->ensureAdmin();
+        $this->reset(['editingUserId', 'editName', 'editEmail', 'editRole']);
+        $this->resetValidation();
+        $this->showCreate = true;
+        $this->dispatch('admin-user-editor-open');
+    }
+
+    public function cancelCreate(): void
+    {
+        $this->ensureAdmin();
+        $this->reset(['showCreate', 'name', 'email']);
+        $this->role = UserRole::PROMOTER->value;
+        $this->resetValidation();
+        $this->dispatch('admin-user-editor-closed', userId: null);
+    }
+
+    protected function messages(): array
+    {
+        return [
+            'required' => 'Complete el campo :attribute.',
+            'email' => 'Ingrese un correo electrónico válido.',
+            'unique' => 'Este correo ya está asociado a otra cuenta.',
+            'string' => 'Ingrese un valor válido para :attribute.',
+            'max' => 'Utilice como máximo :max caracteres en :attribute.',
+            'in' => 'Seleccione Promotora o Coordinadora.',
+        ];
+    }
+
+    protected function validationAttributes(): array
+    {
+        return ['name' => 'nombre', 'editName' => 'nombre', 'email' => 'correo electrónico', 'editEmail' => 'correo electrónico', 'role' => 'rol', 'editRole' => 'rol'];
     }
 
     protected function rules(): array
@@ -128,6 +171,9 @@ class Index extends Component
         $this->accessFeedback($status, true);
         $this->reset(['name', 'email']);
         $this->role = UserRole::PROMOTER->value;
+        $this->showCreate = false;
+        $this->resetPage();
+        $this->dispatch('admin-user-editor-closed', userId: null);
     }
 
     public function editUser(int $userId): void
@@ -145,10 +191,13 @@ class Index extends Component
             return;
         }
 
+        $this->showCreate = false;
+        $this->resetValidation();
         $this->editingUserId = $user->id;
         $this->editName = $user->name;
         $this->editEmail = $user->email;
         $this->editRole = $user->role->value;
+        $this->dispatch('admin-user-editor-open');
     }
 
     public function updateUser(): void
@@ -165,6 +214,9 @@ class Index extends Component
             abort(403);
         }
 
+        // Validar el correo canónico que se guardará, igual que en creación.
+        $this->editName = trim($this->editName);
+        $this->editEmail = Str::lower(trim($this->editEmail));
         $data = $this->validate([
             'editName' => [
                 'required',
@@ -203,6 +255,8 @@ class Index extends Component
     public function cancelEdit(): void
     {
         $this->ensureAdmin();
+        $userId = $this->editingUserId;
+        $this->resetValidation();
 
         $this->reset([
             'editingUserId',
@@ -210,6 +264,7 @@ class Index extends Component
             'editEmail',
             'editRole',
         ]);
+        $this->dispatch('admin-user-editor-closed', userId: $userId);
     }
 
     public function toggleActive(int $userId): void
@@ -249,11 +304,13 @@ class Index extends Component
 
         if ($user->role === UserRole::ADMIN) {
             session()->flash('warning', 'No se reenvían enlaces a cuentas administrativas desde esta sección.');
+
             return;
         }
 
         if (! $user->is_active) {
             session()->flash('warning', 'La cuenta debe estar activa antes de enviar un enlace de acceso.');
+
             return;
         }
 
@@ -269,14 +326,15 @@ class Index extends Component
 
     public function render()
     {
+        $this->ensureAdmin();
         $users = User::query()
             ->when(
                 $this->search,
                 function ($query) {
                     $query->where(function ($query) {
                         $query
-                            ->where('name', 'like', '%' . $this->search . '%')
-                            ->orWhere('email', 'like', '%' . $this->search . '%');
+                            ->where('name', 'like', '%'.$this->search.'%')
+                            ->orWhere('email', 'like', '%'.$this->search.'%');
                     });
                 }
             )
