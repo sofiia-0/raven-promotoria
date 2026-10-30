@@ -61,13 +61,23 @@ class PlanningProductivity
         });
     }
 
-    public function previewWeek(User $actor, int $scheduleId, int $sourceId, int $targetId): array
+    public function previewWeek(User $actor, int $scheduleId, int $sourceId, int $targetId, ?int $sourceScheduleId = null): array
     {
-        $schedule = $this->draft($actor, $scheduleId);
-        $source = $schedule->weeks->firstWhere('id', $sourceId);
+        return $this->weekPreview($actor, $scheduleId, $sourceId, $targetId, $sourceScheduleId);
+    }
+
+    private function weekPreview(User $actor, int $scheduleId, int $sourceId, int $targetId, ?int $sourceScheduleId, bool $lock = false): array
+    {
+        $schedule = $this->draft($actor, $scheduleId, $lock);
+        $origin = $this->copyOrigin($actor, $schedule, $sourceId, $sourceScheduleId, $lock);
+        if ($lock) {
+            $this->lockCopySnapshot($schedule);
+            $this->lockCopySnapshot($origin);
+        }
+        $source = $origin->weeks->firstWhere('id', $sourceId);
         $target = $schedule->weeks->firstWhere('id', $targetId);
         if (! $source || ! $target || $sourceId === $targetId) {
-            throw ValidationException::withMessages(['copy' => 'Seleccione semanas distintas del mismo cronograma.']);
+            throw ValidationException::withMessages(['copy' => 'Seleccione una semana de origen propia y una semana de destino distinta del cronograma actual.']);
         }
         if ($source->activities->isEmpty()) {
             throw ValidationException::withMessages(['copy' => 'La semana de origen no tiene actividades para copiar.']);
@@ -75,7 +85,7 @@ class PlanningProductivity
         $targetDates = $this->weekdayDates($target->starts_on, $target->ends_on);
         $sourceDates = $this->weekdayDates($source->starts_on, $source->ends_on);
         $ids = $source->activities->pluck('pharmacy_id')->filter()->all();
-        $allowed = EstablishmentSearch::forPromoter($actor)->whereKey($ids)->get()->keyBy('id');
+        $allowed = EstablishmentSearch::forPromoter($actor)->whereKey($ids)->when($lock, fn ($query) => $query->lockForUpdate())->get()->keyBy('id');
         $rows = [];
         $keys = [];
         foreach ($source->activities->sortBy(fn ($a) => $a->scheduled_date->toDateString().sprintf('%012d', $a->id)) as $activity) {
@@ -113,26 +123,56 @@ class PlanningProductivity
                 'activity_type' => $activity->activity_type->value, 'date' => $date, 'notes' => $notes, 'status' => $status, 'message' => $message];
         }
 
-        return $this->preview($schedule, ['kind' => 'copy', 'source_id' => $sourceId, 'target_id' => $targetId], $rows);
+        return $this->preview($schedule, ['kind' => 'copy', 'source_id' => $sourceId, 'target_id' => $targetId, 'source_schedule' => $origin->getAttributes(), 'source_weeks' => $origin->weeks->map(fn ($week) => $week->getAttributes())->all(), 'source_activities' => $origin->activities->sortBy('id')->map(fn ($activity) => $activity->getAttributes())->values()->all()], $rows);
     }
 
-    public function copyWeek(User $actor, int $scheduleId, int $sourceId, int $targetId, string $expected, bool $acknowledgeOmissions = false): array
+    public function copyWeek(User $actor, int $scheduleId, int $sourceId, int $targetId, string $expected, bool $acknowledgeOmissions = false, ?int $sourceScheduleId = null): array
     {
-        return DB::transaction(function () use ($actor, $scheduleId, $sourceId, $targetId, $expected, $acknowledgeOmissions) {
-            $schedule = $this->draft($actor, $scheduleId, true);
-            $source = $schedule->weeks->firstWhere('id', $sourceId);
+        $schedule = $this->draft($actor, $scheduleId);
+        $originId = $this->copyOrigin($actor, $schedule, $sourceId, $sourceScheduleId)->id;
+
+        return DB::transaction(function () use ($actor, $scheduleId, $sourceId, $targetId, $expected, $acknowledgeOmissions, $originId) {
+            // Bloquear antes de abrir la fotografía de lectura de MySQL REPEATABLE READ.
+            // Todos los escritores del planificador bloquean el cronograma padre.
+            // Orden estable para dos operaciones que compartan origen o destino.
+            MonthlySchedule::whereIn('id', [$originId, $scheduleId])->orderBy('id')->lockForUpdate()->get();
+            $schedule = $this->draft($actor, $scheduleId);
+            $origin = $this->copyOrigin($actor, $schedule, $sourceId, $originId);
+            $source = $origin->weeks->firstWhere('id', $sourceId);
             $this->lockAssignments($actor, $source?->activities->pluck('pharmacy_id')->filter()->all() ?? []);
-            $preview = $this->previewWeek($actor, $scheduleId, $sourceId, $targetId);
+            $preview = $this->weekPreview($actor, $scheduleId, $sourceId, $targetId, $originId, true);
             $this->assertPreview($preview, $expected, 'copy');
             if ($preview['omitted'] > 0 && ! $acknowledgeOmissions) {
                 throw ValidationException::withMessages(['copy' => 'Confirme que revisó las actividades que no se copiarán. No se guardó ninguna actividad.']);
             }
             $created = $this->apply($actor, $scheduleId, array_values(array_filter($preview['rows'], fn ($r) => $r['status'] === 'ready')));
-            $this->audit->record($actor, 'schedule.week_copied', $schedule, ['source_week_id' => $sourceId, 'target_week_id' => $targetId, 'source_activity_ids' => array_column($preview['rows'], 'source_id'),
+            $this->audit->record($actor, 'schedule.week_copied', $schedule, ['source_schedule_id' => $origin->id, 'target_schedule_id' => $scheduleId, 'source_week_id' => $sourceId, 'target_week_id' => $targetId, 'source_activity_ids' => array_column($preview['rows'], 'source_id'),
                 'new_activity_ids' => $created, 'omitted' => array_values(array_filter($preview['rows'], fn ($r) => $r['status'] === 'unmappable'))]);
 
             return $created;
         });
+    }
+
+    /** El origen es de solo lectura: admite borradores y enviados propios, nunca meses posteriores. */
+    private function copyOrigin(User $actor, MonthlySchedule $target, int $weekId, ?int $scheduleId, bool $lock = false): MonthlySchedule
+    {
+        $origin = MonthlySchedule::where('promoter_id', $actor->id)
+            ->whereRaw('(year * 12 + month) <= ?', [$target->year * 12 + $target->month])
+            ->when($scheduleId !== null, fn ($query) => $query->whereKey($scheduleId))
+            ->whereHas('weeks', fn ($query) => $query->whereKey($weekId))
+            ->when($lock, fn ($query) => $query->lockForUpdate())->first();
+        if (! $origin) {
+            throw ValidationException::withMessages(['copy' => 'Seleccione una semana de un cronograma propio del mes actual o de un mes anterior.']);
+        }
+
+        return $origin->load('weeks.activities.pharmacy');
+    }
+
+    /** Lecturas vigentes también si MySQL conserva una fotografía previa en REPEATABLE READ. */
+    private function lockCopySnapshot(MonthlySchedule $schedule): void
+    {
+        $lock = fn ($query) => $query->lockForUpdate();
+        $schedule->load(['weeks' => $lock, 'weeks.activities' => $lock, 'weeks.activities.pharmacy' => $lock, 'activities' => $lock]);
     }
 
     private function draft(User $actor, int $id, bool $lock = false): MonthlySchedule
