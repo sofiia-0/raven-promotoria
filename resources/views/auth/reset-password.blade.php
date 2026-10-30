@@ -1,96 +1,15 @@
 @extends('layouts.auth')
-
-
 @section('title', 'Configurar contraseña | Raven')
-
-
 @section('content')
-
-    <header class="raven-auth-heading">
-
-        <p
-            class="raven-auth-eyebrow"
-            style="color: var(--raven-primary);"
-        >
-            Seguridad de la cuenta
-        </p>
-
-        <h1 class="raven-auth-title">
-            Configurar contraseña
-        </h1>
-
-        <p class="raven-auth-description">
-            Crea una nueva contraseña para acceder de forma segura
-            al sistema de promotoría.
-        </p>
-
-    </header>
-
-
-    @if ($errors->has('token'))
-
-        <x-ui.alert tone="danger">
-            El enlace de recuperación no es válido o ha expirado.
-            Solicita uno nuevo para continuar.
-        </x-ui.alert>
-
-    @endif
-
-
-    <form
-        method="POST"
-        action="{{ route('password.update') }}"
-        class="raven-auth-form"
-    >
-
-        @csrf
-
-
-        <input
-            type="hidden"
-            name="token"
-            value="{{ request()->route('token') }}"
-        >
-
-
-        <x-ui.input
-            label="Correo electrónico"
-            name="email"
-            type="email"
-            value="{{ old('email', request('email')) }}"
-            required
-            readonly
-            autocomplete="email"
-        />
-
-
-        <x-ui.input
-            label="Nueva contraseña"
-            name="password"
-            type="password"
-            placeholder="Ingresa tu nueva contraseña"
-            required
-            autocomplete="new-password"
-        />
-
-
-        <x-ui.input
-            label="Confirmar contraseña"
-            name="password_confirmation"
-            type="password"
-            placeholder="Repite tu nueva contraseña"
-            required
-            autocomplete="new-password"
-        />
-
-
-        <x-ui.button
-            type="submit"
-            class="raven-auth-submit"
-        >
-            Guardar contraseña
-        </x-ui.button>
-
-    </form>
-
+<header class="access-auth-heading"><span class="access-heading-icon"><x-access.icon name="shield" /></span><p class="access-eyebrow">Seguridad de la cuenta</p><h1>Configurar contraseña</h1><p>Establezca su contraseña para acceder a Raven.</p></header>
+@if($errors->has('token') || in_array($errors->first('email'), ['passwords.token', __('passwords.token')], true))<div class="access-alert access-alert-danger" role="alert" tabindex="-1" data-access-errors>El enlace no es válido o ha expirado. <a href="{{ route('password.request') }}">Solicite uno nuevo</a>.</div>@endif
+<form method="POST" action="{{ route('password.update') }}" class="access-form" data-access-submit>
+    @csrf
+    <input type="hidden" name="token" value="{{ request()->route('token') }}">
+    <x-access.field name="email" label="Correo electrónico" type="email" :value="old('email', request('email'))" required readonly autocomplete="email" />
+    <x-access.field name="password" label="Nueva contraseña" type="password" required autocomplete="new-password" help="Utilice al menos 8 caracteres." />
+    <x-access.field name="password_confirmation" label="Confirmar contraseña" type="password" required autocomplete="new-password" />
+    <x-ui.button type="submit" class="access-submit" data-pending-label="Guardando contraseña…"><span data-submit-label>Guardar contraseña</span><x-access.icon name="check" /></x-ui.button>
+    <a href="{{ route('login') }}" class="access-link access-back">Volver al inicio de sesión</a>
+</form>
 @endsection

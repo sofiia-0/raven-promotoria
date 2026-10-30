@@ -1,0 +1,263 @@
+/* Login y Administración. Todas las reglas están delimitadas: no alteran otros módulos. */
+:is(.raven-access,.raven-admin) {--access-text:#223148;--access-muted:#5c687a;--access-border:#dfe5ee;--access-blue:#2f66b0;--access-purple:#69659e;background:#f3f5f8;color:var(--access-text);font-family:'Manrope Variable',Manrope,system-ui,sans-serif;line-height:1.55;}
+:is(.raven-access,.raven-admin) *, :is(.raven-access,.raven-admin) *::before, :is(.raven-access,.raven-admin) *::after {box-sizing:border-box;}
+:is(.raven-access,.raven-admin) :where(h1,h2,h3,p,dl,dd) {margin:0;}
+:is(.raven-access,.raven-admin) :where(button,input,select,textarea) {font:inherit;}
+:is(.raven-access,.raven-admin) :where(a,button,input,select,textarea,summary):focus-visible {outline:3px solid #2f66b0;outline-offset:3px;}
+:is(.raven-access,.raven-admin) :where(a,button,input,select,textarea) {transition:background-color 150ms ease,border-color 150ms ease,box-shadow 150ms ease;}
+:is(.raven-access,.raven-admin) .access-icon {width:20px;height:20px;flex-shrink:0;vertical-align:middle;}
+:is(.raven-access,.raven-admin) .access-eyebrow {font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#3d608e;}
+:is(.raven-access,.raven-admin) .access-card {min-width:0;border:1px solid var(--access-border);border-radius:22px;background:#fff;box-shadow:0 4px 18px #263d5c05;}
+:is(.raven-access,.raven-admin) .raven-button {min-height:46px;padding:11px 17px;border-radius:12px;gap:9px;font-size:13px;line-height:1.45;box-shadow:none;white-space:normal;}
+:is(.raven-access,.raven-admin) .raven-button-primary {background:#2f66b0;border:1px solid #2f66b0;color:#fff;box-shadow:0 4px 10px #2f66b018;}
+:is(.raven-access,.raven-admin) .raven-button-primary:hover {background:#285998;border-color:#285998;}
+:is(.raven-access,.raven-admin) .raven-button-secondary {background:#fff;border:1px solid #dce3ee;color:#345678;}
+:is(.raven-access,.raven-admin) .raven-button-secondary:hover {background:#edf2f8;border-color:#c9d5e7;}
+:is(.raven-access,.raven-admin) .raven-button-ghost {background:transparent;color:#345d91;border:1px solid transparent;}
+:is(.raven-access,.raven-admin) .raven-button-ghost:hover {background:#edf2f8;}
+:is(.raven-access,.raven-admin) button:disabled {opacity:.58;cursor:wait;box-shadow:none;}
+:is(.raven-access,.raven-admin) .access-field {min-width:0;display:flex;flex-direction:column;gap:8px;}
+:is(.raven-access,.raven-admin) .access-label {font-size:13px;font-weight:700;color:#34445d;line-height:1.55;}
+:is(.raven-access,.raven-admin) .access-label > span {color:#4269a3;}
+:is(.raven-access,.raven-admin) .access-input {display:block;width:100%;min-width:0;min-height:49px;border:1px solid #d7dfec;border-radius:12px;background:#fafbfd;padding:12px 14px;font-size:14px;line-height:1.55;color:#223148;outline:none;}
+:is(.raven-access,.raven-admin) select.access-input {padding-right:28px;}
+:is(.raven-access,.raven-admin) .access-input::placeholder {color:#69768b;opacity:1;}
+:is(.raven-access,.raven-admin) .access-input:focus {border-color:#2f66b0;background:#fff;box-shadow:0 0 0 3px #2f66b015;}
+:is(.raven-access,.raven-admin) .access-input:focus-visible {outline:2px solid #2f66b0;outline-offset:2px;}
+:is(.raven-access,.raven-admin) .access-input[readonly] {background:#f0f2f6;color:#526078;}
+:is(.raven-access,.raven-admin) .access-input[aria-invalid=true] {border-color:#ad564c;background:#fffafa;}
+:is(.raven-access,.raven-admin) .access-help {font-size:12px;line-height:1.65;color:#5c687a;}
+:is(.raven-access,.raven-admin) .access-error {font-size:12px;color:#a13e35;line-height:1.6;}
+:is(.raven-access,.raven-admin) .access-alert {padding:14px 16px;border-radius:12px;border:1px solid #dfe5ee;font-size:13px;line-height:1.7;margin:0 0 20px;overflow-wrap:anywhere;}
+:is(.raven-access,.raven-admin) .access-alert-danger {background:#fcf1ef;border-color:#ebd0ca;color:#873c33;}
+:is(.raven-access,.raven-admin) .access-alert-success {background:#edf5f1;border-color:#d1e6da;color:#34604b;}
+:is(.raven-access,.raven-admin) .access-alert-warning {background:#f1eff8;border-color:#dfd9ee;color:#5d537f;}
+:is(.raven-access,.raven-admin) .access-alert a {font-weight:750;color:inherit;text-decoration:underline;}
+:is(.raven-access,.raven-admin) .access-link {min-height:44px;display:inline-flex;align-items:center;gap:8px;color:#315d98;font-size:12px;font-weight:750;text-decoration:none;background:none;border:0;cursor:pointer;}
+:is(.raven-access,.raven-admin) .access-link:hover {text-decoration:underline;}
+:is(.raven-access,.raven-admin) .access-back-icon {transform:rotate(180deg);}
+:is(.raven-access,.raven-admin) .access-sr-only {position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;}
+:is(.raven-access,.raven-admin) .access-skip-link {position:fixed;top:10px;left:12px;transform:translateY(-180%);opacity:0;pointer-events:none;z-index:1000;background:#fff;border:2px solid #2f66b0;padding:10px 16px;border-radius:10px;color:#264f8b;font-size:13px;}
+:is(.raven-access,.raven-admin) .access-skip-link:focus {transform:translateY(0);opacity:1;pointer-events:auto;}
+.raven-access .access-auth-layout {display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:90px;align-items:center;width:min(1100px,calc(100% - 96px));margin:0 auto;min-height:100svh;padding:52px 0;}
+.raven-access .access-brand {display:flex;flex-direction:column;align-items:flex-start;gap:42px;padding:16px 0;min-width:0;}
+.raven-access .access-brand-logo {width:176px;height:auto;mix-blend-mode:multiply;}
+.raven-access .access-brand-copy {display:flex;flex-direction:column;gap:18px;max-width:450px;}
+.raven-access .access-brand-copy h2 {font-size:clamp(29px,3.3vw,42px);font-weight:750;letter-spacing:-.045em;line-height:1.22;color:#26374f;}
+.raven-access .access-brand-copy > p:last-child {max-width:360px;font-size:14px;line-height:1.85;color:#5c687a;}
+.raven-access .access-brand-motif {width:min(356px,100%);height:auto;margin-top:4px;}
+.raven-access .access-brand-signature {font-size:11px;color:#657084;letter-spacing:.02em;}
+.raven-access .access-auth-area {min-width:0;}
+.raven-access .access-auth-card {background:#fff;border:1px solid #e0e5ed;border-radius:26px;padding:36px;box-shadow:0 20px 55px #293e6010,0 2px 6px #293e6003;}
+.raven-access .access-auth-heading {margin-bottom:28px;}
+.raven-access .access-heading-icon {display:grid;place-items:center;width:44px;height:44px;background:#edf2fa;border:1px solid #e0e8f5;border-radius:14px;color:#38649d;margin-bottom:22px;}
+.raven-access .access-auth-heading h1 {font-size:28px;letter-spacing:-.045em;line-height:1.23;font-weight:800;margin:8px 0 12px;}
+.raven-access .access-auth-heading > p:last-child {font-size:13px;line-height:1.8;color:#5c687a;}
+.raven-access .access-form {display:flex;flex-direction:column;gap:20px;}
+.raven-access .access-password {position:relative;}
+.raven-access .access-password .access-input {padding-right:54px;}
+.raven-access .access-password-toggle {position:absolute;right:3px;top:3px;min-width:43px;min-height:43px;padding:10px;display:grid;place-items:center;background:transparent;border:0;border-radius:9px;color:#526b8e;cursor:pointer;}
+.raven-access .access-password-toggle:hover {background:#eaf0f8;}
+.raven-access .access-eye-closed {display:none;}
+.raven-access .is-revealed .access-eye-open {display:none;}
+.raven-access .is-revealed .access-eye-closed {display:block;}
+.raven-access .access-auth-options {display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:-6px;}
+.raven-access .access-checkbox {min-height:44px;display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-size:12px;color:#4b5a70;}
+.raven-access .access-checkbox input {width:17px;height:17px;margin:0;accent-color:#2f66b0;}
+.raven-access .access-submit {width:100%;justify-content:center;min-height:49px;}
+.raven-access .access-submit .access-icon {width:17px;}
+.raven-access .access-back {justify-content:center;}
+.raven-access .access-auth-footer {display:flex;align-items:center;justify-content:center;gap:7px;margin-top:22px;font-size:11px;color:#5e6d80;}
+.raven-access .access-auth-footer .access-icon {width:13px;height:13px;}
+.raven-access .access-mobile-brand {display:none;}
+.raven-admin .admin-app {display:grid;grid-template-columns:224px minmax(0,1fr);min-height:100svh;}
+.raven-admin .admin-sidebar {position:sticky;top:0;height:100svh;display:flex;flex-direction:column;gap:8px;padding:32px 18px 24px;border-right:1px solid #e1e5ed;background:#f8f9fb;}
+.raven-admin .admin-brand {padding:0 12px 30px;display:block;}
+.raven-admin .admin-brand img {display:block;width:142px;height:auto;mix-blend-mode:multiply;}
+.raven-admin .admin-nav-label {margin:0 12px 12px;color:#657084;text-transform:uppercase;font-size:10px;letter-spacing:.1em;font-weight:750;}
+.raven-admin .admin-nav {display:flex;flex-direction:column;gap:8px;}
+.raven-admin .admin-nav-link {display:flex;align-items:center;gap:12px;min-height:49px;padding:12px 15px;border:1px solid transparent;border-radius:13px;color:#526178;text-decoration:none;font-size:13px;font-weight:700;}
+.raven-admin .admin-nav-link:hover {background:#edf1f7;}
+.raven-admin .admin-nav-link[aria-current=page] {background:#fff;color:#315f9b;border-color:#e0e6ef;box-shadow:0 3px 10px #243c5d06;}
+.raven-admin .admin-sidebar-note {margin-top:auto;padding:18px 12px;border:1px solid #e1e5ee;background:#f0f3f8;border-radius:16px;font-size:11px;color:#59677c;}
+.raven-admin .admin-sidebar-note strong {font-weight:750;color:#40506a;}
+.raven-admin .admin-sidebar-note p {margin-top:5px;line-height:1.7;}
+.raven-admin .admin-mini-motif {display:flex;gap:4px;margin-bottom:13px;}
+.raven-admin .admin-mini-motif i {width:17px;height:17px;background:#cbd8eb;border-radius:6px 0 6px 0;}
+.raven-admin .admin-mini-motif i:nth-child(2) {background:#d3cfe7;border-radius:50%;}
+.raven-admin .admin-mini-motif i:nth-child(3) {background:#c4e0e1;border-radius:0 0 9px 0;}
+.raven-admin .admin-main {min-width:0;}
+.raven-admin .admin-topbar {min-height:82px;display:flex;justify-content:space-between;align-items:center;gap:18px;padding:16px 32px;border-bottom:1px solid #e1e6ef;}
+.raven-admin .admin-topbar > p {font-size:12px;color:#637086;}
+.raven-admin .admin-topbar > p > span {margin:0 9px;color:#718097;}
+.raven-admin .admin-topbar strong {font-weight:750;color:#344b6a;}
+.raven-admin .admin-session {display:flex;align-items:center;gap:10px;min-width:0;}
+.raven-admin .admin-avatar {display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border:1px solid #dce4f0;background:#e9eef8;border-radius:12px;color:#375d96;font-size:13px;font-weight:800;}
+.raven-admin .admin-session-copy {display:flex;flex-direction:column;font-size:11px;max-width:200px;}
+.raven-admin .admin-session-copy strong {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.raven-admin .admin-session-copy span {font-size:10px;color:#647087;}
+.raven-admin .admin-logout {display:flex;align-items:center;justify-content:center;gap:8px;min-width:44px;min-height:44px;padding:10px 12px;background:#fff;border:1px solid #dfe5ee;border-radius:12px;color:#52637b;font-size:11px;cursor:pointer;margin-left:8px;}
+.raven-admin .admin-content {padding:32px;max-width:1500px;margin:0 auto;}
+.raven-admin .admin-page-heading {display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:26px;}
+.raven-admin .admin-page-heading h1 {font-size:30px;line-height:1.25;letter-spacing:-.045em;font-weight:800;margin:8px 0 11px;}
+.raven-admin .admin-page-heading > div > p:last-child {font-size:13px;line-height:1.8;color:#5c687a;}
+.raven-admin .admin-heading-motif {width:96px;height:77px;flex-shrink:0;}
+.raven-admin .admin-stack {display:flex;flex-direction:column;gap:22px;}
+.raven-admin .admin-stack > .admin-page-heading {margin-bottom:0;}
+.raven-admin .admin-stack > .access-alert {margin:0;}
+.raven-admin .admin-metrics {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;}
+.raven-admin .admin-metric {padding:22px 24px;}
+.raven-admin .admin-metric > div {display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.raven-admin .admin-metric p {font-size:12px;font-weight:700;color:#58667c;}
+.raven-admin .admin-metric .access-icon {width:32px;height:32px;padding:7px;border-radius:10px;background:#edf2f9;color:#426da5;}
+.raven-admin .admin-metric:nth-child(2) .access-icon {background:#eaf4f4;color:#3b7777;}
+.raven-admin .admin-metric:nth-child(3) .access-icon {background:#f0edf8;color:#706291;}
+.raven-admin .admin-metric > strong {display:block;margin:12px 0 4px;font-size:35px;line-height:1.2;letter-spacing:-.045em;font-weight:800;}
+.raven-admin .admin-metric > span {font-size:11px;color:#647087;}
+.raven-admin .admin-dashboard-grid {display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;}
+.raven-admin .admin-users-feature {padding:30px;position:relative;background:linear-gradient(120deg,#fff 70%,#f4f6fb);}
+.raven-admin .admin-feature-icon {display:grid;place-items:center;width:45px;height:45px;border:1px solid #dfe6f4;background:#ecf1fa;color:#426aa2;border-radius:14px;flex-shrink:0;}
+.raven-admin .admin-users-feature .admin-feature-icon {margin-bottom:25px;}
+.raven-admin .admin-users-feature h2 {font-size:24px;line-height:1.3;letter-spacing:-.035em;margin:8px 0 13px;font-weight:800;}
+.raven-admin .admin-users-feature > p:not(.access-eyebrow) {max-width:420px;font-size:13px;line-height:1.9;color:#58667c;}
+.raven-admin .admin-users-feature > .raven-button {margin-top:24px;}
+.raven-admin .admin-feature-foot {display:flex;align-items:flex-start;gap:10px;margin-top:28px;font-size:11px;line-height:1.8;color:#5b6980;max-width:430px;}
+.raven-admin .admin-feature-foot .access-icon {width:16px;height:16px;margin-top:2px;}
+.raven-admin .admin-roles {padding:26px;}
+.raven-admin .admin-section-title {display:flex;align-items:center;gap:10px;color:#5d6489;}
+.raven-admin .admin-section-title h2 {font-size:14px;font-weight:800;color:#35455f;}
+.raven-admin .admin-roles dl {margin:24px 0 18px;}
+.raven-admin .admin-roles dl > div {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0;border-bottom:1px solid #e8ecf2;}
+.raven-admin .admin-roles dt {display:flex;align-items:center;gap:10px;font-size:12px;color:#55637a;}
+.raven-admin .admin-roles dd {font-size:19px;font-weight:800;color:#314562;}
+.raven-admin .admin-role-dot {width:7px;height:7px;border-radius:50%;background:#5a7eb1;}
+.raven-admin .admin-role-dot--coordinator {background:#8a7eb0;}
+.raven-admin .admin-role-dot--promoter {background:#6fa4a9;}
+.raven-admin .admin-directory-heading {display:flex;justify-content:space-between;align-items:center;gap:18px;}
+.raven-admin .admin-directory-heading h2 {font-size:16px;font-weight:800;letter-spacing:-.02em;}
+.raven-admin .admin-directory-heading p {font-size:12px;color:#637087;margin-top:6px;}
+.raven-admin .admin-directory {overflow:hidden;}
+.raven-admin .admin-directory-toolbar {padding:22px 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;border-bottom:1px solid #e5eaf1;background:#fbfcfe;}
+.raven-admin .admin-search {width:min(430px,100%);}
+.raven-admin .admin-search-control {position:relative;}
+.raven-admin .admin-search-control .access-icon {position:absolute;left:14px;top:15px;width:18px;height:18px;color:#647894;}
+.raven-admin .admin-search-control .access-input {padding-left:42px;}
+.raven-admin .admin-result-count {font-size:11px;color:#5c6c82;padding-bottom:15px;white-space:nowrap;}
+.raven-admin .admin-users-table {width:100%;border-collapse:collapse;text-align:left;table-layout:fixed;}
+.raven-admin .admin-users-table th {background:#f6f8fb;padding:15px 18px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#606e84;font-weight:750;}
+.raven-admin .admin-users-table th:first-child {width:35%;padding-left:24px;}
+.raven-admin .admin-users-table th:nth-child(2) {width:14%;}
+.raven-admin .admin-users-table th:nth-child(3) {width:13%;}
+.raven-admin .admin-users-table th:last-child {width:38%;}
+.raven-admin .admin-users-table td {padding:20px 18px;border-top:1px solid #e9edf3;vertical-align:middle;font-size:12px;overflow-wrap:anywhere;}
+.raven-admin .admin-users-table td:first-child {padding-left:24px;}
+.raven-admin .admin-users-table tr:hover td {background:#fcfdff;}
+.raven-admin .admin-account {display:flex;align-items:center;gap:12px;min-width:0;}
+.raven-admin .admin-account > div {min-width:0;}
+.raven-admin .admin-account strong {display:block;font-size:13px;line-height:1.7;font-weight:750;color:#34445d;}
+.raven-admin .admin-account > div > span {display:block;font-size:11px;color:#637087;margin-top:4px;line-height:1.6;overflow-wrap:anywhere;}
+.raven-admin .admin-role-label {color:#51617b;font-size:12px;}
+.raven-admin .admin-state {display:inline-flex;align-items:center;gap:7px;font-size:12px;border:1px solid transparent;border-radius:20px;padding:4px 9px;white-space:nowrap;}
+.raven-admin .admin-state i {width:5px;height:5px;border-radius:50%;background:currentColor;}
+.raven-admin .admin-state.is-active {background:#edf5f2;color:#38634f;border-color:#deece4;}
+.raven-admin .admin-state.is-inactive {background:#f2eff7;color:#68577e;border-color:#e7dfef;}
+.raven-admin .admin-row-actions {display:flex;align-items:center;gap:3px;flex-wrap:wrap;}
+.raven-admin .admin-row-actions .raven-button {min-height:44px;padding:9px 10px;font-size:12px;gap:6px;}
+.raven-admin .admin-row-actions .access-icon {width:15px;height:15px;}
+.raven-admin .admin-row-actions .admin-deactivate {color:#974c43;}
+.raven-admin .admin-row-actions > .access-help {display:flex;align-items:center;gap:7px;}
+.raven-admin .admin-users-table td.admin-empty {padding:42px 24px;text-align:center;}
+.raven-admin .admin-empty > .access-icon {width:32px;height:32px;color:#667e9e;margin-bottom:15px;}
+.raven-admin .admin-empty h3 {font-size:15px;font-weight:750;}
+.raven-admin .admin-empty p {font-size:12px;color:#5c687a;margin:7px 0;}
+.raven-admin .admin-pagination {padding:18px 24px;border-top:1px solid #e5eaf1;display:flex;justify-content:space-between;align-items:center;gap:12px;}
+.raven-admin .admin-pagination p {font-size:11px;color:#596980;}
+.raven-admin .admin-pagination > div {display:flex;gap:8px;}
+.raven-admin .admin-pagination button:disabled {cursor:default;}
+.raven-admin .admin-editor {padding:26px;scroll-margin-top:20px;box-shadow:0 7px 24px #29426008;}
+.raven-admin .admin-editor-heading {display:flex;gap:14px;align-items:center;margin-bottom:24px;}
+.raven-admin .admin-editor-heading h2 {font-size:18px;letter-spacing:-.025em;font-weight:800;}
+.raven-admin .admin-editor-heading p {font-size:12px;line-height:1.8;color:#5f6b80;margin-top:5px;}
+.raven-admin .admin-form-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;}
+.raven-admin .admin-form-grid > :last-child {max-width:340px;}
+.raven-admin .admin-form-actions {display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:24px;}
+@media (max-width:1100px) {
+ .raven-access .access-auth-layout {gap:50px;width:calc(100% - 64px);grid-template-columns:minmax(0,1fr) minmax(0,420px);}
+ .raven-admin .admin-users-table,.raven-admin .admin-users-table tbody {display:block;}
+ .raven-admin .admin-users-table thead {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);}
+ .raven-admin .admin-users-table tbody > tr {display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:22px 24px;border-top:1px solid #e1e7f0;}
+ .raven-admin .admin-users-table td,.raven-admin .admin-users-table td:first-child {padding:0;border:0;}
+ .raven-admin .admin-users-table td:first-child,.raven-admin .admin-users-table td:last-child {grid-column:1/-1;}
+ .raven-admin .admin-row-actions {gap:8px;}
+ .raven-admin .admin-row-actions .raven-button {font-size:12px;}
+ .raven-admin .admin-dashboard-grid {grid-template-columns:1fr;}
+}
+@media (max-width:900px) {
+ .raven-access .access-auth-layout {display:block;width:min(480px,100%);min-height:100svh;padding:28px 20px;}
+ .raven-access .access-brand {display:none;}
+ .raven-access .access-mobile-brand {display:flex;flex-direction:column;align-items:center;gap:12px;margin:0 0 23px;text-align:center;}
+ .raven-access .access-mobile-brand img {width:148px;height:auto;mix-blend-mode:multiply;}
+ .raven-access .access-mobile-brand p {max-width:260px;font-size:11px;line-height:1.7;color:#5f6d81;}
+ .raven-access .access-auth-card {padding:30px;border-radius:22px;}
+ .raven-access .access-auth-footer {margin-top:20px;}
+ .raven-admin .admin-app {grid-template-columns:1fr;}
+ .raven-admin .admin-sidebar {position:static;height:auto;flex-direction:row;align-items:center;justify-content:space-between;padding:16px 24px;border-right:0;border-bottom:1px solid #e1e5ee;gap:16px;}
+ .raven-admin .admin-brand {padding:0;}
+ .raven-admin .admin-brand img {width:120px;}
+ .raven-admin .admin-nav {flex-direction:row;gap:6px;}
+ .raven-admin .admin-nav-link {min-height:44px;padding:10px 12px;gap:8px;}
+ .raven-admin .admin-nav-label,.raven-admin .admin-sidebar-note {display:none;}
+ .raven-admin .admin-topbar {min-height:66px;padding:12px 24px;}
+ .raven-admin .admin-content {padding:28px 24px;}
+ .raven-admin .admin-session-copy {max-width:175px;}
+}
+@media (max-width:600px) {
+ .raven-access .access-auth-layout {padding:24px 16px;}
+ .raven-access .access-auth-card {padding:25px 23px;}
+ .raven-access .access-auth-heading {margin-bottom:24px;}
+ .raven-access .access-heading-icon {margin-bottom:19px;}
+ .raven-access .access-auth-heading h1 {font-size:26px;}
+ .raven-admin .admin-sidebar {padding:14px 16px;gap:10px;}
+ .raven-admin .admin-brand img {width:104px;}
+ .raven-admin .admin-nav-link {font-size:12px;padding:9px 10px;gap:7px;}
+ .raven-admin .admin-nav-link .access-icon {width:17px;height:17px;}
+ .raven-admin .admin-topbar {padding:10px 16px;gap:8px;}
+ .raven-admin .admin-session-copy,.raven-admin .admin-logout-copy {display:none;}
+ .raven-admin .admin-logout {margin-left:0;}
+ .raven-admin .admin-content {padding:24px 16px;}
+ .raven-admin .admin-page-heading {gap:12px;margin-bottom:22px;}
+ .raven-admin .admin-page-heading h1 {font-size:26px;}
+ .raven-admin .admin-heading-motif {width:62px;height:50px;}
+ .raven-admin .admin-metrics {grid-template-columns:1fr;gap:12px;}
+ .raven-admin .admin-metric {padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 18px;align-items:center;}
+ .raven-admin .admin-metric > strong {grid-column:2;grid-row:1/3;margin:0;font-size:32px;}
+ .raven-admin .admin-metric > div .access-icon {width:28px;height:28px;padding:6px;order:-1;}
+ .raven-admin .admin-metric > div {justify-content:flex-start;gap:8px;}
+ .raven-admin .admin-metric > span {padding-left:36px;}
+ .raven-admin .admin-users-feature,.raven-admin .admin-roles {padding:24px;}
+ .raven-admin .admin-directory-heading {align-items:flex-start;flex-direction:column;}
+ .raven-admin .admin-directory-heading > .raven-button {width:100%;}
+ .raven-admin .admin-directory-toolbar {padding:20px;align-items:flex-start;flex-direction:column;gap:10px;}
+ .raven-admin .admin-result-count {padding:0;}
+ .raven-admin .admin-users-table tbody > tr {padding:20px;}
+ .raven-admin .admin-row-actions {gap:4px;}
+ .raven-admin .admin-row-actions .raven-button {font-size:12px;}
+ .raven-admin .admin-editor {padding:20px;}
+ .raven-admin .admin-editor-heading {align-items:flex-start;}
+ .raven-admin .admin-form-grid {grid-template-columns:1fr;gap:18px;}
+ .raven-admin .admin-form-grid > :last-child {max-width:none;}
+ .raven-admin .admin-form-actions .raven-button {flex:1 1 auto;}
+ .raven-admin .admin-pagination {padding:16px 20px;}
+}
+@media (max-width:360px) {
+ .raven-access .access-auth-card {padding:23px 19px;}
+ .raven-access .access-auth-options {gap:0;}
+ .raven-access .access-auth-options .access-link {font-size:11px;}
+ .raven-access .access-checkbox {font-size:11px;gap:6px;}
+ .raven-admin .admin-brand img {width:94px;}
+ .raven-admin .admin-nav-link {padding:9px 8px;}
+ .raven-admin .admin-topbar > p {font-size:11px;}
+}
+@media (prefers-reduced-motion:reduce) {
+ :is(.raven-access,.raven-admin) *, :is(.raven-access,.raven-admin) *::before, :is(.raven-access,.raven-admin) *::after {transition:none!important;animation:none!important;scroll-behavior:auto!important;}
+}
