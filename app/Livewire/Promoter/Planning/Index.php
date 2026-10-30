@@ -39,6 +39,8 @@ class Index extends Component
 
     public string $selectedDate = '';
 
+    public string $copySourceMonth = '';
+
     public string $copySourceWeek = '';
 
     public string $copyTargetWeek = '';
@@ -191,7 +193,7 @@ class Index extends Component
 
     private function clearMonthState(): void
     {
-        $this->reset(['scheduledDate', 'pharmacyId', 'pharmacySearch', 'notes', 'selectedDate', 'selectedPharmacyIds', 'batchPreview', 'copyPreview', 'copySourceWeek', 'copyTargetWeek', 'acknowledgeOmissions']);
+        $this->reset(['scheduledDate', 'pharmacyId', 'pharmacySearch', 'notes', 'selectedDate', 'selectedPharmacyIds', 'batchPreview', 'copyPreview', 'copySourceMonth', 'copySourceWeek', 'copyTargetWeek', 'acknowledgeOmissions']);
         $this->resetValidation();
     }
 
@@ -200,7 +202,11 @@ class Index extends Component
         if (in_array($property, ['scheduledDate', 'notes', 'activityType'], true)) {
             $this->batchPreview = null;
         }
-        if (in_array($property, ['copySourceWeek', 'copyTargetWeek'], true)) {
+        if ($property === 'copySourceMonth') {
+            $this->copySourceWeek = '';
+            $this->resetValidation(['copy', 'copySourceMonth', 'copySourceWeek']);
+        }
+        if (in_array($property, ['copySourceMonth', 'copySourceWeek', 'copyTargetWeek'], true)) {
             $this->copyPreview = null;
             $this->acknowledgeOmissions = false;
         }
@@ -305,12 +311,31 @@ class Index extends Component
         $this->dispatch('planning-focus', target: 'planning-agenda-title');
     }
 
+    private function copyMonths()
+    {
+        $month = $this->month();
+
+        return MonthlySchedule::where('promoter_id', $this->promoter()->id)
+            ->whereRaw('(year * 12 + month) <= ?', [$month->year * 12 + $month->month])
+            ->orderByDesc('year')->orderByDesc('month')->get();
+    }
+
+    private function copyOrigin(): MonthlySchedule
+    {
+        $origin = $this->copyMonths()->first(fn ($item) => $item->firstDay()->format('Y-m') === $this->copySourceMonth);
+        if (! $origin) {
+            throw ValidationException::withMessages(['copySourceMonth' => 'Seleccione un mes con un cronograma propio disponible.']);
+        }
+
+        return $origin;
+    }
+
     public function reviewCopy(PlanningProductivity $productivity): void
     {
         $this->reset(['copyPreview', 'acknowledgeOmissions']);
-        $this->validate(['copySourceWeek' => ['required', 'integer'], 'copyTargetWeek' => ['required', 'integer']], ['required' => 'Seleccione la :attribute.', 'integer' => 'Seleccione una :attribute válida.'], ['copySourceWeek' => 'semana de origen', 'copyTargetWeek' => 'semana de destino']);
+        $this->validate(['copySourceMonth' => ['required', 'date_format:Y-m'], 'copySourceWeek' => ['required', 'integer'], 'copyTargetWeek' => ['required', 'integer']], ['copySourceMonth.required' => 'Seleccione el mes de origen.', 'copySourceMonth.date_format' => 'Seleccione un mes de origen válido.', 'required' => 'Seleccione la :attribute.', 'integer' => 'Seleccione una :attribute válida.'], ['copySourceMonth' => 'mes de origen', 'copySourceWeek' => 'semana de origen', 'copyTargetWeek' => 'semana de destino']);
         $schedule = $this->schedule() ?? abort(404);
-        $this->copyPreview = $productivity->previewWeek($this->promoter(), $schedule->id, (int) $this->copySourceWeek, (int) $this->copyTargetWeek);
+        $this->copyPreview = $productivity->previewWeek($this->promoter(), $schedule->id, (int) $this->copySourceWeek, (int) $this->copyTargetWeek, $this->copyOrigin()->id);
         $this->resetValidation('copy');
         $this->dispatch('planning-focus', target: 'copy-preview-title');
     }
@@ -321,7 +346,7 @@ class Index extends Component
             throw ValidationException::withMessages(['copy' => 'Revise la vista previa antes de confirmar.']);
         }
         $schedule = $this->schedule() ?? abort(404);
-        $ids = $productivity->copyWeek($this->promoter(), $schedule->id, (int) $this->copySourceWeek, (int) $this->copyTargetWeek, $this->copyPreview['hash'], $this->acknowledgeOmissions);
+        $ids = $productivity->copyWeek($this->promoter(), $schedule->id, (int) $this->copySourceWeek, (int) $this->copyTargetWeek, $this->copyPreview['hash'], $this->acknowledgeOmissions, $this->copyOrigin()->id);
         $this->selectDay(collect($this->copyPreview['rows'])->where('status', 'ready')->min('date'));
         $this->copyPreview = null;
         $this->acknowledgeOmissions = false;
@@ -365,8 +390,16 @@ class Index extends Component
         $byDate = $activities->groupBy(fn ($a) => $a->scheduled_date->toDateString());
         $selectedPharmacies = EstablishmentSearch::forPromoter($promoter)->whereKey($this->selectedPharmacyIds)->get()->keyBy('id');
 
+        if ($this->copySourceMonth === '') {
+            $this->copySourceMonth = $month->format('Y-m');
+        }
+        $copyMonths = $schedule?->isDraft() ? $this->copyMonths() : collect();
+        $copyOrigin = $copyMonths->first(fn ($item) => $item->firstDay()->format('Y-m') === $this->copySourceMonth);
+
         return view('livewire.promoter.planning.index', [
             'schedule' => $schedule,
+            'copyMonths' => $copyMonths,
+            'copyWeeks' => $copyOrigin?->weeks ?? collect(),
             'calendarDays' => PlanningCalendar::days($month),
             'selectedDay' => $day,
             'selectedWeek' => $selectedWeek,
