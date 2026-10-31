@@ -30,6 +30,12 @@
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h3"/></svg></span>
                     Solicitudes
                 </a>
+                <a href="{{ route('coordinator.assignments.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('coordinator.assignments.*') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('coordinator.assignments.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5h16v16M2 21h20M9 21v-5h6v5M9 9h6m-3-3v6"/></svg></span>
+                    Asignaciones
+                </a>
             </nav>
             <div class="raven-sidebar-footer coordinator-sidebar-footer">
                 <p class="coordinator-sidebar-signature">Laboratorio Raven</p>

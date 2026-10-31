@@ -10,6 +10,7 @@
             <p class="coordinator-kpi-label">Farmacias activas sin promotora</p>
             <p class="coordinator-kpi-value">{{ $unassigned }}</p>
             <p class="coordinator-kpi-help">De {{ $activePharmacies }} establecimientos activos</p>
+            <a class="raven-button raven-button-secondary" href="{{ route('coordinator.assignments.index', ['promotora' => 'none']) }}">Asignar farmacias</a>
         </article>
         <article class="raven-card coordinator-kpi">
             <p class="coordinator-kpi-label">Promotoras activas</p>

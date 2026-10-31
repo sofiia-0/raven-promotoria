@@ -96,6 +96,20 @@
 .coordinator-review-outcome {padding-top: 18px; border-top: 1px solid #edf0f4;}
 .coordinator-table tr.is-selected td {background: #f5f8fc;}
 
+/* Asignaciones (RF-FAR). */
+.coordinator-workload {display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;}
+.coordinator-workload-item {display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1px solid #e3e7ee; border-radius: 14px; background: #fafbfd; color: #2f3e54; font: inherit; font-size: 12px; text-align: left; cursor: pointer;}
+.coordinator-workload-item:hover {border-color: #b6c5d9;}
+.coordinator-workload-item.is-selected {border-color: #7897bd; background: #edf3fa; box-shadow: inset 3px 0 0 #5478a6;}
+.coordinator-workload-name {font-weight: 650; overflow-wrap: anywhere;}
+.coordinator-workload-count {font-size: 18px; font-weight: 800; color: #2f66b0; font-variant-numeric: tabular-nums;}
+.coordinator-batch {background: #f9fafc; border-color: #dce4ef;}
+.coordinator-batch-head {display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;}
+.coordinator-batch-actions {display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap;}
+.coordinator-batch-actions .raven-field {min-width: 240px; flex: 1 1 240px;}
+.coordinator-batch-actions .raven-button {min-height: 44px;}
+.coordinator-table input[type="checkbox"] {width: 18px; height: 18px; accent-color: #2f66b0;}
+
 @media (max-width: 1100px) {
     .coordinator-kpis {grid-template-columns: repeat(2, minmax(0, 1fr));}
     .coordinator-filters {grid-template-columns: repeat(2, minmax(0, 1fr));}

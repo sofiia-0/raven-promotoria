@@ -46,6 +46,17 @@ Route::middleware([
         Route::get('/requests', function () {
             return view('coordinator.requests');
         })->name('requests.index');
+
+        Route::get('/assignments', function () {
+            return view('coordinator.assignments');
+        })->name('assignments.index');
+
+        Route::get('/assignments/{pharmacy}', function (int $pharmacy) {
+            return view('coordinator.assignment-detail', [
+                'pharmacyId' => $pharmacy,
+            ]);
+        })->whereNumber('pharmacy')
+            ->name('assignments.show');
     });
 
 Route::middleware([
