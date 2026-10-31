@@ -1,0 +1,93 @@
+/* Panel de Coordinación. Reutiliza tokens y componentes Raven (app.css); mismo lenguaje visual que Promotora. */
+.coordinator-shell {background: #f4f5f7;}
+.coordinator-shell .raven-app {grid-template-columns: 228px minmax(0, 1fr);}
+.coordinator-shell .raven-sidebar {padding: 30px 18px 20px; background: #f7f8fa; border-color: #e5e7ec;}
+.coordinator-shell .raven-brand {padding: 0 14px 32px;}
+.coordinator-shell .raven-brand img {width: 138px;}
+.coordinator-nav-label {margin: 6px 14px 15px; color: #657080; font-size: 10px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase;}
+.coordinator-shell .raven-nav {gap: 8px;}
+.coordinator-shell .raven-nav-link {min-height: 48px; border: 1px solid transparent; font-size: 13px; color: #586373;}
+.coordinator-shell .raven-nav-link:hover {background: #edf0f5; color: #264f8b;}
+.coordinator-shell .raven-nav-link.is-active {background: #fff; color: #264f8b; border-color: #e7eaf0; box-shadow: 0 3px 12px #1f294008;}
+.coordinator-shell .raven-nav-link.is-active .raven-nav-icon {color: #2f66b0;}
+.coordinator-nav-count {margin-left: auto; min-width: 22px; padding: 2px 7px; border-radius: 999px; background: #eef3f8; color: #45627f; font-size: 10px; font-weight: 750; text-align: center;}
+.coordinator-sidebar-footer {border-top: 1px solid #e5e7ec; padding-top: 14px !important;}
+.coordinator-sidebar-signature {margin: 0 14px; color: #657080; font-size: 10px; letter-spacing: .04em;}
+.coordinator-shell .raven-topbar {min-height: 80px; padding: 16px 32px; background: #f4f5f7; border-bottom: 1px solid #e5e7ec; backdrop-filter: none;}
+.coordinator-shell .raven-topbar-title {font-size: 12px;}
+.coordinator-shell .raven-topbar-title > span:first-child {margin: 0 9px; color: #87909c;}
+.coordinator-topbar-section {font-weight: 500; color: #657080;}
+.coordinator-shell .raven-topbar-subtitle {font-size: 10px; margin-top: 5px;}
+.coordinator-shell .raven-avatar {background: #e9e9f3; width: 36px; height: 36px; flex-basis: 36px;}
+.coordinator-shell .raven-user-name {max-width: 220px; overflow-wrap: anywhere; font-size: 12px;}
+.coordinator-shell .raven-logout {background: #fff; border-color: #e1e4e9; min-height: 42px;}
+.coordinator-shell :is(a, button, input, select, textarea):focus-visible {outline: 3px solid #2f66b0; outline-offset: 3px;}
+.coordinator-skip-link {position: fixed; top: 10px; left: 16px; z-index: 100; padding: 12px 18px; border-radius: 10px; background: #fff; color: #264f8b; transform: translateY(-160%);}
+.coordinator-skip-link:focus {transform: translateY(0);}
+.coordinator-shell .raven-content {max-width: 1440px; padding: 34px 32px 40px;}
+.coordinator-shell .raven-content > .raven-page-header {margin-bottom: 24px;}
+.coordinator-shell .raven-page-title {font-size: clamp(26px, 2.5vw, 34px); letter-spacing: -.045em; font-weight: 750; line-height: 1.2;}
+.coordinator-shell .raven-page-description {font-size: 13px; margin-top: 9px;}
+.coordinator-shell .raven-stack {gap: 20px;}
+.coordinator-shell .raven-card {padding: 24px; border: 1px solid #e7e9ee; border-radius: 22px; background: #fff; box-shadow: 0 3px 15px #1f294004; min-width: 0;}
+.coordinator-shell .raven-card-description {font-size: 12px; line-height: 1.65; color: #657080;}
+.coordinator-shell .raven-section-title {font-size: 16px; letter-spacing: -.025em;}
+.coordinator-shell .raven-button {min-height: 42px; border-radius: 12px; font-size: 12px;}
+.coordinator-shell .raven-button-primary {background: #2f66b0;}
+.coordinator-shell .raven-button-primary:hover {background: #264f8b;}
+.coordinator-shell .raven-input, .coordinator-shell .raven-select, .coordinator-shell .raven-textarea {background: #fbfcfd; border-color: #dde2e9; font-size: 13px; min-height: 44px; border-radius: 12px;}
+.coordinator-shell .raven-label {font-size: 12px; font-weight: 650; color: #465365;}
+.coordinator-shell .raven-field-help {color: #657080; font-size: 11px; line-height: 1.6;}
+.coordinator-shell .raven-badge {font-size: 10px; font-weight: 650;}
+.coordinator-shell .raven-alert {margin: 0;}
+.coordinator-shell [x-cloak] {display: none !important;}
+.coordinator-sr-only {position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;}
+
+/* Componentes compartidos del panel. */
+.coordinator-kpis {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;}
+.coordinator-kpi {display: flex; flex-direction: column; gap: 8px;}
+.coordinator-kpi-label {margin: 0; color: #596776; font-size: 12px; font-weight: 700;}
+.coordinator-kpi-value {margin: 0; color: #2f66b0; font-size: 38px; font-weight: 800; line-height: 1.1; font-variant-numeric: tabular-nums;}
+.coordinator-kpi-help {margin: 0; color: #657080; font-size: 11px; line-height: 1.55;}
+.coordinator-kpi .raven-button {align-self: flex-start; margin-top: 6px;}
+.coordinator-columns {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;}
+.coordinator-section-head {display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap;}
+.coordinator-figures {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0;}
+.coordinator-figures div {padding: 14px; border-radius: 14px; background: #f7f8fb;}
+.coordinator-figures dt {color: #657080; font-size: 11px; font-weight: 700;}
+.coordinator-figures dd {margin: 4px 0 0; color: #1f2940; font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums;}
+.coordinator-list {list-style: none; margin: 0; padding: 0;}
+.coordinator-list-row {display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #edf0f4;}
+.coordinator-list-row:last-child {border-bottom: none;}
+.coordinator-list-title {margin: 0; font-size: 13px; font-weight: 700; color: #1f2940; overflow-wrap: anywhere;}
+.coordinator-list-meta {margin: 3px 0 0; font-size: 11px; color: #657080;}
+.coordinator-filters {display: grid; grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(130px, 1fr)) auto; gap: 14px; align-items: end;}
+.coordinator-filters .raven-button {min-height: 44px;}
+.coordinator-results-head {display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;}
+.coordinator-results-count {margin: 0; font-size: 13px; font-weight: 700;}
+.coordinator-muted {color: #657080; font-size: 11px;}
+.coordinator-table-shell {overflow-x: auto;}
+.coordinator-table {width: 100%; border-collapse: collapse; font-size: 12px;}
+.coordinator-table th {padding: 10px 12px; text-align: left; color: #596776; font-size: 11px; font-weight: 700; border-bottom: 1px solid #e5e8ee; white-space: nowrap;}
+.coordinator-table td {padding: 12px; vertical-align: top; border-bottom: 1px solid #eef0f4; color: #2f3e54;}
+.coordinator-table tr:last-child td {border-bottom: none;}
+.coordinator-table .coordinator-list-meta {display: block;}
+.coordinator-table-actions {text-align: right; white-space: nowrap;}
+.coordinator-numeric {text-align: right; font-variant-numeric: tabular-nums;}
+.coordinator-pagination {overflow-x: auto;}
+.coordinator-empty {text-align: center; padding: 32px 24px;}
+.coordinator-detail-list {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0;}
+.coordinator-detail-list div {min-width: 0;}
+.coordinator-detail-list dt {color: #657080; font-size: 11px; font-weight: 700;}
+.coordinator-detail-list dd {margin: 3px 0 0; color: #2f3e54; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere;}
+.coordinator-badges {display: flex; gap: 6px; flex-wrap: wrap;}
+
+@media (max-width: 1100px) {
+    .coordinator-kpis {grid-template-columns: repeat(2, minmax(0, 1fr));}
+    .coordinator-filters {grid-template-columns: repeat(2, minmax(0, 1fr));}
+}
+@media (max-width: 750px) {
+    .coordinator-kpis, .coordinator-columns, .coordinator-filters, .coordinator-detail-list {grid-template-columns: 1fr;}
+    .coordinator-figures {grid-template-columns: 1fr 1fr;}
+    .coordinator-shell .raven-content {padding: 24px 16px 32px;}
+}
