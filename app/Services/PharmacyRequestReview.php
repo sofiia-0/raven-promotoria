@@ -2,13 +2,9 @@
 
 namespace App\Services;
 
-use App\Enums\ActivityType;
-use App\Enums\ScheduleStatus;
 use App\Enums\UserRole;
-use App\Enums\VisitStatus;
 use App\Models\Pharmacy;
 use App\Models\PharmacyRequest;
-use App\Models\PlannedActivity;
 use App\Models\User;
 use App\Support\EstablishmentSearch;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,6 +26,7 @@ class PharmacyRequestReview
     public function __construct(
         private AuditLogger $audit = new AuditLogger,
         private PharmacyAssignmentService $assignments = new PharmacyAssignmentService,
+        private SchedulePlanner $planner = new SchedulePlanner,
     ) {}
 
     /** Alta: crea y asigna la farmacia (por defecto a quien la solicitó). Baja: la desactiva. */
@@ -66,19 +63,10 @@ class PharmacyRequestReview
         });
     }
 
-    /**
-     * Visitas de cronogramas enviados para esta farmacia, desde hoy y sin realizar.
-     * Tras una baja o una reasignación ya no se podrán registrar: se avisa antes de confirmar.
-     */
+    /** Visitas planificadas que una baja dejaría sin poder registrarse (las calcula Planificación). */
     public function pendingPlannedVisits(int $pharmacyId): int
     {
-        return PlannedActivity::query()
-            ->where('pharmacy_id', $pharmacyId)
-            ->where('activity_type', ActivityType::VISITA)
-            ->whereDate('scheduled_date', '>=', SchedulePlanner::today()->toDateString())
-            ->whereHas('week.schedule', fn (Builder $q) => $q->where('status', ScheduleStatus::ENVIADO))
-            ->whereDoesntHave('visits', fn (Builder $q) => $q->where('status', VisitStatus::REALIZADA))
-            ->count();
+        return $this->planner->pendingPlannedVisits([$pharmacyId]);
     }
 
     /** Fichas del mismo departamento cuyo nombre contiene los términos propuestos (posible duplicado). */
