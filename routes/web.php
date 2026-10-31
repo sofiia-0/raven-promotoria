@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\Coordinator\VisitEvidenceController as CoordinatorVisitEvidenceController;
 use App\Http\Controllers\Promoter\VisitEvidenceController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +58,33 @@ Route::middleware([
             ]);
         })->whereNumber('pharmacy')
             ->name('assignments.show');
+
+        Route::get('/schedules', function () {
+            return view('coordinator.schedules');
+        })->name('schedules.index');
+
+        Route::get('/schedules/{schedule}', function (int $schedule) {
+            return view('coordinator.schedule-detail', [
+                'scheduleId' => $schedule,
+            ]);
+        })->whereNumber('schedule')
+            ->name('schedules.show');
+
+        Route::get('/visits', function () {
+            return view('coordinator.visits');
+        })->name('visits.index');
+
+        Route::get('/visits/{visit}', function (int $visit) {
+            return view('coordinator.visit-detail', [
+                'visitId' => $visit,
+            ]);
+        })->whereNumber('visit')
+            ->name('visits.show');
+
+        Route::get('/visits/{visit}/evidence/{evidence}/download', [CoordinatorVisitEvidenceController::class, 'download'])
+            ->whereNumber('visit')->whereUuid('evidence')->middleware('throttle:60,1')->name('visits.evidence.download');
+        Route::get('/visits/{visit}/evidence/{evidence}/preview', [CoordinatorVisitEvidenceController::class, 'preview'])
+            ->whereNumber('visit')->whereUuid('evidence')->middleware('throttle:120,1')->name('visits.evidence.preview');
     });
 
 Route::middleware([

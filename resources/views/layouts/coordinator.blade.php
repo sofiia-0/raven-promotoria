@@ -36,6 +36,18 @@
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5h16v16M2 21h20M9 21v-5h6v5M9 9h6m-3-3v6"/></svg></span>
                     Asignaciones
                 </a>
+                <a href="{{ route('coordinator.schedules.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('coordinator.schedules.*') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('coordinator.schedules.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2m4 0h2M8 18h2"/></svg></span>
+                    Cronogramas
+                </a>
+                <a href="{{ route('coordinator.visits.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('coordinator.visits.*') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('coordinator.visits.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2m-7 9 3 3 5-6"/></svg></span>
+                    Visitas
+                </a>
             </nav>
             <div class="raven-sidebar-footer coordinator-sidebar-footer">
                 <p class="coordinator-sidebar-signature">Laboratorio Raven</p>

@@ -32,6 +32,7 @@
                 <div><dt>En borrador</dt><dd>{{ $schedulesDraft }}</dd></div>
                 <div><dt>Sin crear</dt><dd>{{ $schedulesMissing }}</dd></div>
             </dl>
+            <a class="raven-button raven-button-secondary coordinator-section-link" href="{{ route('coordinator.schedules.index') }}">Ver cronogramas</a>
         </section>
 
         <section class="raven-card" aria-labelledby="visits-title">
@@ -46,6 +47,7 @@
                 <div><dt>No realizadas</dt><dd>{{ $visitsNotDone }}</dd></div>
                 <div><dt>Fuera de plan</dt><dd>{{ $visitsUnplanned }}</dd></div>
             </dl>
+            <a class="raven-button raven-button-secondary coordinator-section-link" href="{{ route('coordinator.visits.index') }}">Ver visitas</a>
         </section>
     </div>
 

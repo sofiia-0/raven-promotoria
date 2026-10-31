@@ -110,6 +110,37 @@
 .coordinator-batch-actions .raven-button {min-height: 44px;}
 .coordinator-table input[type="checkbox"] {width: 18px; height: 18px; accent-color: #2f66b0;}
 
+/* Supervisión de cronogramas y visitas (RF-PLAN, RF-VIS). */
+.coordinator-section-link {margin-top: 16px;}
+.coordinator-month-nav {display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;}
+.coordinator-total-row th, .coordinator-total-row td {padding: 12px; border-top: 1px solid #dfe4ec; font-weight: 800; color: #1f2940; text-align: left;}
+.coordinator-total-row td.coordinator-numeric {text-align: right;}
+.coordinator-weeks {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;}
+.coordinator-activity {align-items: flex-start; justify-content: flex-start;}
+.coordinator-activity-date {display: flex; flex-direction: column; align-items: center; min-width: 44px; padding: 6px 4px; border-radius: 10px; background: #e7eef8; color: #2f66b0; font-size: 11px; font-weight: 700; text-transform: capitalize;}
+.coordinator-activity-date strong {font-size: 18px; line-height: 1.1; font-variant-numeric: tabular-nums;}
+.coordinator-activity-body {flex: 1; min-width: 0;}
+.coordinator-activity-status {justify-content: flex-end; max-width: 45%;}
+.coordinator-filters--visits {grid-template-columns: repeat(5, minmax(130px, 1fr));}
+.coordinator-filter-wide {grid-column: span 4;}
+.coordinator-visit-location {margin-bottom: 18px;}
+.coordinator-evidences {list-style: none; margin: 0; padding: 0; display: grid; gap: 12px;}
+.coordinator-evidences li {display: flex; align-items: center; gap: 14px; padding: 12px; border: 1px solid #e7e9ee; border-radius: 14px;}
+.coordinator-evidences img {width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: 0 0 auto;}
+.coordinator-evidences div {flex: 1; min-width: 0;}
+
+@media (max-width: 1100px) {
+    .coordinator-weeks {grid-template-columns: 1fr;}
+    .coordinator-filters--visits {grid-template-columns: repeat(2, minmax(0, 1fr));}
+    .coordinator-filter-wide {grid-column: span 2;}
+}
+@media (max-width: 750px) {
+    .coordinator-filters--visits {grid-template-columns: 1fr;}
+    .coordinator-filter-wide {grid-column: auto;}
+    .coordinator-activity {flex-wrap: wrap;}
+    .coordinator-activity-status {max-width: none; width: 100%; justify-content: flex-start;}
+    .coordinator-evidences li {flex-wrap: wrap;}
+}
 @media (max-width: 1100px) {
     .coordinator-kpis {grid-template-columns: repeat(2, minmax(0, 1fr));}
     .coordinator-filters {grid-template-columns: repeat(2, minmax(0, 1fr));}
