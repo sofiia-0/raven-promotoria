@@ -35,11 +35,14 @@ Route::middleware([
 Route::middleware([
     'auth',
     'role:coordinator',
-])->group(function () {
-    Route::get('/coordinator', function () {
-        return 'Panel de Coordinadora';
-    })->name('coordinator.dashboard');
-});
+])
+    ->prefix('coordinator')
+    ->name('coordinator.')
+    ->group(function () {
+        Route::get('/', function () {
+            return view('coordinator.dashboard');
+        })->name('dashboard');
+    });
 
 Route::middleware([
     'auth',
