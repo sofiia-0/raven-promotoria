@@ -4,6 +4,7 @@
             <p class="coordinator-kpi-label">Solicitudes pendientes</p>
             <p class="coordinator-kpi-value">{{ $pendingAlta + $pendingBaja }}</p>
             <p class="coordinator-kpi-help">{{ $pendingAlta }} de alta · {{ $pendingBaja }} de baja</p>
+            <a class="raven-button raven-button-primary" href="{{ route('coordinator.requests.index') }}">Revisar solicitudes</a>
         </article>
         <article class="raven-card coordinator-kpi">
             <p class="coordinator-kpi-label">Farmacias activas sin promotora</p>

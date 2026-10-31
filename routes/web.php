@@ -42,6 +42,10 @@ Route::middleware([
         Route::get('/', function () {
             return view('coordinator.dashboard');
         })->name('dashboard');
+
+        Route::get('/requests', function () {
+            return view('coordinator.requests');
+        })->name('requests.index');
     });
 
 Route::middleware([

@@ -82,6 +82,20 @@
 .coordinator-detail-list dd {margin: 3px 0 0; color: #2f3e54; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere;}
 .coordinator-badges {display: flex; gap: 6px; flex-wrap: wrap;}
 
+/* Solicitudes de alta y baja (RF-AB). */
+.coordinator-filters--requests {grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(150px, 1fr));}
+.coordinator-review {border-color: #cad9ed; box-shadow: inset 3px 0 0 #6c89ae;}
+.coordinator-review-title {margin-top: 10px;}
+.coordinator-review .coordinator-detail-list {margin-bottom: 18px;}
+.coordinator-detail-wide {grid-column: 1 / -1;}
+.coordinator-block {display: block; margin-top: 4px; white-space: pre-line;}
+.coordinator-review-warning {margin-bottom: 18px !important;}
+.coordinator-review-warning p {margin: 0 0 6px;}
+.coordinator-review-warning ul {margin: 0; padding-left: 18px;}
+.coordinator-review-form {padding-top: 18px; border-top: 1px solid #edf0f4;}
+.coordinator-review-outcome {padding-top: 18px; border-top: 1px solid #edf0f4;}
+.coordinator-table tr.is-selected td {background: #f5f8fc;}
+
 @media (max-width: 1100px) {
     .coordinator-kpis {grid-template-columns: repeat(2, minmax(0, 1fr));}
     .coordinator-filters {grid-template-columns: repeat(2, minmax(0, 1fr));}

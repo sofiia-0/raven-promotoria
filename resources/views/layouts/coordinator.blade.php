@@ -24,6 +24,12 @@
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></span>
                     Inicio
                 </a>
+                <a href="{{ route('coordinator.requests.index') }}"
+                   class="raven-nav-link {{ request()->routeIs('coordinator.requests.*') ? 'is-active' : '' }}"
+                   @if(request()->routeIs('coordinator.requests.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h3"/></svg></span>
+                    Solicitudes
+                </a>
             </nav>
             <div class="raven-sidebar-footer coordinator-sidebar-footer">
                 <p class="coordinator-sidebar-signature">Laboratorio Raven</p>
