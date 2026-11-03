@@ -8,11 +8,20 @@ use App\Models\VisitEvidence;
 
 class VisitEvidencePolicy
 {
-    /** La futura consulta de Coordinadora se definirá aquí; hoy no se concede. */
+    /**
+     * Solo evidencias ya adjuntas a una visita. La promotora ve las de sus propias visitas;
+     * Coordinación las consulta para supervisar (solo lectura). Administración no.
+     */
     public function view(User $user, VisitEvidence $evidence): bool
     {
-        return $user->is_active && $user->role === UserRole::PROMOTER
-            && $evidence->status === 'attached' && $evidence->visit_id !== null
-            && $evidence->visit?->promoter_id === $user->id;
+        if (! $user->is_active || $evidence->status !== 'attached' || $evidence->visit_id === null) {
+            return false;
+        }
+
+        return match ($user->role) {
+            UserRole::PROMOTER => $evidence->visit?->promoter_id === $user->id,
+            UserRole::COORDINATOR => true,
+            default => false,
+        };
     }
 }
