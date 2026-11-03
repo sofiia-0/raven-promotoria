@@ -150,3 +150,64 @@
     .coordinator-figures {grid-template-columns: 1fr 1fr;}
     .coordinator-shell .raven-content {padding: 24px 16px 32px;}
 }
+
+/* Integración del piloto: escala y contención propias de Coordinadora. */
+.coordinator-shell {font-size:15px;line-height:1.6;}
+.coordinator-shell :is(.raven-main,.raven-content,.raven-stack,.raven-card,.raven-field,.raven-form-grid,.coordinator-kpis,.coordinator-columns,.coordinator-weeks) {min-width:0;max-width:100%;}
+.coordinator-shell .raven-card {overflow-wrap:anywhere;}
+.coordinator-shell :is(.raven-input,.raven-select,.raven-textarea) {width:100%;max-width:100%;font-size:16px;line-height:1.5;min-height:44px;}
+.coordinator-shell .raven-label {font-size:15px;line-height:1.5;}
+.coordinator-shell :is(.raven-button,.raven-nav-link) {font-size:15px;min-height:44px;line-height:1.5;}
+.coordinator-shell :is(.raven-field-help,.raven-field-error,.raven-card-description,.raven-page-description,.coordinator-list-meta,.coordinator-muted,.coordinator-kpi-help,.coordinator-kpi-label,.coordinator-detail-list dt,.coordinator-detail-list dd) {font-size:14px;line-height:1.6;}
+.coordinator-shell :is(.raven-section-title,.raven-card-title) {font-size:19px;line-height:1.45;}
+.coordinator-shell .coordinator-list-title {font-size:15px;line-height:1.5;}
+.coordinator-shell :is(.raven-badge,.raven-topbar-title,.raven-topbar-subtitle,.raven-user-name,.coordinator-figures dt,.coordinator-activity-date) {font-size:13px;line-height:1.5;}
+.coordinator-shell .coordinator-kpis {grid-template-columns:repeat(3,minmax(0,1fr));}
+.coordinator-shell .coordinator-columns,.coordinator-shell .coordinator-weeks {grid-template-columns:repeat(2,minmax(0,1fr));}
+.coordinator-shell .coordinator-figures {grid-template-columns:repeat(3,minmax(0,1fr));}
+.coordinator-shell .coordinator-figures div {min-width:0;padding:12px;}
+.coordinator-shell .coordinator-table-shell {position:relative;width:100%;max-width:100%;min-width:0;overflow:auto;overscroll-behavior-inline:contain;}
+.coordinator-shell .coordinator-table {font-size:14px;line-height:1.6;}
+.coordinator-shell .coordinator-table th {font-size:14px;}
+.coordinator-shell .coordinator-table td {min-width:105px;max-width:320px;}
+.coordinator-shell .coordinator-table td:first-child {min-width:45px;}
+.coordinator-shell .coordinator-table .coordinator-list-title {min-width:150px;}
+.coordinator-shell .coordinator-batch-actions .raven-field {min-width:0;flex:1 1 230px;}
+.coordinator-shell .coordinator-assignment-row {flex-wrap:wrap;align-items:flex-start;}
+.coordinator-shell .coordinator-assignment-row > div {min-width:0;flex:1 1 220px;}
+.coordinator-shell .coordinator-assignment-row button {white-space:normal;max-width:100%;}
+.coordinator-shell .promoter-location {margin-top:6px;color:#52647a;font-size:14px;line-height:1.6;}
+.coordinator-shell .promoter-location p {margin:3px 0;overflow-wrap:anywhere;}
+.coordinator-shell .promoter-street {color:#465365;}
+.coordinator-shell .coordinator-table .promoter-location {min-width:200px;}
+.coordinator-shell :is(.coordinator-nav-label,.coordinator-sidebar-signature) {font-size:12px;}
+@media(max-width:1100px) {
+ .coordinator-shell .raven-app {grid-template-columns:minmax(0,1fr);}
+ .coordinator-shell .raven-sidebar {position:static;height:auto;min-width:0;max-width:100%;padding:18px 20px 12px;border-right:0;border-bottom:1px solid #e5e7ec;}
+ .coordinator-shell .raven-brand {padding:0 4px 12px;min-height:0;}
+ .coordinator-shell .raven-brand img {width:124px;}
+ .coordinator-shell :is(.coordinator-nav-label,.coordinator-sidebar-footer) {display:none;}
+ .coordinator-shell .raven-nav {flex-direction:row;overflow-x:auto;max-width:100%;gap:8px;padding-bottom:5px;}
+ .coordinator-shell .raven-nav-link {flex-shrink:0;white-space:nowrap;}
+ .coordinator-shell .raven-topbar {padding:16px 24px;}
+ .coordinator-shell .raven-content {padding:28px 24px;}
+ .coordinator-shell .coordinator-weeks {grid-template-columns:minmax(0,1fr);}
+}
+@media(max-width:750px) {
+ .coordinator-shell .raven-content {padding:24px 16px;}
+ .coordinator-shell .raven-card {padding:20px 16px;}
+ .coordinator-shell .raven-topbar {gap:12px;padding:14px 16px;flex-wrap:wrap;}
+ .coordinator-shell .raven-user {gap:10px;}
+ .coordinator-shell .raven-user-copy {display:none;}
+ .coordinator-shell :is(.coordinator-kpis,.coordinator-columns,.coordinator-weeks,.coordinator-detail-list) {grid-template-columns:minmax(0,1fr);}
+ .coordinator-shell .coordinator-figures {grid-template-columns:repeat(3,minmax(0,1fr));}
+ .coordinator-shell .coordinator-filters {grid-template-columns:minmax(0,1fr);}
+ .coordinator-shell .coordinator-filter-wide {grid-column:auto;}
+ .coordinator-shell .raven-form-actions,.coordinator-shell .coordinator-batch-actions {align-items:stretch;}
+ .coordinator-shell .coordinator-batch-actions .raven-button {white-space:normal;}
+ .coordinator-shell .coordinator-activity {flex-wrap:wrap;}
+ .coordinator-shell .coordinator-activity-status {max-width:100%;width:100%;justify-content:flex-start;}
+}
+@media(prefers-reduced-motion:reduce) {
+ .coordinator-shell * {scroll-behavior:auto;animation:none;transition:none;}
+}

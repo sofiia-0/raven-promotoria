@@ -7,8 +7,11 @@ use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\AuditLog;
 use App\Models\Pharmacy;
 use App\Models\User;
+use App\Models\Visit;
 use App\Services\PharmacyAssignmentService;
+use App\Services\SchedulePlanner;
 use Illuminate\Contracts\View\View;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -22,48 +25,71 @@ class Show extends Component
 
     public string $targetPromoterId = '';
 
+    public string $operation = 'add';
+
+    public string $sourceAssignmentId = '';
+
+    public string $coverageStartsOn = '';
+
+    public string $coverageEndsOn = '';
+
     public function mount(int $pharmacyId): void
     {
         $this->coordinator();
         $this->pharmacyId = Pharmacy::query()->findOrFail($pharmacyId)->id;
+        $this->coverageStartsOn = SchedulePlanner::today()->toDateString();
+        $this->coverageEndsOn = $this->coverageStartsOn;
     }
 
     public function assign(PharmacyAssignmentService $assignments): void
     {
-        $validated = $this->validate(['targetPromoterId' => ['required', 'integer']],
-            ['targetPromoterId.required' => 'Seleccione una promotora.']);
+        $actor = $this->coordinator();
+        $validated = $this->validate([
+            'targetPromoterId' => ['required', 'integer'],
+            'operation' => ['required', Rule::in(['add', 'replace', 'coverage'])],
+            'sourceAssignmentId' => [Rule::requiredIf($this->operation === 'replace'), 'nullable', 'integer'],
+            'coverageStartsOn' => ['required_if:operation,coverage', 'date_format:Y-m-d'],
+            'coverageEndsOn' => ['required_if:operation,coverage', 'date_format:Y-m-d', 'after_or_equal:coverageStartsOn'],
+        ], ['targetPromoterId.required' => 'Seleccione una promotora.', 'sourceAssignmentId.required' => 'Seleccione la responsable que desea sustituir.']);
 
         $promoter = User::query()->findOrFail((int) $validated['targetPromoterId']);
-        $result = $assignments->assignMany($this->coordinator(), [$this->pharmacyId], $promoter);
+        if ($this->operation === 'replace') {
+            $assignments->replace($actor, $this->pharmacyId, (int) $this->sourceAssignmentId, $promoter);
+            $message = 'Se sustituyó únicamente la responsable seleccionada. Las demás relaciones y el historial se conservan.';
+        } elseif ($this->operation === 'coverage') {
+            $assignments->cover($actor, $this->pharmacyId, $promoter, $this->coverageStartsOn, $this->coverageEndsOn);
+            $message = 'Cobertura guardada. Las responsables habituales conservan su asignación.';
+        } else {
+            $result = $assignments->assignMany($actor, [$this->pharmacyId], $promoter);
+            $message = $result['changed'] === 0 ? 'La promotora ya es responsable de este establecimiento.' : 'Responsable añadida sin retirar a las demás.';
+        }
 
-        $this->reset('targetPromoterId');
-        session()->flash('success', $result['changed'] === 0
-            ? 'El establecimiento ya estaba asignado a '.$promoter->name.'.'
-            : 'Establecimiento asignado a '.$promoter->name.'.'.($result['pending_visits'] > 0
-                ? ' Visitas planificadas de la promotora anterior que ya no podrán registrarse: '.$result['pending_visits'].'.' : ''));
+        $this->reset('targetPromoterId', 'sourceAssignmentId');
+        session()->flash('success', $message);
     }
 
-    public function unassign(PharmacyAssignmentService $assignments): void
+    public function endAssignment(int $assignmentId, PharmacyAssignmentService $assignments): void
     {
-        $assignments->unassignMany($this->coordinator(), [$this->pharmacyId]);
-        session()->flash('success', 'El establecimiento quedó sin promotora asignada.');
+        $assignments->end($this->coordinator(), $this->pharmacyId, $assignmentId);
+        session()->flash('success', 'Se finalizó únicamente la relación seleccionada. El historial se conserva.');
     }
 
     public function render(): View
     {
         $this->coordinator();
-        $pharmacy = Pharmacy::query()->with(['currentAssignment.promoter:id,name', 'assignments' => fn ($q) => $q->with('promoter:id,name')->latest('assigned_at')->latest('id')])
+        $pharmacy = Pharmacy::query()->with(['activeAssignments.promoter:id,name', 'assignments' => fn ($q) => $q->with(['promoter:id,name', 'creator:id,name', 'ender:id,name'])->latest('assigned_at')->latest('id')])
             ->findOrFail($this->pharmacyId);
 
         // Quién hizo cada cambio desde el panel: la tabla de asignaciones no guarda el actor.
         $changes = AuditLog::query()->with('actor:id,name')
             ->where('auditable_type', $pharmacy->getTable())->where('auditable_id', $pharmacy->id)
-            ->whereIn('action', ['assignment.changed', 'assignment.ended'])
+            ->whereIn('action', ['assignment.changed', 'assignment.added', 'assignment.replaced', 'assignment.ended', 'coverage.created', 'coverage.ended'])
             ->latest()->latest('id')->limit(20)->get();
 
         return view('livewire.coordinator.assignments.show', [
             'pharmacy' => $pharmacy,
             'changes' => $changes,
+            'recentVisits' => Visit::where('pharmacy_id', $this->pharmacyId)->with('promoter:id,name')->latest('visited_at')->latest('id')->limit(10)->get(),
             'promoters' => User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }

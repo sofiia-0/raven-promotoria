@@ -30,6 +30,7 @@ class ImportRavenCatalog extends Command
     {
         if (! app()->environment(['local', 'testing'])) {
             $this->error('Importación bloqueada: este comando solo se permite en APP_ENV=local/testing.');
+
             return self::FAILURE;
         }
 
@@ -38,6 +39,7 @@ class ImportRavenCatalog extends Command
 
         if ($update && ! $commit) {
             $this->error('--update-existing requiere --commit.');
+
             return self::FAILURE;
         }
 
@@ -62,6 +64,7 @@ class ImportRavenCatalog extends Command
 
             if (! $commit) {
                 $this->info('Simulación completada. Para importar, agregá --commit.');
+
                 return self::SUCCESS;
             }
 
@@ -92,8 +95,9 @@ class ImportRavenCatalog extends Command
                     }
 
                     if ($promoter !== null) {
-                        $active = $pharmacy->currentAssignment()->first();
-                        if ($active !== null && $active->promoter_id !== $promoter->id) {
+                        $assignments = $pharmacy->assignments()->operational()->get();
+                        $active = $assignments->firstWhere('promoter_id', $promoter->id);
+                        if ($active === null && $assignments->isNotEmpty()) {
                             throw new RuntimeException('Asignación conflictiva en '.$reference
                                 .': ya pertenece a otra cuenta. No se reasigna automáticamente.');
                         }
@@ -113,9 +117,11 @@ class ImportRavenCatalog extends Command
             $this->info('Importación correcta: '.$stats['created'].' creadas, '.$stats['updated']
                 .' actualizadas, '.$stats['untouched'].' conservadas, '
                 .$stats['assigned'].' asignaciones nuevas.');
+
             return self::SUCCESS;
         } catch (Throwable $e) {
             $this->error('No se modificaron datos si falló la validación o la transacción: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }
@@ -128,6 +134,7 @@ class ImportRavenCatalog extends Command
         if (! is_file($path) || ! is_readable($path)) {
             throw new RuntimeException('Archivo no encontrado o sin permiso: '.$path);
         }
+
         return $path;
     }
 
@@ -193,6 +200,7 @@ class ImportRavenCatalog extends Command
             if (! $data) {
                 throw new RuntimeException('CSV sin filas de establecimientos.');
             }
+
             return $data;
         } finally {
             fclose($file);
@@ -226,6 +234,7 @@ class ImportRavenCatalog extends Command
         if (count(array_unique(array_map(fn ($u) => $u->id, $mapping))) !== count($mapping)) {
             throw new RuntimeException('Dos responsables del fichero apuntan a la misma cuenta. Revisá el mapping.');
         }
+
         return $mapping;
     }
 
@@ -233,6 +242,7 @@ class ImportRavenCatalog extends Command
     {
         $optional = fn (string $key) => $row[$key] === '' ? null : $row[$key];
         $number = fn (string $key) => $row[$key] === '' ? null : (int) $row[$key];
+
         return [
             'name' => $row['name'],
             'client_type' => $optional('client_type'),

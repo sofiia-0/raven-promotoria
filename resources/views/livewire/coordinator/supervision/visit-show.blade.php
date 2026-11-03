@@ -12,7 +12,7 @@
             <span class="raven-badge {{ $visit->isUnplanned() ? 'raven-badge-rose' : 'raven-badge-neutral' }}">{{ $visit->isUnplanned() ? 'Fuera de plan' : 'Planificada' }}</span>
         </div>
         <h2 id="visit-title" class="raven-section-title coordinator-review-title">{{ $visit->pharmacy?->display_name }}</h2>
-        <p class="coordinator-list-meta coordinator-visit-location">{{ $visit->pharmacy?->location_summary ?: 'Ubicación sin especificar' }}</p>
+        <div class="coordinator-visit-location"><x-promoter.location :department="$visit->pharmacy?->department" :city="$visit->pharmacy?->city" :address="$visit->pharmacy?->address" :neighborhood="$visit->pharmacy?->neighborhood" /></div>
 
         <dl class="coordinator-detail-list">
             <div><dt>Promotora</dt><dd>{{ $visit->promoter?->name }}</dd></div>
@@ -46,14 +46,15 @@
         <section class="raven-card" aria-labelledby="checklist-title">
             <h2 id="checklist-title" class="raven-section-title">Checklist</h2>
             <p class="raven-card-description">{{ $visit->checklist->where('checked', true)->count() }} de {{ $visit->checklist->count() }} actividades registradas.</p>
-            <ul class="coordinator-list">
-                @foreach($visit->checklist as $entry)
-                    <li class="coordinator-list-row" wire:key="checklist-{{ $entry->id }}">
-                        <span>{{ $entry->item?->name }}</span>
-                        <span class="raven-badge {{ $entry->checked ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $entry->checked ? 'Realizada' : 'Sin marcar' }}</span>
-                    </li>
-                @endforeach
-            </ul>
+            @foreach([true => 'Realizada', false => 'Sin marcar'] as $checked => $label)
+                @php $entries = $visit->checklist->filter(fn($entry) => (bool)$entry->checked === (bool)$checked); @endphp
+                @if($entries->isNotEmpty())
+                    <h3 class="raven-section-title coordinator-review-title">{{ $label }} · {{ $entries->count() }}</h3>
+                    <ul class="coordinator-list" aria-label="{{ $label }}">
+                        @foreach($entries as $entry)<li class="coordinator-list-row" wire:key="checklist-{{ $entry->id }}"><span>{{ $entry->item?->name }}</span><span class="raven-badge {{ $entry->checked ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $label }}</span></li>@endforeach
+                    </ul>
+                @endif
+            @endforeach
         </section>
     @endif
 

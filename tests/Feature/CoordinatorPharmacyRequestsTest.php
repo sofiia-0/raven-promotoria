@@ -212,7 +212,9 @@ class CoordinatorPharmacyRequestsTest extends TestCase
         }
 
         $this->assertSame(1, Pharmacy::count());
-        $this->assertSame(1, AuditLog::count());
+        $this->assertSame(1, AuditLog::where('action', 'pharmacy_request.approved')->count());
+        $this->assertSame(1, AuditLog::where('action', 'assignment.added')->count());
+        $this->assertSame(2, AuditLog::count());
     }
 
     /** RNF-SEG: una promotora no puede resolver solicitudes (ni las propias). */

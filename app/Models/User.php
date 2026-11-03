@@ -69,7 +69,7 @@ class User extends Authenticatable
     public function assignedPharmacies(): BelongsToMany
     {
         return $this->belongsToMany(Pharmacy::class, 'pharmacy_assignments', 'promoter_id', 'pharmacy_id')
-            ->wherePivotNull('ended_at')
+            ->where(fn ($query) => PharmacyAssignment::constrainOperational($query, 'pharmacy_assignments.'))
             ->withPivot(['id', 'assigned_at', 'ended_at'])
             ->withTimestamps();
     }

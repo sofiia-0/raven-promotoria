@@ -66,7 +66,7 @@
         @error('selection') <p class="raven-field-error" role="alert">{{ $message }}</p> @enderror
         <div class="coordinator-batch-actions">
             <div class="raven-field">
-                <label class="raven-label" for="batch-target">Asignar a</label>
+                <label class="raven-label" for="batch-target">Promotora para la operación</label>
                 <select id="batch-target" class="raven-select" wire:model="targetPromoterId">
                     <option value="">Seleccione una promotora</option>
                     @foreach($promoters as $item)
@@ -77,10 +77,10 @@
             </div>
             <button type="button" class="raven-button raven-button-primary" wire:click="assignSelected" wire:loading.attr="disabled" wire:target="assignSelected, unassignSelected"
                     @disabled(count($selected) === 0)
-                    wire:confirm="¿Asignar los establecimientos seleccionados? Se terminará su asignación anterior.">Asignar</button>
+                    wire:confirm="¿Añadir esta responsable a los establecimientos seleccionados? Las demás responsables conservarán su asignación.">Añadir responsable</button>
             <button type="button" class="raven-button raven-button-secondary" wire:click="unassignSelected" wire:loading.attr="disabled" wire:target="assignSelected, unassignSelected"
                     @disabled(count($selected) === 0)
-                    wire:confirm="¿Quitar la promotora de los establecimientos seleccionados?">Quitar asignación</button>
+                    wire:confirm="¿Retirar únicamente la responsable seleccionada de estos establecimientos?">Retirar responsable</button>
             <button type="button" class="raven-button raven-button-ghost" wire:click="clearSelection" @disabled(count($selected) === 0)>Vaciar selección</button>
         </div>
     </section>
@@ -98,7 +98,7 @@
             <p class="raven-card-description">Ajuste la búsqueda o limpie los filtros.</p>
         </section>
     @else
-        <section class="raven-card coordinator-table-shell">
+        <section class="raven-card coordinator-table-shell" tabindex="0">
             <table class="coordinator-table">
                 <thead>
                     <tr>
@@ -121,15 +121,12 @@
                                 <span class="coordinator-list-title">{{ $pharmacy->display_name }}</span>
                                 @if($pharmacy->source_reference)<span class="coordinator-list-meta">{{ $pharmacy->source_reference }}</span>@endif
                             </td>
-                            <td>{{ $pharmacy->display_locality ?: 'Sin especificar' }}</td>
+                            <td><x-promoter.location :department="$pharmacy->department" :city="$pharmacy->city" :address="$pharmacy->address" :neighborhood="$pharmacy->neighborhood" /></td>
                             <td>{{ $pharmacy->category ?: '—' }}</td>
                             <td>
-                                @if($pharmacy->currentAssignment)
-                                    {{ $pharmacy->currentAssignment->promoter?->name }}
-                                    <span class="coordinator-list-meta">Desde {{ $pharmacy->currentAssignment->assigned_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y') }}</span>
-                                @else
-                                    <span class="raven-badge raven-badge-rose">Sin promotora</span>
-                                @endif
+                                @forelse($pharmacy->activeAssignments as $relation)
+                                    <span class="coordinator-block">{{ $relation->promoter?->name }}@if($relation->assignment_kind === 'coverage')<span class="coordinator-list-meta">Cobertura hasta {{ $relation->coverage_ends_on?->format('d/m/Y') }}</span>@endif</span>
+                                @empty<span class="raven-badge raven-badge-rose">Sin promotora</span>@endforelse
                             </td>
                             <td class="coordinator-table-actions">
                                 <a class="raven-button raven-button-ghost" href="{{ route('coordinator.assignments.show', ['pharmacy' => $pharmacy->id]) }}">Historial<span class="coordinator-sr-only"> de {{ $pharmacy->display_name }}</span></a>

@@ -5,9 +5,11 @@ namespace App\Livewire\Coordinator\Supervision;
 use App\Enums\UserRole;
 use App\Enums\VisitStatus;
 use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
+use App\Models\Pharmacy;
 use App\Models\User;
 use App\Models\Visit;
 use App\Services\SchedulePlanner;
+use App\Support\EstablishmentSearch;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,12 +40,17 @@ class Visits extends Component
     #[Url(as: 'q')]
     public string $search = '';
 
+    #[Url(as: 'establecimiento')]
+    public string $pharmacyId = '';
+
     public function mount(): void
     {
         $this->coordinator();
         $today = SchedulePlanner::today();
-        $this->from = $this->validDate($this->from) ?? $today->startOfMonth()->toDateString();
-        $this->to = $this->validDate($this->to) ?? $today->toDateString();
+        if (! ctype_digit($this->pharmacyId)) {
+            $this->from = $this->validDate($this->from) ?? $today->startOfMonth()->toDateString();
+            $this->to = $this->validDate($this->to) ?? $today->toDateString();
+        }
     }
 
     private function validDate(string $value): ?string
@@ -55,14 +62,14 @@ class Visits extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['promoter', 'from', 'to', 'status', 'origin', 'search'], true)) {
+        if (in_array($property, ['promoter', 'from', 'to', 'status', 'origin', 'search', 'pharmacyId'], true)) {
             $this->resetPage();
         }
     }
 
     public function clearFilters(): void
     {
-        $this->reset(['promoter', 'status', 'origin', 'search']);
+        $this->reset(['promoter', 'status', 'origin', 'search', 'pharmacyId']);
         $this->from = SchedulePlanner::today()->startOfMonth()->toDateString();
         $this->to = SchedulePlanner::today()->toDateString();
         $this->resetPage();
@@ -72,6 +79,9 @@ class Visits extends Component
     {
         $this->coordinator();
         $query = Visit::query();
+        if (ctype_digit($this->pharmacyId)) {
+            $query->where('pharmacy_id', (int) $this->pharmacyId);
+        }
 
         // Los filtros de fecha son días de Managua; visited_at se guarda en UTC.
         if ($from = $this->validDate($this->from)) {
@@ -92,9 +102,7 @@ class Visits extends Component
             $query->whereNull('planned_activity_id');
         }
         if (($term = trim($this->search)) !== '') {
-            $query->whereHas('pharmacy', fn (Builder $q) => $q->where(fn (Builder $w) => $w
-                ->where('name', 'like', '%'.$term.'%')
-                ->orWhere('city', 'like', '%'.$term.'%')));
+            $query->whereHas('pharmacy', fn (Builder $q) => EstablishmentSearch::apply($q, $term));
         }
 
         $summary = (clone $query)
@@ -104,10 +112,11 @@ class Visits extends Component
             ->toBase()->first();
 
         return view('livewire.coordinator.supervision.visits', [
-            'visits' => $query->with(['promoter:id,name', 'pharmacy:id,name,department,city', 'reason:id,name'])
+            'visits' => $query->with(['promoter:id,name', 'pharmacy', 'reason:id,name'])
                 ->orderByDesc('visited_at')->orderByDesc('id')->paginate(20),
             'summary' => $summary,
             'statuses' => VisitStatus::cases(),
+            'selectedPharmacy' => ctype_digit($this->pharmacyId) ? Pharmacy::find((int) $this->pharmacyId) : null,
             'promoters' => User::query()->where('role', UserRole::PROMOTER)->orderBy('name')->get(['id', 'name', 'is_active']),
         ]);
     }

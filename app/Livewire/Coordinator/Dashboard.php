@@ -60,7 +60,7 @@ class Dashboard extends Component
             'pendingBaja' => (int) $requests->baja,
             'activePharmacies' => Pharmacy::query()->where('is_active', true)->count(),
             'unassigned' => Pharmacy::query()->where('is_active', true)
-                ->whereDoesntHave('assignments', fn (Builder $q) => $q->whereNull('ended_at'))->count(),
+                ->whereDoesntHave('assignments', fn (Builder $q) => $q->operational())->count(),
             'schedulesSent' => $sent,
             'schedulesDraft' => $draft,
             'schedulesMissing' => max(0, $activePromoters - $sent - $draft),

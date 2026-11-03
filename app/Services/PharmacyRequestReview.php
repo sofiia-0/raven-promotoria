@@ -80,7 +80,7 @@ class PharmacyRequestReview
         return EstablishmentSearch::apply(Pharmacy::query(), $name)
             ->when($request->data['department'] ?? null, fn (Builder $q, $department) => $q->where('department', $department))
             ->when($request->pharmacy_id, fn (Builder $q, $id) => $q->whereKeyNot($id))
-            ->with('currentAssignment.promoter:id,name')
+            ->with('activeAssignments.promoter:id,name')
             ->orderBy('name')->limit(5)->get();
     }
 
@@ -104,7 +104,7 @@ class PharmacyRequestReview
         }
 
         $pharmacy = Pharmacy::query()->create($fields + ['is_active' => true]);
-        $this->assignments->reassign($pharmacy, $assignee);
+        $this->assignments->assignMany($reviewer, [$pharmacy->id], $assignee);
 
         $request->pharmacy_id = $pharmacy->id;
         $this->resolve($request, $reviewer, PharmacyRequest::APPROVED, $note);

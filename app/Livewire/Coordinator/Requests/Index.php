@@ -7,6 +7,8 @@ use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\PharmacyRequest;
 use App\Models\User;
 use App\Services\PharmacyRequestReview;
+use App\Support\CoordinatorRequestSearch;
+use App\Support\EstablishmentSearch;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\Url;
@@ -99,18 +101,16 @@ class Index extends Component
         $this->coordinator();
 
         $query = PharmacyRequest::query()
-            ->with(['promoter:id,name', 'pharmacy:id,name,department,city,is_active', 'reviewer:id,name'])
+            ->with(['promoter:id,name', 'pharmacy', 'reviewer:id,name'])
             ->when(in_array($this->status, [PharmacyRequest::PENDING, PharmacyRequest::APPROVED, PharmacyRequest::REJECTED], true),
                 fn (Builder $q) => $q->where('status', $this->status))
             ->when(in_array($this->type, [PharmacyRequest::TYPE_ALTA, PharmacyRequest::TYPE_BAJA], true),
                 fn (Builder $q) => $q->where('type', $this->type));
 
         if (($term = trim($this->search)) !== '') {
-            $like = '%'.$term.'%';
-            $query->where(fn (Builder $q) => $q
-                ->where('data', 'like', $like)
-                ->orWhereHas('pharmacy', fn (Builder $p) => $p->where('name', 'like', $like))
-                ->orWhereHas('promoter', fn (Builder $p) => $p->where('name', 'like', $like)));
+            foreach (EstablishmentSearch::terms($term) as $part) {
+                $query->where(fn (Builder $q) => CoordinatorRequestSearch::applyTerm($q, $part));
+            }
         }
 
         // Pendientes en orden de llegada; resueltas, las más recientes primero.
@@ -119,7 +119,7 @@ class Index extends Component
             : $query->latest()->latest('id');
 
         $selected = $this->selectedId
-            ? PharmacyRequest::query()->with(['promoter:id,name,is_active', 'pharmacy.currentAssignment.promoter:id,name', 'reviewer:id,name'])->find($this->selectedId)
+            ? PharmacyRequest::query()->with(['promoter:id,name,is_active', 'pharmacy.activeAssignments.promoter:id,name', 'reviewer:id,name'])->find($this->selectedId)
             : null;
 
         return view('livewire.coordinator.requests.index', [

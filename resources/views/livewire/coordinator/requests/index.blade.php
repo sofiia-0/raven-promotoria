@@ -41,8 +41,8 @@
                         </div>
                     @endforeach
                 @elseif($selected->pharmacy)
-                    <div><dt>Ubicación</dt><dd>{{ $selected->pharmacy->location_summary ?: 'Sin especificar' }}</dd></div>
-                    <div><dt>Promotora asignada</dt><dd>{{ $selected->pharmacy->currentAssignment?->promoter?->name ?? 'Sin asignación vigente' }}</dd></div>
+                    <div><dt>Ubicación</dt><dd><x-promoter.location :department="$selected->pharmacy->department" :city="$selected->pharmacy->city" :address="$selected->pharmacy->address" :neighborhood="$selected->pharmacy->neighborhood" /></dd></div>
+                    <div><dt>Responsables y coberturas</dt><dd>{{ $selected->pharmacy->activeAssignments->pluck('promoter.name')->filter()->unique()->join(', ') ?: 'Sin asignación vigente' }}</dd></div>
                     <div><dt>Estado de la ficha</dt><dd>{{ $selected->pharmacy->is_active ? 'Activa' : 'Inactiva' }}</dd></div>
                 @endif
                 <div class="coordinator-detail-wide">
@@ -63,7 +63,7 @@
                     <p><strong>Posibles duplicados en el fichero.</strong> Revise que no se trate de un establecimiento ya registrado:</p>
                     <ul>
                         @foreach($duplicates as $duplicate)
-                            <li wire:key="duplicate-{{ $duplicate->id }}">{{ $duplicate->display_name }} · {{ $duplicate->display_locality ?: 'Sin ubicación' }} · {{ $duplicate->is_active ? ($duplicate->currentAssignment?->promoter?->name ?? 'Sin promotora') : 'Inactiva' }}</li>
+                            <li wire:key="duplicate-{{ $duplicate->id }}">{{ $duplicate->display_name }} · {{ $duplicate->display_locality ?: 'Sin ubicación' }} · {{ $duplicate->display_address ?: 'Dirección por completar' }} · {{ $duplicate->is_active ? ($duplicate->activeAssignments->pluck('promoter.name')->filter()->unique()->join(', ') ?: 'Sin promotora') : 'Inactiva' }}</li>
                         @endforeach
                     </ul>
                 </div>
@@ -154,7 +154,7 @@
             <p class="raven-card-description">Cuando una promotora solicite un alta o una baja, aparecerá aquí.</p>
         </section>
     @else
-        <section class="raven-card coordinator-table-shell">
+        <section class="raven-card coordinator-table-shell" tabindex="0">
             <table class="coordinator-table">
                 <thead>
                     <tr>
@@ -173,7 +173,7 @@
                             <td><span class="raven-badge {{ $item->type === PharmacyRequest::TYPE_ALTA ? 'raven-badge-info' : 'raven-badge-rose' }}">{{ $item->type === PharmacyRequest::TYPE_ALTA ? 'Alta' : 'Baja' }}</span></td>
                             <td>
                                 <span class="coordinator-list-title">{{ $requestTitle($item) }}</span>
-                                <span class="coordinator-list-meta">{{ $item->type === PharmacyRequest::TYPE_ALTA ? \App\Support\EstablishmentPresentation::locality($item->data['department'] ?? null, $item->data['city'] ?? null) : ($item->pharmacy?->display_locality ?? '') }}</span>
+                                <span class="coordinator-list-meta">{{ $item->type === PharmacyRequest::TYPE_ALTA ? \App\Support\EstablishmentPresentation::locality($item->data['department'] ?? null, $item->data['city'] ?? null) : ($item->pharmacy?->display_locality ?? '') }}</span><span class="coordinator-list-meta">{{ $item->type === PharmacyRequest::TYPE_ALTA ? \App\Support\EstablishmentPresentation::address($item->data['address'] ?? null, $item->data['neighborhood'] ?? null, $item->data['department'] ?? null, $item->data['city'] ?? null) : ($item->pharmacy?->display_address ?? '') }}</span>
                             </td>
                             <td>{{ $item->promoter?->name ?? 'Promotora' }}</td>
                             <td>

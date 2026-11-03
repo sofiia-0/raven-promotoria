@@ -41,7 +41,7 @@ class Dashboard extends Component
             ->where('pharmacies.is_active', true)
             ->whereHas('assignments', function (Builder $query) use ($user): void {
                 $query->where('promoter_id', $user->id)
-                    ->whereNull('ended_at');
+                    ->operational();
             });
     }
 

@@ -10,6 +10,7 @@ use App\Services\PharmacyAssignmentService;
 use App\Support\EstablishmentSearch;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -76,10 +77,8 @@ class Index extends Component
             'selected.max' => 'Puede modificar hasta '.PharmacyAssignmentService::BATCH_LIMIT.' establecimientos por operación.',
             'targetPromoterId.required' => 'Seleccione la promotora que recibirá los establecimientos.',
         ]);
-
         $promoter = User::query()->findOrFail((int) $validated['targetPromoterId']);
         $result = $assignments->assignMany($this->coordinator(), $validated['selected'], $promoter);
-
         $this->clearSelection();
         session()->flash('success', $this->summary($result, $result['changed'] === 1
             ? 'Se asignó 1 establecimiento a '.$promoter->name.'.'
@@ -91,14 +90,13 @@ class Index extends Component
         $validated = $this->validate([
             'selected' => ['required', 'array', 'min:1', 'max:'.PharmacyAssignmentService::BATCH_LIMIT],
             'selected.*' => ['integer'],
-        ], ['selected.required' => 'Seleccione al menos un establecimiento.']);
-
-        $result = $assignments->unassignMany($this->coordinator(), $validated['selected']);
-
+            'targetPromoterId' => ['required', 'integer'],
+        ], ['targetPromoterId.required' => 'Seleccione la responsable que desea retirar.', 'selected.required' => 'Seleccione al menos un establecimiento.']);
+        $result = $assignments->unassignMany($this->coordinator(), $validated['selected'], (int) $validated['targetPromoterId']);
         $this->clearSelection();
         session()->flash('success', $this->summary($result, $result['changed'] === 1
-            ? '1 establecimiento quedó sin promotora.'
-            : $result['changed'].' establecimientos quedaron sin promotora.'));
+            ? 'Se retiró únicamente la responsable seleccionada de 1 establecimiento.'
+            : $result['changed'].' establecimientos: se retiró únicamente la responsable seleccionada.'));
     }
 
     /** @param array{changed:int, unchanged:int, pending_visits:int} $result */
@@ -118,16 +116,14 @@ class Index extends Component
     public function render(): View
     {
         $this->coordinator();
-
         $query = Pharmacy::query()->where('is_active', true)
-            ->with('currentAssignment.promoter:id,name,is_active')
+            ->with('activeAssignments.promoter:id,name,is_active')
             ->when($this->department !== '', fn (Builder $q) => $q->where('department', $this->department))
-            ->when($this->promoter === 'none', fn (Builder $q) => $q->whereDoesntHave('assignments', fn (Builder $a) => $a->whereNull('ended_at')))
-            ->when(ctype_digit($this->promoter), fn (Builder $q) => $q->whereHas('assignments', fn (Builder $a) => $a->whereNull('ended_at')->where('promoter_id', (int) $this->promoter)));
+            ->when($this->promoter === 'none', fn (Builder $q) => $q->whereDoesntHave('assignments', fn (Builder $a) => $a->operational()))
+            ->when(ctype_digit($this->promoter), fn (Builder $q) => $q->whereHas('assignments', fn (Builder $a) => $a->operational()->where('promoter_id', (int) $this->promoter)));
         EstablishmentSearch::apply($query, $this->search);
-
         $promoters = User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)
-            ->withCount(['pharmacyAssignments as active_pharmacies' => fn (Builder $q) => $q->whereNull('ended_at')
+            ->withCount(['pharmacyAssignments as active_pharmacies' => fn (Builder $q) => $q->select(DB::raw('COUNT(DISTINCT pharmacy_id)'))->operational()
                 ->whereHas('pharmacy', fn (Builder $p) => $p->where('is_active', true))])
             ->orderBy('name')->get(['id', 'name']);
 
@@ -135,7 +131,7 @@ class Index extends Component
             'pharmacies' => $query->orderBy('name')->orderBy('id')->paginate(25),
             'promoters' => $promoters,
             'unassignedCount' => Pharmacy::query()->where('is_active', true)
-                ->whereDoesntHave('assignments', fn (Builder $q) => $q->whereNull('ended_at'))->count(),
+                ->whereDoesntHave('assignments', fn (Builder $q) => $q->operational())->count(),
             'departments' => Pharmacy::query()->where('is_active', true)->whereNotNull('department')
                 ->distinct()->orderBy('department')->pluck('department'),
             'batchLimit' => PharmacyAssignmentService::BATCH_LIMIT,

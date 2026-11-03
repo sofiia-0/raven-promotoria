@@ -40,6 +40,9 @@ class PlanningProductivity
         foreach ($ids as $id) {
             $p = $allowed->get($id);
             $reason = ! $p ? 'El establecimiento ya no está activo o asignado a usted.' : (in_array($id, $taken, true) ? 'La farmacia ya está planificada para ese día.' : null);
+            if ($p && ! $this->authorizedOn($actor, $id, $date)) {
+                $reason = 'La fecha queda fuera de la vigencia de su asignación o cobertura.';
+            }
             $rows[] = ['pharmacy_id' => $id, 'name' => $p?->display_name ?? 'Establecimiento no disponible', 'locality' => $p?->display_locality ?? '', 'address' => $p?->display_address ?? '',
                 'selection_identifier' => $identifiers[$id] ?? null, 'activity_type' => 'VISITA', 'date' => $date, 'notes' => trim((string) $notes), 'status' => $reason ? 'conflict' : 'ready', 'message' => $reason];
         }
@@ -104,6 +107,9 @@ class PlanningProductivity
             } elseif ($activity->activity_type === ActivityType::VISITA && ! $allowed->has($activity->pharmacy_id)) {
                 $status = 'conflict';
                 $message = 'La farmacia ya no está activa o asignada a usted.';
+            } elseif ($activity->activity_type === ActivityType::VISITA && ! $this->authorizedOn($actor, $activity->pharmacy_id, $date)) {
+                $status = 'conflict';
+                $message = 'La fecha queda fuera de la vigencia de su asignación o cobertura.';
             }
             $notes = trim((string) $activity->notes);
             if ($status === 'ready') {
@@ -197,7 +203,12 @@ class PlanningProductivity
         $ids = array_values(array_unique(array_map('intval', $ids)));
         sort($ids);
         EstablishmentSearch::forPromoter($actor)->whereKey($ids)->orderBy('pharmacies.id')->lockForUpdate()->get();
-        PharmacyAssignment::where('promoter_id', $actor->id)->whereIn('pharmacy_id', $ids)->whereNull('ended_at')->orderBy('id')->lockForUpdate()->get();
+        PharmacyAssignment::where('promoter_id', $actor->id)->whereIn('pharmacy_id', $ids)->operational()->orderBy('id')->lockForUpdate()->get();
+    }
+
+    private function authorizedOn(User $actor, int $pharmacyId, string $date): bool
+    {
+        return PharmacyAssignment::where('promoter_id', $actor->id)->where('pharmacy_id', $pharmacyId)->operationalOn($date)->exists();
     }
 
     private function preview(MonthlySchedule $schedule, array $request, array $rows): array

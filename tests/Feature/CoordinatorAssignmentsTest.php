@@ -72,44 +72,25 @@ class CoordinatorAssignmentsTest extends TestCase
             ->assertViewHas('promoters', fn ($p) => $p->firstWhere('id', $this->ana->id)->active_pharmacies === 2);
 
         $this->assertEqualsCanonicalizing([$first->id, $second->id], $this->ana->assignedPharmacies()->pluck('pharmacies.id')->all());
-        $this->assertSame(2, AuditLog::query()->where('action', 'assignment.changed')->where('actor_id', $this->coordinator->id)->count());
+        $this->assertSame(2, AuditLog::query()->where('action', 'assignment.added')->where('actor_id', $this->coordinator->id)->count());
     }
 
-    /** RF-FAR: reasignar conserva el historial y avisa de las visitas planificadas afectadas. */
-    public function test_reassignment_keeps_history_and_reports_affected_planned_visits(): void
+    public function test_adding_responsible_keeps_previous_assignments_plan_access_and_history(): void
     {
         $pharmacy = $this->assignedTo($this->ana, 'Farmacia Central');
         $planner = new SchedulePlanner;
         $schedule = $planner->create($this->ana, 2026, 10);
         $future = $planner->addActivity($this->ana, $schedule->id, ['activity_type' => 'VISITA', 'scheduled_date' => '2026-10-15', 'pharmacy_id' => $pharmacy->id]);
-        $planner->addActivity($this->ana, $schedule->id, ['activity_type' => 'VISITA', 'scheduled_date' => '2026-10-22', 'pharmacy_id' => $pharmacy->id]);
         $planner->submit($this->ana, $schedule->id);
-
         Livewire::actingAs($this->coordinator)->test(Index::class)
-            ->set('selected', [(string) $pharmacy->id])
-            ->set('targetPromoterId', (string) $this->bea->id)
-            ->call('assignSelected')
-            ->assertHasNoErrors()
-            ->assertSee('2 visitas planificadas de la promotora anterior ya no podrán registrarse.');
-
-        $this->assertSame($this->bea->id, $pharmacy->fresh()->currentAssignment->promoter_id);
-        $this->assertSame(2, $pharmacy->assignments()->count());
-        $this->assertNotNull($pharmacy->assignments()->where('promoter_id', $this->ana->id)->value('ended_at'));
-
-        // La promotora anterior ya no puede registrar la visita que tenía planificada hoy.
-        try {
-            (new VisitRecorder)->register($this->ana, ['idempotency_key' => (string) Str::uuid(), 'status' => 'REALIZADA', 'planned_activity_id' => $future->id]);
-            $this->fail('La promotora anterior no debería registrar visitas de una farmacia reasignada.');
-        } catch (ValidationException $e) {
-            $this->assertArrayHasKey('pharmacyId', $e->errors());
-        }
-
-        $this->actingAs($this->coordinator)->get('/coordinator/assignments/'.$pharmacy->id)
-            ->assertOk()
-            ->assertSee('Ana Promotora')
-            ->assertSee('Bea Promotora')
-            ->assertSee('Terminada')
-            ->assertSee('Se cambió la promotora');
+            ->set('selected', [(string) $pharmacy->id])->set('targetPromoterId', (string) $this->bea->id)
+            ->call('assignSelected')->assertHasNoErrors();
+        $this->assertCount(2, $pharmacy->fresh()->activeAssignments);
+        $this->assertNull($pharmacy->fresh()->currentAssignment);
+        $this->assertNull($pharmacy->assignments()->where('promoter_id', $this->ana->id)->value('ended_at'));
+        $visit = (new VisitRecorder)->register($this->ana, ['idempotency_key' => (string) Str::uuid(), 'status' => 'REALIZADA', 'planned_activity_id' => $future->id]);
+        $this->assertSame($this->ana->id, $visit->promoter_id);
+        $this->actingAs($this->coordinator)->get('/coordinator/assignments/'.$pharmacy->id)->assertOk()->assertSee('Ana Promotora')->assertSee('Bea Promotora')->assertSee('Visitas de este establecimiento');
     }
 
     public function test_assigning_to_the_same_promoter_is_idempotent(): void
@@ -129,8 +110,8 @@ class CoordinatorAssignmentsTest extends TestCase
         $pharmacy = $this->assignedTo($this->ana, 'Farmacia Central');
 
         Livewire::actingAs($this->coordinator)->test(Show::class, ['pharmacyId' => $pharmacy->id])
-            ->call('unassign')
-            ->assertSee('quedó sin promotora');
+            ->call('endAssignment', $pharmacy->assignments()->sole()->id)
+            ->assertSee('únicamente la relación seleccionada');
 
         $this->assertNull($pharmacy->fresh()->currentAssignment);
         $this->assertSame(1, $pharmacy->assignments()->count());

@@ -29,7 +29,7 @@ class ScheduleShow extends Component
         return view('livewire.coordinator.supervision.schedule-show', [
             'schedule' => MonthlySchedule::query()->with([
                 'promoter:id,name,is_active',
-                'weeks.activities.pharmacy:id,name,department,city',
+                'weeks.activities.pharmacy',
                 'weeks.activities.visits:id,planned_activity_id,attempt,status,visited_at',
                 'weeks.activities.reschedules.reason:id,name',
             ])->findOrFail($this->scheduleId),

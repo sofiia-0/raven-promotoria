@@ -116,7 +116,7 @@ class PharmacyRequestService
                 ->whereKey($pharmacyId)
                 ->where('is_active', true)
                 ->whereHas('assignments', function (Builder $query) use ($actor): void {
-                    $query->where('promoter_id', $actor->id)->whereNull('ended_at');
+                    $query->where('promoter_id', $actor->id)->operational();
                 })
                 ->lockForUpdate()
                 ->firstOrFail();

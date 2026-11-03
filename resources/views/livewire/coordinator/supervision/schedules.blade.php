@@ -5,7 +5,7 @@
         <button type="button" class="raven-button raven-button-secondary" wire:click="nextMonth">Mes siguiente ›</button>
     </section>
 
-    <section class="raven-card coordinator-table-shell" aria-label="Cronogramas de {{ $monthLabel }}">
+    <section class="raven-card coordinator-table-shell" tabindex="0" aria-label="Cronogramas de {{ $monthLabel }}">
         @if($rows->isEmpty())
             <div class="coordinator-empty">
                 <p class="raven-card-title">No hay promotoras activas</p>

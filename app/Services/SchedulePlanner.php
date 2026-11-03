@@ -8,6 +8,8 @@ use App\Enums\UserRole;
 use App\Enums\VisitStatus;
 use App\Models\ActivityReschedule;
 use App\Models\MonthlySchedule;
+use App\Models\Pharmacy;
+use App\Models\PharmacyAssignment;
 use App\Models\PlannedActivity;
 use App\Models\User;
 use App\Models\VisitReason;
@@ -184,11 +186,14 @@ class SchedulePlanner
                 if ($type->requiresPharmacy()) {
                     $pharmacyId = (int) ($data['pharmacy_id'] ?? 0);
 
+                    // Serializa el permiso actual con altas, retiros y sustituciones de responsables.
+                    Pharmacy::whereKey($pharmacyId)->lockForUpdate()->first();
                     // Solo establecimientos activos asignados HOY a esta promotora.
                     $allowed = $promoter->assignedPharmacies()
                         ->where('pharmacies.id', $pharmacyId)
                         ->where('pharmacies.is_active', true)
-                        ->exists();
+                        ->where(fn ($query) => PharmacyAssignment::constrainOperational($query, 'pharmacy_assignments.', $date->toDateString()))
+                        ->lockForUpdate()->first(['pharmacies.id']) !== null;
 
                     if (! $allowed) {
                         throw ValidationException::withMessages([

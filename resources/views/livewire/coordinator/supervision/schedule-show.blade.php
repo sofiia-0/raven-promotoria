@@ -44,7 +44,7 @@
                                 </div>
                                 <div class="coordinator-activity-body">
                                     <p class="coordinator-list-title">{{ $activity->pharmacy?->display_name ?? $activity->activity_type->label() }}</p>
-                                    @if($activity->pharmacy)<p class="coordinator-list-meta">{{ $activity->pharmacy->display_locality }}</p>@endif
+                                    @if($activity->pharmacy)<x-promoter.location :department="$activity->pharmacy->department" :city="$activity->pharmacy->city" :address="$activity->pharmacy->address" :neighborhood="$activity->pharmacy->neighborhood" />@endif
                                     @if($activity->notes)<p class="coordinator-list-meta">{{ $activity->notes }}</p>@endif
                                     @foreach($activity->reschedules as $reschedule)
                                         <p class="coordinator-list-meta">Reprogramada {{ $reschedule->from_date->format('d/m') }} → {{ $reschedule->to_date->format('d/m') }} · {{ $reschedule->reason?->name }}</p>

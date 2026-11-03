@@ -1,4 +1,5 @@
 <div class="raven-stack">
+    @if($selectedPharmacy)<section class="raven-card" aria-label="Establecimiento seleccionado"><h2 class="raven-section-title">{{ $selectedPharmacy->display_name }}</h2><x-promoter.location :department="$selectedPharmacy->department" :city="$selectedPharmacy->city" :address="$selectedPharmacy->address" :neighborhood="$selectedPharmacy->neighborhood" /><p class="raven-field-help">Historial de todas las promotoras. Puede limitarlo mediante los filtros.</p></section>@endif
     <section class="raven-card" aria-label="Filtrar visitas">
         <div class="coordinator-filters coordinator-filters--visits">
             <div class="raven-field">
@@ -37,7 +38,7 @@
             </div>
             <div class="raven-field coordinator-filter-wide">
                 <label class="raven-label" for="visits-search">Farmacia</label>
-                <input id="visits-search" class="raven-input" type="search" placeholder="Nombre o municipio" wire:model.live.debounce.350ms="search">
+                <input id="visits-search" class="raven-input" type="search" placeholder="Nombre, municipio, departamento o dirección" wire:model.live.debounce.350ms="search">
             </div>
             <button type="button" class="raven-button raven-button-secondary" wire:click="clearFilters">Limpiar</button>
         </div>
@@ -54,7 +55,7 @@
             <p class="raven-card-description">Ajuste el rango de fechas o limpie los filtros.</p>
         </section>
     @else
-        <section class="raven-card coordinator-table-shell">
+        <section class="raven-card coordinator-table-shell" tabindex="0">
             <table class="coordinator-table">
                 <thead>
                     <tr>
@@ -73,7 +74,7 @@
                             <td>{{ $visit->promoter?->name }}</td>
                             <td>
                                 <span class="coordinator-list-title">{{ $visit->pharmacy?->display_name }}</span>
-                                <span class="coordinator-list-meta">{{ $visit->pharmacy?->display_locality }}</span>
+                                <span class="coordinator-list-meta">{{ $visit->pharmacy?->display_locality }}<span class="coordinator-list-meta">{{ $visit->pharmacy?->display_address }}</span></span>
                             </td>
                             <td>
                                 <span class="raven-badge {{ $visit->status === \App\Enums\VisitStatus::REALIZADA ? 'raven-badge-success' : 'raven-badge-danger' }}">{{ $visit->status->label() }}</span>
