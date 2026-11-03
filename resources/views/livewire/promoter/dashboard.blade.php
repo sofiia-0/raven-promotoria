@@ -1,52 +1,23 @@
-<div class="promoter-dashboard">
-    <section aria-label="Resumen de establecimientos" class="promoter-dashboard-kpis">
-        <article class="raven-card promoter-summary-card">
-            <div class="promoter-kpi-heading"><p class="promoter-kpi-label">Establecimientos activos asignados</p><span class="promoter-kpi-symbol" aria-hidden="true">▦</span></div>
-            <p class="promoter-kpi-value">{{ $totalActive }}</p>
-            <a class="promoter-text-link" href="{{ route('promoter.pharmacies.index') }}">Ver mis farmacias <span aria-hidden="true">↗</span></a>
-        </article>
-        <article class="raven-card promoter-summary-card">
-            <div class="promoter-kpi-heading"><p class="promoter-kpi-label">Departamentos</p><span class="promoter-kpi-symbol promoter-kpi-symbol-aqua" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span></div>
-            <p class="promoter-kpi-value">{{ $departmentsCount }}</p>
-        </article>
-        <article class="raven-card promoter-summary-card">
-            <div class="promoter-kpi-heading"><p class="promoter-kpi-label">Fichas sin dirección detallada</p><span class="promoter-kpi-symbol promoter-kpi-symbol-purple" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 5H5v15h14v-8M10 14l1-4 7-7 3 3-7 7Z"/></svg></span></div>
-            <p class="promoter-kpi-value">{{ $missingAddress }}</p>
-            <a class="promoter-text-link" href="{{ route('promoter.pharmacies.index') }}">Revisar fichero <span aria-hidden="true">↗</span></a>
-        </article>
+<div class="promoter-dashboard promoter-pilot-dashboard">
+    <section class="raven-card promoter-metric-filters" aria-labelledby="activity-period-title">
+        <div><h2 id="activity-period-title" class="raven-section-title">Su actividad mensual</h2><p class="raven-card-description">Consulte cobertura, cumplimiento y visitas realizadas de {{ mb_strtolower($metrics['label']) }}.</p></div>
+        <div class="promoter-metric-period"><div class="raven-field"><label for="metric-month" class="raven-label">Mes</label><select id="metric-month" class="raven-select" wire:model.live="reportMonth">@for($m=1;$m<=12;$m++)<option value="{{ $m }}">{{ \Carbon\CarbonImmutable::create(2026,$m,1)->locale('es')->translatedFormat('F') }}</option>@endfor</select></div><div class="raven-field"><label for="metric-year" class="raven-label">Año</label><select id="metric-year" class="raven-select" wire:model.live="reportYear">@foreach($reportYears as $y)<option value="{{ $y }}">{{ $y }}</option>@endforeach</select></div></div>
+        <p class="promoter-sr-only" role="status" wire:loading>Actualizando indicadores…</p>
     </section>
-
-    <div class="promoter-overview-grid">
-        <section class="raven-card promoter-breakdown-card" aria-labelledby="category-title">
-            <div class="promoter-dashboard-section-head">
-                <div><h2 id="category-title" class="raven-card-title">Distribución por categoría</h2></div>
-                <span class="promoter-section-note">Hasta 6 categorías</span>
-            </div>
-            @forelse ($categories as $item)
-                <div class="promoter-dashboard-breakdown">
-                    <div class="promoter-dashboard-breakdown-header"><span>{{ $item->label }}</span><strong>{{ $item->total }}</strong></div>
-                    <progress class="promoter-dashboard-progress" max="{{ max(1, $totalActive) }}" value="{{ $item->total }}" aria-label="{{ $item->label }}: {{ $item->total }} establecimientos"></progress>
-                </div>
-            @empty
-                <div class="promoter-dashboard-empty"><p class="raven-card-title">Sin establecimientos asignados</p><p class="raven-card-description">Aún no tiene establecimientos activos asignados.</p></div>
-            @endforelse
-        </section>
-
-        <section class="raven-card promoter-breakdown-card promoter-department-card" aria-labelledby="department-title">
-            <div class="promoter-dashboard-section-head">
-                <div><h2 id="department-title" class="raven-card-title">Distribución por departamento</h2></div>
-                <span class="promoter-section-note">Hasta 6 departamentos</span>
-            </div>
-            @forelse ($departments as $item)
-                <div class="promoter-dashboard-breakdown">
-                    <div class="promoter-dashboard-breakdown-header"><span>{{ $item->label }}</span><strong>{{ $item->total }}</strong></div>
-                    <progress class="promoter-dashboard-progress" max="{{ max(1, $totalActive) }}" value="{{ $item->total }}" aria-label="{{ $item->label }}: {{ $item->total }} establecimientos"></progress>
-                </div>
-            @empty
-                <div class="promoter-dashboard-empty"><p class="raven-card-title">Sin ubicaciones para mostrar</p><p class="raven-card-description">La distribución aparecerá cuando tenga establecimientos asignados.</p></div>
-            @endforelse
-        </section>
-
+    <div aria-live="polite" aria-atomic="true" class="promoter-sr-only">{{ $metrics['label'] }}: {{ $metrics['totalRealized'] }} visitas realizadas; cobertura {{ $metrics['coverage'] }} %; cumplimiento {{ $metrics['compliance'] }} %.</div>
+    <section class="promoter-dashboard-kpis" aria-label="Indicadores de actividad">
+        <article class="raven-card promoter-summary-card"><div class="promoter-kpi-heading"><h3 class="promoter-kpi-label">Cobertura de establecimientos</h3><span class="promoter-kpi-symbol"><x-promoter.icon name="location" /></span></div><p class="promoter-kpi-value">{{ number_format($metrics['coverage'],1,',','.') }}<small> %</small></p><p class="raven-card-description">{{ $metrics['coveredEstablishments'] }} de {{ $metrics['scheduledEstablishments'] }} establecimientos distintos programados fueron visitados.</p>@if(!$metrics['scheduledEstablishments'])<p class="raven-field-help">Sin establecimientos programados en cronogramas enviados.</p>@endif</article>
+        <article class="raven-card promoter-summary-card"><div class="promoter-kpi-heading"><h3 class="promoter-kpi-label">Cumplimiento del plan</h3><span class="promoter-kpi-symbol promoter-kpi-symbol-purple"><x-promoter.icon name="calendar" /></span></div><p class="promoter-kpi-value">{{ number_format($metrics['compliance'],1,',','.') }}<small> %</small></p><p class="raven-card-description">{{ $metrics['completedPlanned'] }} de {{ $metrics['scheduledVisits'] }} visitas programadas se realizaron en el mes.</p><p class="raven-field-help">Cada actividad programada cuenta una sola vez.</p></article>
+        <article class="raven-card promoter-summary-card"><div class="promoter-kpi-heading"><h3 class="promoter-kpi-label">Visitas realizadas</h3><span class="promoter-kpi-symbol promoter-kpi-symbol-aqua"><x-promoter.icon name="check" /></span></div><p class="promoter-kpi-value">{{ $metrics['totalRealized'] }}</p><p class="raven-card-description">{{ $metrics['outsidePlan'] }} fuera de plan. Las visitas repetidas cuentan como registros diferentes.</p><a class="promoter-text-link" href="{{ route('promoter.visits.history') }}">Consultar historial ↗</a></article>
+    </section>
+    <div class="promoter-metric-charts">
+        <section class="raven-card" aria-labelledby="category-title"><h2 id="category-title" class="raven-section-title">Distribución por categoría</h2><p class="raven-card-description">Porcentaje de las {{ $metrics['totalRealized'] }} visitas realizadas, incluidas las de fuera de plan.</p><x-promoter.activity-distribution :metrics="$metrics" /></section>
+        <section class="raven-card" aria-labelledby="department-title"><h2 id="department-title" class="raven-section-title">Distribución por departamento</h2><p class="raven-card-description">Cantidad y porcentaje de visitas realizadas por departamento.</p><div class="promoter-territory-chart">
+            @forelse($metrics['departments'] as $item)<div class="promoter-dashboard-breakdown"><div class="promoter-dashboard-breakdown-header"><span>{{ $item['label'] }}</span><strong>{{ $item['total'] }} · {{ number_format($item['percentage'],1,',','.') }} %</strong></div><progress class="promoter-dashboard-progress" max="100" value="{{ $item['percentage'] }}" aria-label="{{ $item['label'] }}: {{ $item['total'] }} visitas, {{ $item['percentage'] }} por ciento"></progress></div>@empty<div class="promoter-dashboard-empty"><p>No hay visitas realizadas para este período.</p></div>@endforelse
+        </div></section>
+    </div>
+    <details class="raven-card promoter-metric-definitions"><summary>Cómo se calculan estos indicadores</summary><p>Cobertura: establecimientos programados distintos con al menos una visita realizada en el mes ÷ establecimientos programados distintos. Una visita fuera de plan aporta cobertura si corresponde a un establecimiento programado.</p><p>Cumplimiento: actividades del plan enviado con un registro realizado durante el mes ÷ actividades de visita programadas. Los borradores no forman parte del plan y una visita fuera de plan no completa automáticamente una actividad.</p><p>Distribución: visitas realizadas de cada grupo ÷ todas sus visitas realizadas del mes. Las clasificaciones de categoría y departamento son las actuales del establecimiento. Las reasignaciones no borran su actividad anterior; solo se incluyen sus propios planes y registros. El mes se calcula en horario de Nicaragua.</p></details>
+    <section class="raven-card promoter-current-file" aria-labelledby="current-file-title"><div><h2 id="current-file-title" class="raven-section-title">Su fichero actual</h2><p class="raven-card-description">{{ $totalActive }} establecimientos activos asignados · {{ $departmentsCount }} departamentos · {{ $missingAddress }} fichas sin dirección detallada.</p></div><a class="raven-button raven-button-secondary" href="{{ route('promoter.pharmacies.index') }}">Ver Mis farmacias</a></section>
         <section class="raven-card promoter-activity-card" aria-labelledby="changes-title">
             <div class="promoter-dashboard-section-head">
                 <div><h2 id="changes-title" class="raven-card-title">Modificaciones recientes</h2></div>
@@ -70,14 +41,4 @@
                 </ul>
             @endif
         </section>
-    </div>
-
-    <section class="raven-card" aria-labelledby="visits-title">
-        <h2 id="visits-title" class="raven-card-title">Planificación y visitas</h2>
-        <p class="raven-card-description">
-            Las visitas del día, el progreso semanal y las visitas pendientes aparecerán cuando
-            se integre el módulo de planificación y registro de visitas. No se muestran cifras
-            provisionales para evitar confundirlas con resultados reales.
-        </p>
-    </section>
 </div>

@@ -28,6 +28,43 @@
                         @error('status') <span class="raven-field-error">{{ $message }}</span> @enderror
                     </fieldset>
 
+                    <section id="visit-geo" class="promoter-record-geo promoter-planning-notes" aria-labelledby="visit-geo-title"
+                        x-data="{
+                            state: 'idle', captured: '',
+                            capture() {
+                                if(this.state === 'loading') return;
+                                $wire.latitude = null; $wire.longitude = null; $wire.locationAccuracy = null;
+                                if(!window.isSecureContext) { this.state = 'insecure'; return; }
+                                if(!navigator.geolocation) { this.state = 'unsupported'; return; }
+                                this.state = 'loading';
+                                navigator.geolocation.getCurrentPosition(pos => {
+                                    const c = pos.coords;
+                                    if(!Number.isFinite(c.latitude) || !Number.isFinite(c.longitude) || Math.abs(c.latitude)>90 || Math.abs(c.longitude)>180 || (c.accuracy != null &amp;&amp; (!Number.isFinite(c.accuracy) || c.accuracy<0 || c.accuracy>2147483647))) { this.state='unavailable'; return; }
+                                    $wire.latitude = c.latitude.toFixed(7); $wire.longitude = c.longitude.toFixed(7);
+                                    $wire.locationAccuracy = c.accuracy == null ? null : Math.round(c.accuracy);
+                                    this.captured = new Date().toLocaleTimeString('es-NI', {hour:'2-digit', minute:'2-digit'}); this.state='ok';
+                                }, error => { this.state = error.code === 1 ? 'denied' : (error.code === 3 ? 'timeout' : 'unavailable'); },
+                                {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+                            }
+                        }">
+                        <h3 id="visit-geo-title" class="raven-section-title"><x-promoter.icon name="location" /> Ubicación del registro <span aria-hidden="true">*</span></h3>
+                        <p class="raven-field-help">Antes de registrar la visita, recuerde guardar su ubicación.</p>
+                        <button id="capture-visit-location" type="button" class="raven-button raven-button-secondary" @click="capture()" :disabled="state === 'loading'" :aria-busy="state === 'loading'">
+                            <x-promoter.icon name="location" /><span x-text="state === 'loading' ? 'Obteniendo ubicación…' : (state === 'idle' ? 'Capturar ubicación' : 'Volver a capturar ubicación')">Capturar ubicación</span>
+                        </button>
+                        <div class="promoter-location-status" role="status" aria-live="polite">
+                            <p x-show="state === 'ok'" x-cloak x-text="'Ubicación capturada a las '+captured+'. Precisión aproximada: '+($wire.locationAccuracy == null ? 'no disponible' : '± '+$wire.locationAccuracy+' m')+'.'"></p>
+                            <p x-show="state === 'denied'" x-cloak>No se concedió el permiso de ubicación. Revise los permisos del navegador y vuelva a intentarlo.</p>
+                            <p x-show="state === 'timeout'" x-cloak>Se agotó el tiempo de captura. Revise la señal de ubicación y vuelva a intentarlo.</p>
+                            <p x-show="state === 'unavailable'" x-cloak>El dispositivo no pudo obtener una ubicación válida. Active su ubicación y vuelva a intentarlo.</p>
+                            <p x-show="state === 'unsupported'" x-cloak>Este navegador no admite la captura de ubicación. Utilice un navegador compatible.</p>
+                            <p x-show="state === 'insecure'" x-cloak>Abra Raven mediante su dirección HTTPS para capturar la ubicación.</p>
+                            <p x-show="!['idle','loading','ok'].includes(state)" x-cloak>No se puede completar el registro sin ubicación. Informe a Coordinación por el canal habitual e indique el establecimiento y el error mostrado. Los demás datos del formulario se conservan.</p>
+                        </div>
+                        @if($errors->has('latitude') || $errors->has('longitude'))<p class="raven-field-error" role="alert">{{ $errors->first('latitude') ?: $errors->first('longitude') }}</p>@endif
+                        @error('locationAccuracy')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror
+                        <x-promoter.visit-map live :authorized="$mapAuthorized" />
+                    </section>
                     @if($status === 'NO_REALIZADA')
                         <div class="raven-field promoter-planning-notes">
                             <label class="raven-label" for="visit-reason">Motivo</label>
@@ -63,9 +100,10 @@
                         <p class="raven-field-help promoter-planning-notes" role="status">El checklist todavía no está configurado. Consulte con Coordinadora.</p>
                     @endif
 
-                    @if($status === 'REALIZADA' && $objectiveOptions->isNotEmpty())
+                    @if($status === 'REALIZADA' )
                         <div class="raven-field promoter-planning-notes">
-                            <x-promoter.reason-select model="objectiveId" label="Objetivo general de la visita (opcional)" :value="$objectiveId" :options="$objectiveOptions" />
+                            <x-promoter.reason-select model="objectiveId" label="Objetivo general de la visita" required :value="$objectiveId" :options="$objectiveOptions" />
+                            @if($objectiveOptions->isEmpty())<p class="raven-field-error" role="status">No hay objetivos disponibles. Informe a Coordinación; no podrá registrar una visita realizada hasta que se habiliten.</p>@endif
                             @if($objectiveOptions->firstWhere('id',(int)$objectiveId)?->is_other)
                                 <x-promoter.field model="objectiveExplanation" label="Explique el objetivo" :value="$objectiveExplanation" type="textarea" required max="1500" help="Utilice al menos 10 caracteres." />
                             @endif
@@ -84,7 +122,8 @@
                     @error('evidence')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror
                     </div>
                     <div class="raven-form-actions promoter-record-submit">
-                        <button type="submit" class="raven-button raven-button-primary" :disabled="evidenceBusy || evidenceProblem" wire:loading.attr="disabled" wire:target="save"><x-promoter.icon name="check" />Registrar visita</button>
+                        <button type="submit" class="raven-button raven-button-primary" :disabled="evidenceBusy || evidenceProblem || !$wire.latitude || !$wire.longitude" wire:loading.attr="disabled" wire:target="save"><x-promoter.icon name="check" />Registrar visita</button>
+                        <p class="raven-field-help" x-show="!$wire.latitude || !$wire.longitude">Capture su ubicación para habilitar el registro.</p>
                         <span class="raven-field-help" wire:loading wire:target="save">Guardando…</span>
                     </div>
                 </form>
@@ -116,47 +155,7 @@
                         </div>
                     </div>
                 </section>
-                <section class="raven-card promoter-record-geo" aria-label="Captura opcional de ubicación">
-                    <div class="raven-field promoter-planning-notes"
-                         x-data="{
-                            state: 'idle',
-                            capture() {
-                                if (! navigator.geolocation) { this.state = 'unsupported'; return; }
-                                this.state = 'loading';
-                                navigator.geolocation.getCurrentPosition(
-                                    (pos) => {
-                                        $wire.latitude = pos.coords.latitude.toFixed(7);
-                                        $wire.longitude = pos.coords.longitude.toFixed(7);
-                                        $wire.locationAccuracy = Math.round(pos.coords.accuracy);
-                                        this.state = 'ok';
-                                    },
-                                    () => {
-                                        $wire.latitude = null;
-                                        $wire.longitude = null;
-                                        $wire.locationAccuracy = null;
-                                        this.state = 'denied';
-                                    },
-                                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-                                );
-                            }
-                         }"
-                         x-init="capture()">
-                        <span class="raven-label">Ubicación del registro</span>
-                        <p class="raven-field-help" x-show="state === 'loading'">Obteniendo ubicación…</p>
-                        <p class="raven-field-help" x-show="state === 'ok'" x-cloak>
-                            Ubicación capturada.
-                        </p>
-                        <p class="raven-field-help" x-show="state === 'denied' || state === 'unsupported'" x-cloak>
-                            No se pudo obtener la ubicación. La visita se registrará sin ella.
-                        </p>
-                        <div>
-                            <button type="button" class="raven-button raven-button-ghost" x-on:click="capture()"
-                                    x-show="state !== 'loading'">Volver a intentar</button>
-                        </div>
-                        @error('latitude') <span class="raven-field-error">{{ $message }}</span> @enderror
-                    </div>
-                    <x-promoter.visit-map live :authorized="$mapAuthorized" />
-                </section>
+
             </aside>
         </div>
     @endif

@@ -10,16 +10,20 @@ use RuntimeException;
 /** Actualización explícita del catálogo. Nunca se ejecuta desde vistas, boot o migraciones. */
 class OfficialVisitChecklist
 {
+    // Catálogo inicial aprobado para sincronización explícita; el registro usa los ítems activos de la base.
+    // No ejecutar esta sincronización para restablecer cambios futuros aprobados desde Coordinadora.
     public const ITEMS = [
         ['Push Money', null],
-        ['Capacitación o revisión de plan de exhibición', null],
+        ['Capacitación', null],
+        ['Plan de exhibición', null],
         ['Pedido generado', null],
         ['Entrega de material promocional', null],
         ['Entrega de muestra médica', null],
-        ['Entrega de Plan paciente', null],
+        ['Plan paciente', null],
     ];
 
     public const RETIRED = [
+        'Capacitación o revisión de plan de exhibición', 'Entrega de Plan paciente',
         'Exhibición de productos', 'Inventario disponible', 'Precios visibles',
         'Material promocional', 'Capacitación al personal', 'Productos próximos a vencer',
         'Entrega de Plan de recomendación',
@@ -98,7 +102,7 @@ class OfficialVisitChecklist
         }
 
         return [
-            'sha256' => hash('sha256', json_encode(['version' => 1, 'official' => self::ITEMS, 'retired' => self::RETIRED, 'rows' => $rows, 'answers' => $answers, 'actions' => $actions, 'conflicts' => $conflicts], JSON_THROW_ON_ERROR)),
+            'sha256' => hash('sha256', json_encode(['version' => 2, 'official' => self::ITEMS, 'retired' => self::RETIRED, 'rows' => $rows, 'answers' => $answers, 'actions' => $actions, 'conflicts' => $conflicts], JSON_THROW_ON_ERROR)),
             'official' => array_column(self::ITEMS, 0), 'actions' => $actions, 'conflicts' => $conflicts,
         ];
     }
@@ -164,7 +168,7 @@ class OfficialVisitChecklist
             $after = $this->rows();
             $afterPlan = $this->plan($after, $answers);
             if ($afterPlan['actions'] !== [] || $afterPlan['conflicts'] !== []) {
-                throw new RuntimeException('El resultado no coincide con los seis ítems oficiales.');
+                throw new RuntimeException('El resultado no coincide con los ítems oficiales propuestos.');
             }
             $this->writeVerified($backup.'.result.json', ['phase' => 'verified_before_transaction_commit', 'before_sha256' => hash_file('sha256', $backup), 'items' => $after]);
 

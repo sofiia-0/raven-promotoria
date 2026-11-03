@@ -11,9 +11,10 @@ use App\Models\VisitReason;
 use App\Support\EstablishmentSearch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
-/** Añade contexto opcional solo durante una creación nueva y atómica. */
+/** Frontera de registro de Promotora: requisitos actuales y creación atómica, sin reescribir historia. */
 class VisitContextRecorder
 {
     public function __construct(private VisitWithEvidenceRecorder $recorder = new VisitWithEvidenceRecorder, private PromoterReasonCategories $categories = new PromoterReasonCategories) {}
@@ -28,6 +29,30 @@ class VisitContextRecorder
     public function register(User $actor, array $data, array $evidenceIds = [], mixed $objectiveId = null, string $explanation = ''): Visit
     {
         abort_unless($actor->role === UserRole::PROMOTER && $actor->is_active, 403);
+        $existing = Visit::where('idempotency_key', $data['idempotency_key'] ?? '')->first();
+        if ($existing) {
+            abort_unless($existing->promoter_id === $actor->id, 403);
+            if ($objectiveId !== null && $objectiveId !== '' && (! $existing->objective
+                || $existing->objective->promoter_reason_category_id !== (int) $objectiveId
+                || ($existing->objective->explanation ?? '') !== trim($explanation))) {
+                throw ValidationException::withMessages(['objectiveId' => 'La visita ya está registrada. No se modificó su objetivo.']);
+            }
+
+            return $this->recorder->register($actor, $data, $evidenceIds);
+        }
+        Validator::make([...$data, 'objectiveId' => $objectiveId], [
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'location_accuracy' => ['nullable', 'integer', 'between:0,2147483647'],
+            'objectiveId' => [($data['status'] ?? null) === VisitStatus::REALIZADA->value ? 'required' : 'nullable', 'integer', 'min:1'],
+        ], [
+            'latitude.required' => 'Capture su ubicación antes de registrar la visita.',
+            'longitude.required' => 'Capture su ubicación antes de registrar la visita.',
+            'latitude.*' => 'La ubicación capturada no es válida. Vuelva a intentarlo.',
+            'longitude.*' => 'La ubicación capturada no es válida. Vuelva a intentarlo.',
+            'location_accuracy.*' => 'La precisión de la ubicación no es válida. Vuelva a capturarla.',
+            'objectiveId.*' => 'Seleccione un objetivo general para la visita realizada.',
+        ])->validate();
         if (($data['status'] ?? null) === VisitStatus::NO_REALIZADA->value
             && $this->requiresReasonExplanation($data['visit_reason_id'] ?? null)
             && ! Visit::where('idempotency_key', $data['idempotency_key'])->exists()

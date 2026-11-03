@@ -1,0 +1,9 @@
+@props(['metrics'])
+@php $colors=['#3266ae','#7764a3','#397d82','#607594','#97628a','#8b7654']; $offset=0; $circumference=2*pi()*45; @endphp
+@if($metrics['totalRealized'])
+<figure class="promoter-category-chart"><svg viewBox="0 0 120 120" role="img" aria-label="Distribución de {{ $metrics['totalRealized'] }} visitas realizadas por categoría. Las cantidades y porcentajes se detallan a continuación."><circle cx="60" cy="60" r="45" fill="none" stroke="#edf1f6" stroke-width="13" />
+@foreach($metrics['categorySegments'] as $segment)@php $portion=$segment['total']/$metrics['totalRealized']; @endphp<circle cx="60" cy="60" r="45" fill="none" stroke="{{ $colors[$loop->index] }}" stroke-width="13" stroke-dasharray="{{ $portion*$circumference }} {{ $circumference }}" stroke-dashoffset="{{ -$offset*$circumference }}" transform="rotate(-90 60 60)" />@php $offset+=$portion; @endphp@endforeach
+<text x="60" y="57" text-anchor="middle" class="promoter-donut-total">{{ $metrics['totalRealized'] }}</text><text x="60" y="72" text-anchor="middle" class="promoter-donut-label">realizadas</text></svg>
+<figcaption><ul class="promoter-category-legend">@foreach($metrics['categorySegments'] as $segment)<li><span class="promoter-chart-dot" style="background:{{ $colors[$loop->index] }}" aria-hidden="true"></span><span>{{ $segment['label'] }}</span><strong>{{ $segment['total'] }} · {{ number_format($segment['percentage'],1,',','.') }} %</strong></li>@endforeach</ul></figcaption></figure>
+@if(count($metrics['categories'])>5)<details><summary>Ver todas las categorías</summary><ul class="promoter-category-legend">@foreach($metrics['categories'] as $item)<li><span>{{ $item['label'] }}</span><strong>{{ $item['total'] }} · {{ number_format($item['percentage'],1,',','.') }} %</strong></li>@endforeach</ul></details>@endif
+@else<div class="promoter-dashboard-empty"><p>No hay visitas realizadas para este período.</p></div>@endif

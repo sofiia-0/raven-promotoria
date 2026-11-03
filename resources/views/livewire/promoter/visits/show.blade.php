@@ -74,14 +74,13 @@
             <p class="raven-section-description">
                 {{ $visit->checklist->where('checked', true)->count() }} de {{ $visit->checklist->count() }} actividades registradas.
             </p>
-            <ul class="promoter-planning-list">
-                @foreach($visit->checklist as $entry)
-                    <li class="promoter-dashboard-activity">
-                        <span>{{ $entry->item?->name }}</span>
-                        <span class="raven-badge {{ $entry->checked ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $entry->checked ? 'Realizada' : 'Sin marcar' }}</span>
-                    </li>
-                @endforeach
-            </ul>
+            @foreach([true => 'Realizada', false => 'Sin marcar'] as $checked => $label)
+                @php $entries = $visit->checklist->filter(fn($entry) => (bool)$entry->checked === (bool)$checked); @endphp
+                @if($entries->isNotEmpty())<h3 class="raven-card-title promoter-checklist-group">{{ $label }} · {{ $entries->count() }}</h3>
+                <ul class="promoter-planning-list" aria-label="{{ $label }}">
+                    @foreach($entries as $entry)<li class="promoter-dashboard-activity"><span>{{ $entry->item?->name }}</span><span class="raven-badge {{ $entry->checked ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $label }}</span></li>@endforeach
+                </ul>@endif
+            @endforeach
         </section>
     @endif
 

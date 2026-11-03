@@ -88,7 +88,7 @@
     @endif
     </div>
     <section class="raven-card promoter-request-history-card" aria-labelledby="request-history-title">
-        <div class="promoter-section-heading"><h2 id="request-history-title" class="raven-section-title"><x-promoter.icon name="history" />Historial de solicitudes</h2><span class="promoter-section-note">{{ $requests->total() }} {{ $requests->total() === 1 ? 'solicitud' : 'solicitudes' }}</span></div>
+        <div class="promoter-section-heading"><h2 id="request-history-title" class="raven-section-title promoter-history-title"><x-promoter.icon name="history" />Historial de solicitudes</h2><span class="promoter-section-note">{{ $requests->total() }} {{ $requests->total() === 1 ? 'solicitud' : 'solicitudes' }}</span></div>
         <div class="promoter-request-history">
             @forelse($requests as $item)
                 <article class="promoter-request-row" wire:key="request-{{ $item->id }}">

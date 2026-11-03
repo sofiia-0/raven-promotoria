@@ -61,7 +61,7 @@ class PromoterOfficialChecklistTest extends TestCase
     {
         $this->assertSame(0, Artisan::call('raven:checklist'));
         $p = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR);
-        $this->assertCount(6, $p['actions']);
+        $this->assertCount(7, $p['actions']);
         $this->assertSame(array_column(OfficialVisitChecklist::ITEMS, 0), $p['official']);
         $this->assertSame(0, ChecklistItem::count());
         $this->assertSame(1, Artisan::call('raven:checklist', ['--apply' => true]));
@@ -74,7 +74,7 @@ class PromoterOfficialChecklistTest extends TestCase
         $before = $this->rows('checklist_items');
         (new VisitCatalogSeeder)->run();
         $this->assertSame($before, $this->rows('checklist_items'));
-        $this->assertSame(['Push Money', 'Capacitación o revisión de plan de exhibición', 'Pedido generado', 'Entrega de material promocional', 'Entrega de muestra médica', 'Entrega de Plan paciente'], ChecklistItem::active()->pluck('name')->all());
+        $this->assertSame(['Push Money', 'Capacitación', 'Plan de exhibición', 'Pedido generado', 'Entrega de material promocional', 'Entrega de muestra médica', 'Plan paciente'], ChecklistItem::active()->pluck('name')->all());
         $this->assertDatabaseMissing('checklist_items', ['name' => 'Entrega de Plan de recomendación']);
     }
 
@@ -90,7 +90,7 @@ class PromoterOfficialChecklistTest extends TestCase
         $labels = ChecklistItem::orderBy('id')->get(['id', 'name', 'description'])->toJson();
         $s = new OfficialVisitChecklist;
         $result = $s->apply($s->preview()['sha256'], $this->directory);
-        $this->assertSame(13, $result['changed']);
+        $this->assertSame(count(OfficialVisitChecklist::RETIRED) + count(OfficialVisitChecklist::ITEMS), $result['changed']);
         $this->assertSame(hash_file('sha256', $result['backup']), trim(file_get_contents($result['backup'].'.sha256')));
         $this->assertSame($answers, $this->rows('visit_checklist'));
         $this->assertSame($beforeVisits, $this->rows('visits'));
@@ -98,9 +98,9 @@ class PromoterOfficialChecklistTest extends TestCase
         $this->assertSame(0, ChecklistItem::whereIn('id', $ids)->where('is_active', true)->count());
         $this->actingAs($visit->promoter)->get('/promoter/visits/'.$visit->id)->assertOk()->assertSee('Exhibición de productos');
         $official = ChecklistItem::active()->get();
-        $this->assertCount(6, $official);
+        $this->assertCount(7, $official);
         $new = $this->visit([$official[0]->id => true, $ids[0] => true, 999999 => true]);
-        $this->assertCount(6, $new->checklist);
+        $this->assertCount(7, $new->checklist);
         $this->assertSame(1, $new->checklist->where('checked', true)->count());
         $this->assertSame($ids, $visit->fresh()->checklist->pluck('checklist_item_id')->all());
         $before = $this->rows('checklist_items');
@@ -115,7 +115,7 @@ class PromoterOfficialChecklistTest extends TestCase
         $s->apply($s->preview()['sha256'], $this->directory);
         $this->assertSame('Push Money', $item->fresh()->name);
         $this->assertTrue($item->fresh()->is_active);
-        $this->assertSame(6, ChecklistItem::count());
+        $this->assertSame(7, ChecklistItem::count());
     }
 
     public function test_duplicate_normalized_labels_block_all_changes(): void
@@ -180,6 +180,30 @@ class PromoterOfficialChecklistTest extends TestCase
             $this->assertSame($before, $this->rows('checklist_items'));
             $this->assertSame(0, DB::table('visit_reasons')->count());
         }
+    }
+
+    public function test_new_visits_follow_evolving_active_catalog_without_rewriting_previous_answers(): void
+    {
+        $service = new OfficialVisitChecklist;
+        $service->seedFresh();
+        $training = ChecklistItem::where('name', 'Capacitación')->firstOrFail();
+        $old = $this->visit([$training->id => true]);
+        $before = $old->checklist()->orderBy('id')->get()->toJson();
+
+        // Simula una futura gestión autorizada del catálogo, sin implementar Coordinadora.
+        $training->update(['is_active' => false]);
+        $added = ChecklistItem::factory()->create(['name' => 'Actividad de prueba', 'sort_order' => 5]);
+        $exhibition = ChecklistItem::where('name', 'Plan de exhibición')->firstOrFail();
+        $exhibition->update(['sort_order' => 1]);
+        $new = $this->visit([$added->id => true, $training->id => true]);
+
+        $this->assertSame($before, $old->fresh()->checklist()->orderBy('id')->get()->toJson());
+        $this->assertTrue($old->fresh()->checklist->firstWhere('checklist_item_id', $training->id)->checked);
+        $this->assertSame([$exhibition->id, $added->id], $new->checklist()->orderBy('id')->limit(2)->pluck('checklist_item_id')->all());
+        $this->assertFalse($new->checklist->contains('checklist_item_id', $training->id));
+        $this->assertTrue($new->checklist->firstWhere('checklist_item_id', $added->id)->checked);
+        $this->actingAs($old->promoter)->get('/promoter/visits/'.$old->id)->assertOk()->assertSee('Capacitación');
+        $this->assertSame($added->id, ChecklistItem::where('name', 'Actividad de prueba')->sole()->id);
     }
 
     public function test_application_is_blocked_outside_local_and_testing(): void

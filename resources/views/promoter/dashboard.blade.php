@@ -5,7 +5,7 @@
 @section('content')
     <header class="raven-page-header promoter-home-header">
         <div class="promoter-home-heading">
-            <h1 class="raven-page-title">Resumen de establecimientos</h1>
+            <h1 class="raven-page-title">Resumen de actividad</h1>
         </div>
         <figure class="promoter-header-art" aria-hidden="true">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 196" fill="none" focusable="false">

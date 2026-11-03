@@ -16,6 +16,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\Concerns\RequiresIsolatedPromoterDatabase;
+use Tests\Concerns\WithPilotVisitRequirements;
 use Tests\TestCase;
 
 class PromoterRoundOneSearchTest extends TestCase
@@ -23,6 +24,7 @@ class PromoterRoundOneSearchTest extends TestCase
     use RefreshDatabase, RequiresIsolatedPromoterDatabase {
         RequiresIsolatedPromoterDatabase::beforeRefreshingDatabase insteadof RefreshDatabase;
     }
+    use WithPilotVisitRequirements;
 
     protected function setUp(): void
     {
@@ -56,6 +58,9 @@ class PromoterRoundOneSearchTest extends TestCase
             $test->set('pharmacyId', (string) $mine->id)->set('pharmacySearch', 'Sin coincidencias')->assertViewHas('selectedPharmacy', fn ($p) => $p?->id === $mine->id);
             foreach ([$foreign, $inactive, $ended] as $p) {
                 $test->set('pharmacyId', (string) $p->id)->set('pharmacySearch', '')->assertViewHas('selectedPharmacy', fn ($p) => $p === null)->assertDontSee($p->name);
+            }
+            if ($c === Register::class) {
+                $test->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId());
             }
             $test->set('pharmacyId', (string) $foreign->id);
             if ($c === Planning::class) {

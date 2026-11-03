@@ -31,6 +31,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\Concerns\RequiresIsolatedPromoterDatabase;
+use Tests\Concerns\WithPilotVisitRequirements;
 use Tests\TestCase;
 
 class PromoterFinalAdjustmentsTest extends TestCase
@@ -38,6 +39,7 @@ class PromoterFinalAdjustmentsTest extends TestCase
     use RefreshDatabase, RequiresIsolatedPromoterDatabase {
         RequiresIsolatedPromoterDatabase::beforeRefreshingDatabase insteadof RefreshDatabase;
     }
+    use WithPilotVisitRequirements;
 
     private User $actor;
 
@@ -67,7 +69,7 @@ class PromoterFinalAdjustmentsTest extends TestCase
 
     private function data(): array
     {
-        return ['idempotency_key' => (string) Str::uuid(), 'pharmacy_id' => $this->pharmacy->id, 'status' => 'REALIZADA'];
+        return ['idempotency_key' => (string) Str::uuid(), 'pharmacy_id' => $this->pharmacy->id, 'status' => 'REALIZADA', 'latitude' => '12.1234567', 'longitude' => '-86.1234567'];
     }
 
     private function reject(callable $call): void
@@ -132,7 +134,7 @@ class PromoterFinalAdjustmentsTest extends TestCase
     {
         $this->synchronize('unperformed');
         $reason = VisitReason::first();
-        $component = Livewire::actingAs($this->actor)->test(Register::class)->set('status', 'NO_REALIZADA')->assertSee($reason->name)->set('pharmacyId', (string) $this->pharmacy->id)->call('save')->assertHasErrors('reasonId');
+        $component = Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->set('status', 'NO_REALIZADA')->assertSee($reason->name)->set('pharmacyId', (string) $this->pharmacy->id)->call('save')->assertHasErrors('reasonId');
         $component->set('reasonId', (string) $reason->id)->call('save')->assertHasNoErrors()->assertRedirect();
         $visit = Visit::first();
         $this->assertSame($reason->id, $visit->visit_reason_id);
@@ -149,13 +151,13 @@ class PromoterFinalAdjustmentsTest extends TestCase
         $this->assertSame(0, Visit::count());
     }
 
-    public function test_objective_is_optional_and_does_not_rewrite_historical_visits(): void
+    public function test_objective_is_required_for_new_visits_and_does_not_rewrite_historical_visits(): void
     {
         $old = (new VisitRecorder)->register($this->actor, $this->data());
         $before = $old->fresh()->getAttributes();
         $this->synchronize();
-        $visit = (new VisitContextRecorder)->register($this->actor, $this->data());
-        $this->assertNull($visit->objective);
+        $this->reject(fn () => (new VisitContextRecorder)->register($this->actor, $this->data()));
+        $this->assertSame(1, Visit::count());
         $this->assertSame($before, $old->fresh()->getAttributes());
         $this->actingAs($this->actor)->get('/promoter/visits/'.$old->id)->assertOk()->assertDontSee('Objetivo general');
     }
@@ -167,7 +169,7 @@ class PromoterFinalAdjustmentsTest extends TestCase
         $category = $this->category('visit_objective', 'commercial_followup');
         $visit = (new VisitContextRecorder)->register($this->actor, $this->data(), [], $category->id);
         $this->assertSame($category->id, $visit->objective->promoter_reason_category_id);
-        $this->assertSame(6, $visit->checklist()->count());
+        $this->assertSame(7, $visit->checklist()->count());
         $this->assertNull($visit->visit_reason_id);
         $category->update(['name' => 'Nombre aprobado posterior', 'is_provisional' => false]);
         $this->assertSame('Seguimiento comercial', $visit->objective->fresh()->category_label);
@@ -190,9 +192,9 @@ class PromoterFinalAdjustmentsTest extends TestCase
     {
         $this->synchronize();
         $other = $this->category('visit_objective', 'other');
-        $c = Livewire::actingAs($this->actor)->test(Register::class)->set('pharmacyId', (string) $this->pharmacy->id)->set('objectiveId', (string) $other->id)->assertSee('Explique el objetivo')->set('objectiveExplanation', 'Detalle del objetivo de prueba.')->call('save')->assertHasNoErrors();
+        $c = Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->set('pharmacyId', (string) $this->pharmacy->id)->set('objectiveId', (string) $other->id)->assertSee('Explique el objetivo')->set('objectiveExplanation', 'Detalle del objetivo de prueba.')->call('save')->assertHasNoErrors();
         $this->assertSame('Detalle del objetivo de prueba.', VisitObjective::first()->explanation);
-        Livewire::actingAs($this->actor)->test(Register::class)->set('objectiveId', (string) $other->id)->set('objectiveExplanation', 'Detalle que no debe persistir.')->set('objectiveId', '')->assertSet('objectiveExplanation', '');
+        Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->set('objectiveId', (string) $other->id)->set('objectiveExplanation', 'Detalle que no debe persistir.')->set('objectiveId', '')->assertSet('objectiveExplanation', '');
     }
 
     public function test_objective_replay_is_idempotent_and_cannot_append_to_an_old_visit(): void
@@ -206,7 +208,7 @@ class PromoterFinalAdjustmentsTest extends TestCase
         $this->assertSame($visit->id, $again->id);
         $this->assertSame(1, VisitObjective::count());
         $oldData = $this->data();
-        $old = $recorder->register($this->actor, $oldData);
+        $old = (new VisitRecorder)->register($this->actor, $oldData);
         $this->reject(fn () => $recorder->register($this->actor, $oldData, [], $category->id));
         $this->assertNull($old->objective);
         $this->assertSame(1, VisitObjective::count());
@@ -273,20 +275,20 @@ class PromoterFinalAdjustmentsTest extends TestCase
     {
         $visit = (new VisitRecorder)->register($this->actor, [...$this->data(), 'latitude' => '12.12', 'longitude' => '-86.12']);
         $key = 'promoter.maps.authorized.'.$this->actor->id;
-        Livewire::actingAs($this->actor)->test(Register::class)->assertViewHas('mapAuthorized', false)->call('authorizeVisitMap')->assertViewHas('mapAuthorized', true);
+        Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->assertViewHas('mapAuthorized', false)->call('authorizeVisitMap')->assertViewHas('mapAuthorized', true);
         $this->assertTrue(session($key));
         Livewire::actingAs($this->actor)->test(Show::class, ['visitId' => $visit->id])->assertViewHas('mapAuthorized', true)->call('revokeVisitMap')->assertViewHas('mapAuthorized', false);
         $this->assertFalse(session()->has($key));
-        Livewire::actingAs($this->actor)->test(Register::class)->assertViewHas('mapAuthorized', false);
+        Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->assertViewHas('mapAuthorized', false);
     }
 
     public function test_map_consent_does_not_leak_between_users_or_survive_session_clear(): void
     {
-        Livewire::actingAs($this->actor)->test(Register::class)->call('authorizeVisitMap');
+        Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->call('authorizeVisitMap');
         $other = User::factory()->promoter()->create();
-        Livewire::actingAs($other)->test(Register::class)->assertViewHas('mapAuthorized', false);
+        Livewire::actingAs($other)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->assertViewHas('mapAuthorized', false);
         session()->flush();
-        Livewire::actingAs($this->actor)->test(Register::class)->assertViewHas('mapAuthorized', false);
+        Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->assertViewHas('mapAuthorized', false);
         $admin = User::factory()->create(['role' => UserRole::ADMIN]);
         Livewire::actingAs($admin)->test(Register::class)->assertForbidden();
     }
@@ -388,7 +390,7 @@ class PromoterFinalAdjustmentsTest extends TestCase
         $recorder = new VisitContextRecorder;
         $this->reject(fn () => $recorder->register($this->actor, $data));
         $this->reject(fn () => $recorder->register($this->actor, [...$data, 'notes' => 'Corto']));
-        $component = Livewire::actingAs($this->actor)->test(Register::class)->set('status', 'NO_REALIZADA')
+        $component = Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())->set('status', 'NO_REALIZADA')
             ->set('pharmacyId', (string) $this->pharmacy->id)->set('reasonId', (string) $reason->id)
             ->assertSee('Explique el motivo')->call('save')->assertHasErrors('notes');
         $component->set('notes', 'Explicación de otro motivo.')->call('save')->assertHasNoErrors();

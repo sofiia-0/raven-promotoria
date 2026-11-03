@@ -1,5 +1,7 @@
 @props(['model' => 'pharmacyId', 'searchModel' => 'pharmacySearch', 'options', 'selected' => null, 'hasMore' => false, 'onSelect' => null, 'required' => true, 'multiple' => false, 'selectedIds' => []])
 @php
+    $selectedMatches = $multiple && $options->contains(fn($option) => in_array($option->id, $selectedIds, true));
+    if ($multiple) $options = $options->reject(fn($option) => in_array($option->id, $selectedIds, true));
     $pickerId = 'pharmacy-picker-'.$model;
     $identifiers = \App\Support\EstablishmentPresentation::selectionIdentifiers($options);
     $selectedLabel = $selected ? $selected->display_name.(isset($identifiers[$selected->id]) ? ' — '.$identifiers[$selected->id] : '') : '';
@@ -24,9 +26,10 @@
             if (!button || this.searching) return;
             if (@js($multiple)) {
                 clearTimeout(this.timer); ++this.version;
+                const keepListOpen = this.items().length > 1;
                 this.searching = true; this.open = true;
                 try { await this.$wire[@js($onSelect)](Number(button.dataset.id)); }
-                finally { this.searching = false; this.open = true; this.$refs.input.focus(); }
+                finally { this.searching = false; this.active = -1; this.$nextTick(() => { this.$refs.input.focus(); this.open = keepListOpen; }); }
                 return;
             }
             if (@js($onSelect)) {
@@ -75,7 +78,7 @@
             @keydown.escape.stop.prevent="open = false; active = -1" @keydown.tab="open = false">
         <button class="promoter-picker-clear" type="button" x-show="selected !== '' || text !== ''" x-cloak @click="clear()" aria-label="{{ $multiple ? 'Borrar búsqueda' : 'Quitar selección de farmacia' }}">×</button>
     </div>
-    <p id="{{ $pickerId }}-help" class="raven-field-help">Nombre, municipio, departamento, barrio, dirección o sucursal. @if($multiple) Marque las opciones que necesite; la búsqueda permanecerá abierta.@else Seleccione un resultado.@if($onSelect) Se añadirá a su selección antes de guardar.@endif @endif</p>
+    <p id="{{ $pickerId }}-help" class="raven-field-help">Nombre, municipio, departamento, barrio, dirección o sucursal. @if($multiple) Marque las opciones que necesite; puede seguir buscando desde este campo.@else Seleccione un resultado.@if($onSelect) Se añadirá a su selección antes de guardar.@endif @endif</p>
     <div class="promoter-picker-results" x-show="open" x-cloak>
         @if($multiple)<div class="promoter-multi-picker-heading"><span role="status" aria-live="polite" aria-atomic="true">{{ count($selectedIds) }} seleccionados</span><button type="button" class="promoter-subtle-link" @click="open = false; $refs.input.focus(); open = false">Cerrar lista</button></div>@endif
         <p class="raven-field-help promoter-picker-status" role="status" x-show="searching">Buscando establecimientos…</p>
@@ -94,7 +97,7 @@
                     </button>
                 </li>
             @empty
-                <li role="presentation"><p class="promoter-picker-status" role="status" x-show="!searching">No se encontraron establecimientos asignados.</p></li>
+                <li role="presentation"><p class="promoter-picker-status" role="status" x-show="!searching">{{ $selectedMatches ? 'Las coincidencias ya están en su selección. Busque otro establecimiento.' : 'No se encontraron establecimientos asignados.' }}</p></li>
             @endforelse
         </ul>
         @if($hasMore)<p class="raven-field-help promoter-picker-status">Se muestran 20 resultados. Afine la búsqueda.</p>@endif
