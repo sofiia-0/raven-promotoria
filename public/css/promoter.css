@@ -1101,12 +1101,12 @@
     .promoter-planning-productivity .promoter-month-header {padding: 18px;}
     .promoter-calendar-heading {align-items: flex-start; flex-wrap: wrap; gap: 12px;}
     .promoter-calendar-tabs {width: 100%;} .promoter-calendar-tabs button {flex: 1;}
-    .promoter-calendar-week-nav {display: flex; overflow-x: auto; padding: 3px 3px 10px; margin-inline: -3px; gap: 7px;}
-    .promoter-calendar-week-nav button {flex: 0 0 102px;}
+    .promoter-calendar-week-nav {grid-template-columns: repeat(auto-fit,minmax(min(100%,88px),1fr)); gap: 7px;}
+    .promoter-calendar-week-nav button {min-width: 0; padding: 8px;}
     .promoter-calendar-desktop {display: none;}
     .promoter-calendar-mobile {display: grid; gap: 10px;}
-    .promoter-calendar-day-strip {display: flex; gap: 8px; overflow-x: auto; padding: 4px 3px 12px; scroll-snap-type: x proximity;}
-    .promoter-calendar-day-strip button {flex: 0 0 66px; display: flex; flex-direction: column; gap: 5px; align-items: center; padding: 10px 6px; border: 1px solid #dfe6ef; border-radius: 12px; background: #fafbfd; color: #4b607b; font: inherit; scroll-snap-align: center;}
+    .promoter-calendar-day-strip {display: grid; grid-template-columns: repeat(auto-fit,minmax(52px,1fr)); gap: 7px; padding: 4px 3px 12px;}
+    .promoter-calendar-day-strip button {min-width: 0; display: flex; flex-direction: column; gap: 5px; align-items: center; padding: 10px 6px; border: 1px solid #dfe6ef; border-radius: 12px; background: #fafbfd; color: #4b607b; font: inherit;}
     .promoter-calendar-day-strip button[aria-pressed=true] {border-color: #799ecb; background: #eaf1fc;}
     .promoter-calendar-day-strip span {font-size: 11px;} .promoter-calendar-day-strip strong {font-size: 17px; color: #304968;}
     .promoter-calendar-summary {flex-direction: column; gap: 6px;}
