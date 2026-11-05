@@ -41,11 +41,16 @@ class Exchange extends Component
         $actor = $this->coordinator();
         $this->validate(['workbook' => ['required', 'file', 'mimes:xlsx', 'max:10240']], [], ['workbook' => 'archivo Excel']);
         $this->reset(['batchId', 'manifestHash', 'onlyErrors']);
+        $stream = null;
         try {
-            $batch = app(EstablishmentExchange::class)->preview($actor, $this->workbook->getRealPath());
+            $stream = $this->workbook->readStream();
+            $batch = app(EstablishmentExchange::class)->previewStream($actor, $stream);
             $this->batchId = $batch->id;
             $this->manifestHash = $batch->manifest_sha256;
         } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
             $this->workbook->delete();
             $this->reset('workbook');
         }

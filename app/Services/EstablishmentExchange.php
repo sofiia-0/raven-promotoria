@@ -125,11 +125,42 @@ class EstablishmentExchange
         });
     }
 
+    /** Funciona con archivos temporales privados locales o respaldados por un disco S3. */
+    public function previewStream(User $actor, mixed $stream): EstablishmentImport
+    {
+        $this->authorize($actor);
+        if (! is_resource($stream)) {
+            $this->fail('No se pudo leer el archivo seleccionado. Cárguelo nuevamente.');
+        }
+        $path = $this->temporaryPath();
+        try {
+            $target = @fopen($path, 'xb');
+            if (! $target) {
+                $this->fail('No se pudo preparar el archivo privado para la vista previa.');
+            }
+            try {
+                $copied = stream_copy_to_stream($stream, $target, 10 * 1024 * 1024 + 1);
+            } finally {
+                fclose($target);
+            }
+            if (! $copied || $copied > 10 * 1024 * 1024) {
+                $this->fail('Seleccione un archivo XLSX de hasta 10 MB.');
+            }
+
+            return $this->preview($actor, $path);
+        } finally {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+    }
+
     public function apply(User $actor, string $batchId, string $confirmedHash): EstablishmentImport
     {
         $this->authorize($actor);
 
         return DB::transaction(function () use ($actor, $batchId, $confirmedHash) {
+            $this->authorize(User::lockForUpdate()->findOrFail($actor->id));
             $batch = EstablishmentImport::where('actor_id', $actor->id)->lockForUpdate()->findOrFail($batchId);
             if (! hash_equals($batch->manifest_sha256, $confirmedHash) || ! hash_equals($confirmedHash, CanonicalData::hash($batch->manifest))) {
                 $this->fail('La vista previa no coincide con la confirmación. Genere una nueva vista previa.');

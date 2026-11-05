@@ -12,6 +12,8 @@ use App\Services\EstablishmentExchange;
 use App\Services\EstablishmentWorkbook;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -244,5 +246,22 @@ class CoordinatorEstablishmentExchangeTest extends TestCase
         $this->artisan('raven:establishment-exports:prune --apply')->assertSuccessful();
         $this->assertFileDoesNotExist($old);
         $this->assertFileExists($recent);
+    }
+
+    public function test_real_upload_preview_confirmation_and_download_through_livewire(): void
+    {
+        $this->freezeTime();
+        Storage::fake('local');
+        config(['livewire.temporary_file_upload.disk' => 'local']);
+        $actor = User::factory()->coordinator()->create();
+        $record = Pharmacy::factory()->create(['phone' => '1111-2222']);
+        $path = $this->file([$this->row($record, ['phone' => '3333-4444'])]);
+        $upload = UploadedFile::fake()->createWithContent('fichero.xlsx', file_get_contents($path));
+
+        $screen = Livewire::actingAs($actor)->test(Exchange::class)->set('workbook', $upload)->call('preview')->assertHasNoErrors()->assertSee('Vista previa sin aplicar');
+        $this->assertSame('1111-2222', $record->fresh()->phone);
+        $screen->call('apply')->assertHasNoErrors()->assertSee('Importación aplicada');
+        $this->assertSame('3333-4444', $record->fresh()->phone);
+        $screen->call('exportComplete')->assertFileDownloaded('raven-establecimientos-'.now()->format('Ymd-His').'.xlsx');
     }
 }
