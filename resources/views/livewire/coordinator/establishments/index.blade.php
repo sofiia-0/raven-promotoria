@@ -1,4 +1,5 @@
 <div class="raven-stack">
+    <a class="raven-button raven-button-secondary" href="{{ route('coordinator.establishments.exchange', $this->only(['search', 'department', 'city', 'category', 'status', 'promoter'])) }}">Importar o exportar Excel</a>
     <section class="raven-card" aria-label="Filtros de establecimientos"><div class="coordinator-filters">
         <x-promoter.field model="search" label="Buscar" :value="$search" live max="255" />
         <x-promoter.searchable-select model="department" label="Departamento" :value="$department" :options="$departments" clearable />

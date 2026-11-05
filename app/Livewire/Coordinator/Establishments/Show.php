@@ -73,6 +73,7 @@ class Show extends Component
         ];
         $options = PromoterCatalogOptions::withHistorical($options, $pharmacy, (string) $this->form['department']);
 
-        return view('livewire.coordinator.establishments.show', ['pharmacy' => $pharmacy, 'options' => $options]);
+        return view('livewire.coordinator.establishments.show', ['pharmacy' => $pharmacy, 'options' => $options,
+            'operationalIds' => $pharmacy->assignments()->operational()->pluck('id')->all()]);
     }
 }
