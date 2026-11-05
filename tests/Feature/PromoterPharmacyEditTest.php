@@ -9,7 +9,6 @@ use App\Models\PharmacyAssignment;
 use App\Models\PharmacyChange;
 use App\Models\User;
 use App\Services\PharmacyAssignmentService;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -111,14 +110,8 @@ class PromoterPharmacyEditTest extends TestCase
             ->get('/promoter/pharmacies/'.$pharmacy->id)
             ->assertNotFound();
 
-        try {
-            Livewire::actingAs($other)
-                ->test(Show::class, ['pharmacyId' => $pharmacy->id]);
-
-            $this->fail('Una promotora ajena no debería acceder a esta farmacia.');
-        } catch (ModelNotFoundException $exception) {
-            $this->assertSame(Pharmacy::class, $exception->getModel());
-        }
+        Livewire::actingAs($other)
+            ->test(Show::class, ['pharmacyId' => $pharmacy->id])->assertNotFound();
 
         $this->assertSame('Farmacia Uno', $pharmacy->fresh()->name);
         $this->assertSame(0, PharmacyChange::count());
@@ -132,19 +125,12 @@ class PromoterPharmacyEditTest extends TestCase
         $pharmacy = $this->assigned($first);
 
         $form = Livewire::actingAs($first)
-            ->test(Show::class, ['pharmacyId' => $pharmacy->id]);
+            ->test(Show::class, ['pharmacyId' => $pharmacy->id])->set('name', 'Nombre no autorizado');
 
         (new PharmacyAssignmentService)
             ->reassign($pharmacy, $second);
 
-        try {
-            $form->set('name', 'Nombre no autorizado')
-                ->call('save');
-
-            $this->fail('No debería permitirse editar después de una reasignación.');
-        } catch (ModelNotFoundException $exception) {
-            $this->assertSame(Pharmacy::class, $exception->getModel());
-        }
+        $form->call('save')->assertNotFound();
 
         $this->assertSame('Farmacia Uno', $pharmacy->fresh()->name);
         $this->assertSame(0, PharmacyChange::count());
