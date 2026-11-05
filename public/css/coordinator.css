@@ -1,4 +1,8 @@
 /* Panel de Coordinación. Reutiliza tokens y componentes Raven (app.css); mismo lenguaje visual que Promotora. */
+.coordinator-catalog-toolbar {display:flex; flex-wrap:wrap; gap:16px; align-items:end; margin-bottom:20px;}
+.coordinator-catalog-toolbar > label {flex:1 1 240px; min-width:0;}
+.coordinator-table-wrap {position:relative; min-width:0; max-width:100%; overflow-x:auto;}
+.coordinator-table-wrap .raven-table {min-width:560px;}
 .coordinator-shell {background: #f4f5f7;}
 .coordinator-shell .raven-app {grid-template-columns: 228px minmax(0, 1fr);}
 .coordinator-shell .raven-sidebar {padding: 30px 18px 20px; background: #f7f8fa; border-color: #e5e7ec;}

@@ -48,6 +48,10 @@
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2h6v2m-7 9 3 3 5-6"/></svg></span>
                     Visitas
                 </a>
+                <a href="{{ route('coordinator.catalogs.index') }}" class="raven-nav-link {{ request()->routeIs('coordinator.catalogs.*') ? 'is-active' : '' }}" @if(request()->routeIs('coordinator.catalogs.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16M4 12h16M4 19h16"/><circle cx="8" cy="5" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="19" r="2" fill="currentColor"/></svg></span>
+                    Catálogos
+                </a>
             </nav>
             <div class="raven-sidebar-footer coordinator-sidebar-footer">
                 <p class="coordinator-sidebar-signature">Laboratorio Raven</p>

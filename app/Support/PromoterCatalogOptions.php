@@ -3,8 +3,10 @@
 namespace App\Support;
 
 use App\Enums\UserRole;
+use App\Models\CommercialCatalogOption;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class PromoterCatalogOptions
 {
@@ -41,6 +43,15 @@ class PromoterCatalogOptions
     {
         abort_unless($actor->role === UserRole::PROMOTER && $actor->is_active, 403);
         abort_unless(in_array($field, ['department', 'city', 'client_type', 'category'], true), 422);
+
+        // Una vez configurado un dominio, las opciones inactivas no reaparecen
+        // por observarse todavía en establecimientos históricos.
+        if (in_array($field, ['client_type', 'category'], true)
+            && Schema::hasTable('commercial_catalog_options')
+            && CommercialCatalogOption::query()->where('domain', $field)->exists()) {
+            return CommercialCatalogOption::query()->where('domain', $field)->where('is_active', true)
+                ->orderBy('sort_order')->orderBy('name')->pluck('name');
+        }
 
         $values = $actor->assignedPharmacies()
             ->where('pharmacies.is_active', true)

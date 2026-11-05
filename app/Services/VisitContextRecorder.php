@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Models\Visit;
 use App\Models\VisitObjective;
 use App\Models\VisitReason;
-use App\Support\EstablishmentSearch;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -23,7 +22,7 @@ class VisitContextRecorder
     {
         $reason = VisitReason::query()->active()->whereKey((int) $id)->first();
 
-        return $reason && trim(EstablishmentSearch::normalize($reason->name)) === 'otro motivo';
+        return $reason && $reason->needs_explanation;
     }
 
     public function register(User $actor, array $data, array $evidenceIds = [], mixed $objectiveId = null, string $explanation = ''): Visit
