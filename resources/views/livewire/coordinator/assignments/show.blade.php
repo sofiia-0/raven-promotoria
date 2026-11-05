@@ -24,7 +24,7 @@
                 </li>
             @empty<li class="coordinator-list-meta">No hay responsables ni coberturas vigentes o programadas.</li>@endforelse
         </ul>
-        @if($pharmacy->is_active)<x-coordinator.assignment-form :pharmacy="$pharmacy" :promoters="$promoters" :operation="$operation" />
+        @if($pharmacy->is_active)<x-coordinator.assignment-form :pharmacy="$pharmacy" :promoters="$promoters" :operation="$operation" :target-promoter-id="$targetPromoterId" />
         @else<p class="raven-card-description coordinator-review-form">Un establecimiento inactivo no se asigna. Se conserva su historial.</p>@endif
     </section>
     <section class="raven-card" aria-labelledby="assignment-history-title">
@@ -50,7 +50,7 @@
     @if($changes->isNotEmpty())
         <section class="raven-card" aria-labelledby="assignment-changes-title"><h2 id="assignment-changes-title" class="raven-section-title">Cambios hechos desde Coordinación</h2>
             <ul class="coordinator-list">@foreach($changes as $change)
-                <li class="coordinator-list-row coordinator-assignment-row"><p class="coordinator-list-title">{{ ['assignment.added'=>'Se añadió una responsable','assignment.replaced'=>'Se sustituyó una responsable','assignment.changed'=>'Se cambió la promotora','assignment.ended'=>'Se retiró una responsable','coverage.created'=>'Se creó una cobertura','coverage.ended'=>'Se finalizó una cobertura'][$change->action] ?? 'Cambio de asignación' }}</p><span class="coordinator-list-meta">{{ $change->actor?->name ?? 'Sin dato histórico' }} · {{ $change->created_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</span></li>
+                <li class="coordinator-list-row coordinator-assignment-row"><p class="coordinator-list-title">{{ ['assignment.added'=>'Se añadió una responsable','assignment.replaced'=>'Se sustituyó una responsable','assignment.changed'=>'Se cambió la promotora','assignment.ended'=>'Se retiró una responsable','coverage.created'=>'Se creó una cobertura','coverage.ended'=>'Se finalizó una cobertura'][$change->action] ?? 'Cambio de asignación' }}@if(filled($change->details['reason'] ?? null))<span class="coordinator-list-meta">{{ $change->details['reason'] }}</span>@endif</p><span class="coordinator-list-meta">{{ $change->actor?->name ?? 'Sin dato histórico' }} · {{ $change->created_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</span></li>
             @endforeach</ul>
         </section>
     @endif

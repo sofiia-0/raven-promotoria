@@ -49,6 +49,27 @@ class CoordinatorAssignmentsTest extends TestCase
         return $pharmacy;
     }
 
+    public function test_contextual_editor_scopes_relations_and_records_a_coverage_reason(): void
+    {
+        $first = $this->assignedTo($this->ana, 'Farmacia Uno');
+        $second = $this->assignedTo($this->bea, 'Farmacia Dos');
+        $otherAssignment = $second->assignments()->firstOrFail();
+
+        Livewire::actingAs($this->coordinator)->test(Index::class)
+            ->assertDontSee('Seleccionar los de esta página')
+            ->call('toggleBatchMode')->assertSee('Seleccionar los de esta página')
+            ->call('openEditor', $first->id, 'replace', $otherAssignment->id)->assertNotFound();
+
+        Livewire::actingAs($this->coordinator)->test(Show::class, ['pharmacyId' => $first->id, 'compact' => true, 'initialOperation' => 'coverage'])
+            ->assertSee('Registrar cobertura temporal')
+            ->set('targetPromoterId', (string) $this->bea->id)
+            ->set('coverageReason', 'Apoyo temporal al equipo')
+            ->call('assign')->assertHasNoErrors()->assertDispatched('coordinator-assignment-saved');
+
+        $this->assertCount(2, $first->assignments()->whereNull('ended_at')->get());
+        $this->assertSame('Apoyo temporal al equipo', AuditLog::where('action', 'coverage.created')->sole()->details['reason']);
+    }
+
     /** RF-FAR: asignar en lote farmacias sin promotora. */
     public function test_coordinator_assigns_unassigned_pharmacies_in_batch(): void
     {

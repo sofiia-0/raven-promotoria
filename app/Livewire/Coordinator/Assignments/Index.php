@@ -11,6 +11,8 @@ use App\Support\EstablishmentSearch;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -35,6 +37,17 @@ class Index extends Component
 
     public string $targetPromoterId = '';
 
+    public bool $batchMode = false;
+
+    #[Locked]
+    public ?int $editingPharmacyId = null;
+
+    #[Locked]
+    public string $editingOperation = 'add';
+
+    #[Locked]
+    public ?int $editingAssignmentId = null;
+
     public function mount(): void
     {
         $this->coordinator();
@@ -44,7 +57,47 @@ class Index extends Component
     {
         if (in_array($property, ['search', 'department', 'promoter'], true)) {
             $this->resetPage();
+            $this->closeEditor();
         }
+    }
+
+    public function toggleBatchMode(): void
+    {
+        $this->coordinator();
+        $this->batchMode = ! $this->batchMode;
+        if (! $this->batchMode) {
+            $this->clearSelection();
+        }
+    }
+
+    public function openEditor(int $pharmacyId, string $operation, ?int $assignmentId = null): void
+    {
+        $this->coordinator();
+        abort_unless(in_array($operation, ['add', 'coverage', 'replace'], true), 404);
+        $pharmacy = Pharmacy::query()->where('is_active', true)->findOrFail($pharmacyId);
+        if ($operation === 'replace') {
+            $pharmacy->assignments()->where('assignment_kind', 'responsible')->whereNull('ended_at')->findOrFail($assignmentId);
+        }
+        $this->editingPharmacyId = $pharmacyId;
+        $this->editingOperation = $operation;
+        $this->editingAssignmentId = $operation === 'replace' ? $assignmentId : null;
+    }
+
+    public function closeEditor(): void
+    {
+        $this->reset(['editingPharmacyId', 'editingOperation', 'editingAssignmentId']);
+    }
+
+    #[On('coordinator-assignment-saved')]
+    public function refreshAssignments(): void
+    {
+        $this->coordinator();
+    }
+
+    public function endRelation(int $pharmacyId, int $assignmentId, PharmacyAssignmentService $assignments): void
+    {
+        $assignments->end($this->coordinator(), $pharmacyId, $assignmentId);
+        session()->flash('success', 'Se finalizó la relación seleccionada.');
     }
 
     public function clearFilters(): void

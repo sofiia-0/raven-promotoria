@@ -23,6 +23,9 @@ class Show extends Component
     #[Locked]
     public int $pharmacyId;
 
+    #[Locked]
+    public bool $compact = false;
+
     public string $targetPromoterId = '';
 
     public string $operation = 'add';
@@ -33,10 +36,22 @@ class Show extends Component
 
     public string $coverageEndsOn = '';
 
-    public function mount(int $pharmacyId): void
+    public string $coverageReason = '';
+
+    public function mount(int $pharmacyId, bool $compact = false, string $initialOperation = 'add', ?int $assignmentId = null): void
     {
         $this->coordinator();
-        $this->pharmacyId = Pharmacy::query()->findOrFail($pharmacyId)->id;
+        $pharmacy = Pharmacy::query()->findOrFail($pharmacyId);
+        $this->pharmacyId = $pharmacy->id;
+        $this->compact = $compact;
+        if ($compact) {
+            abort_unless(in_array($initialOperation, ['add', 'coverage', 'replace'], true), 404);
+            $this->operation = $initialOperation;
+            if ($initialOperation === 'replace') {
+                $this->sourceAssignmentId = (string) $pharmacy->assignments()
+                    ->where('assignment_kind', 'responsible')->whereNull('ended_at')->findOrFail($assignmentId)->id;
+            }
+        }
         $this->coverageStartsOn = SchedulePlanner::today()->toDateString();
         $this->coverageEndsOn = $this->coverageStartsOn;
     }
@@ -50,6 +65,7 @@ class Show extends Component
             'sourceAssignmentId' => [Rule::requiredIf($this->operation === 'replace'), 'nullable', 'integer'],
             'coverageStartsOn' => ['required_if:operation,coverage', 'date_format:Y-m-d'],
             'coverageEndsOn' => ['required_if:operation,coverage', 'date_format:Y-m-d', 'after_or_equal:coverageStartsOn'],
+            'coverageReason' => ['nullable', 'string', 'max:500'],
         ], ['targetPromoterId.required' => 'Seleccione una promotora.', 'sourceAssignmentId.required' => 'Seleccione la responsable que desea sustituir.']);
 
         $promoter = User::query()->findOrFail((int) $validated['targetPromoterId']);
@@ -57,14 +73,17 @@ class Show extends Component
             $assignments->replace($actor, $this->pharmacyId, (int) $this->sourceAssignmentId, $promoter);
             $message = 'Se sustituyó únicamente la responsable seleccionada. Las demás relaciones y el historial se conservan.';
         } elseif ($this->operation === 'coverage') {
-            $assignments->cover($actor, $this->pharmacyId, $promoter, $this->coverageStartsOn, $this->coverageEndsOn);
+            $assignments->cover($actor, $this->pharmacyId, $promoter, $this->coverageStartsOn, $this->coverageEndsOn, $validated['coverageReason']);
             $message = 'Cobertura guardada. Las responsables habituales conservan su asignación.';
         } else {
             $result = $assignments->assignMany($actor, [$this->pharmacyId], $promoter);
             $message = $result['changed'] === 0 ? 'La promotora ya es responsable de este establecimiento.' : 'Responsable añadida sin retirar a las demás.';
         }
 
-        $this->reset('targetPromoterId', 'sourceAssignmentId');
+        $this->reset('targetPromoterId', 'sourceAssignmentId', 'coverageReason');
+        if ($this->compact) {
+            $this->dispatch('coordinator-assignment-saved');
+        }
         session()->flash('success', $message);
     }
 
@@ -79,6 +98,13 @@ class Show extends Component
         $this->coordinator();
         $pharmacy = Pharmacy::query()->with(['activeAssignments.promoter:id,name', 'assignments' => fn ($q) => $q->with(['promoter:id,name', 'creator:id,name', 'ender:id,name'])->latest('assigned_at')->latest('id')])
             ->findOrFail($this->pharmacyId);
+
+        if ($this->compact) {
+            return view('livewire.coordinator.assignments.editor', [
+                'pharmacy' => $pharmacy,
+                'promoters' => User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            ]);
+        }
 
         // Quién hizo cada cambio desde el panel: la tabla de asignaciones no guarda el actor.
         $changes = AuditLog::query()->with('actor:id,name')

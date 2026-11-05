@@ -1,6 +1,7 @@
-@props(['pharmacy', 'promoters', 'operation'])
+@props(['pharmacy', 'promoters', 'operation', 'compact' => false, 'targetPromoterId' => ''])
 <form class="coordinator-review-form" wire:submit="assign">
     <div class="raven-form-grid">
+        @unless($compact)
         <div class="raven-field coordinator-detail-wide">
             <label class="raven-label" for="assignment-operation">Acción</label>
             <select id="assignment-operation" class="raven-select" wire:model.live="operation">
@@ -10,6 +11,7 @@
             </select>
             @error('operation')<span class="raven-field-error">{{ $message }}</span>@enderror
         </div>
+        @endunless
         @if($operation === 'replace')
             <div class="raven-field coordinator-detail-wide">
                 <label class="raven-label" for="assignment-source">Responsable que se sustituirá</label>
@@ -23,13 +25,11 @@
                 @error('sourceAssignmentId')<span class="raven-field-error">{{ $message }}</span>@enderror
             </div>
         @endif
-        <div class="raven-field coordinator-detail-wide">
-            <label class="raven-label" for="single-target">{{ $operation === 'coverage' ? 'Promotora de cobertura' : ($operation === 'replace' ? 'Nueva responsable' : 'Promotora que se añadirá') }}</label>
-            <select id="single-target" class="raven-select" wire:model="targetPromoterId">
-                <option value="">Seleccione una promotora</option>
-                @foreach($promoters as $item)<option value="{{ $item->id }}">{{ $item->name }}</option>@endforeach
-            </select>
-            @error('targetPromoterId')<span class="raven-field-error">{{ $message }}</span>@enderror
+        <div class="coordinator-detail-wide">
+            <x-promoter.searchable-select model="targetPromoterId"
+                :label="$operation === 'coverage' ? 'Promotora de cobertura' : ($operation === 'replace' ? 'Nueva responsable' : 'Promotora que se añadirá')"
+                :value="$targetPromoterId" :options="$promoters->map(fn ($person) => (string) $person->id)"
+                :labels="$promoters->pluck('name', 'id')->all()" required />
         </div>
         @if($operation === 'coverage')
             <div class="raven-field">
@@ -41,6 +41,11 @@
                 <label class="raven-label" for="coverage-end">Último día de cobertura</label>
                 <input id="coverage-end" class="raven-input" type="date" wire:model="coverageEndsOn">
                 @error('coverageEndsOn')<span class="raven-field-error">{{ $message }}</span>@enderror
+            </div>
+            <div class="raven-field coordinator-detail-wide">
+                <label class="raven-label" for="coverage-reason">Motivo de la cobertura (opcional)</label>
+                <textarea id="coverage-reason" class="raven-textarea" wire:model="coverageReason" maxlength="500" rows="2"></textarea>
+                @error('coverageReason')<span class="raven-field-error">{{ $message }}</span>@enderror
             </div>
             <p class="raven-field-help coordinator-detail-wide">Ambos días están incluidos, en horario de Managua. Al terminar el último día cesa el acceso por esta cobertura; las responsables habituales y las visitas registradas se conservan.</p>
         @endif
