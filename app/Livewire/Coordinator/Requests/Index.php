@@ -75,6 +75,7 @@ class Index extends Component
             $validated['assigneeId'] ? (int) $validated['assigneeId'] : null, $validated['reviewNote']);
 
         $this->closeReview();
+        $this->dispatch('coordinator-request-reviewed');
         session()->flash('success', $request->type === PharmacyRequest::TYPE_ALTA
             ? 'Alta aprobada: el establecimiento ya forma parte del fichero y quedó asignado.'
             : 'Baja aprobada: el establecimiento quedó inactivo y conserva su historial.');
@@ -93,6 +94,7 @@ class Index extends Component
         $review->reject($this->coordinator(), $validated['selectedId'], $validated['reviewNote']);
 
         $this->closeReview();
+        $this->dispatch('coordinator-request-reviewed');
         session()->flash('success', 'Solicitud rechazada. La promotora verá el motivo en su historial.');
     }
 

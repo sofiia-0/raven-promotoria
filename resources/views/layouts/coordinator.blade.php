@@ -68,6 +68,7 @@
                     <p class="raven-topbar-subtitle">Laboratorio Raven</p>
                 </div>
                 <div class="raven-user">
+                    <livewire:coordinator.pending-notice />
                     <div class="raven-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</div>
                     <div class="raven-user-copy">
                         <span class="raven-user-name">{{ auth()->user()->name }}</span>

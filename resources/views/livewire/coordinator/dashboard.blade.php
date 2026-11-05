@@ -1,4 +1,5 @@
 <div class="coordinator-dashboard raven-stack">
+    <livewire:coordinator.metrics />
     <section class="coordinator-kpis" aria-label="Resumen general">
         <article class="raven-card coordinator-kpi">
             <p class="coordinator-kpi-label">Solicitudes pendientes</p>
