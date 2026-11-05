@@ -3,7 +3,9 @@
 namespace App\Livewire\Coordinator\Catalogs;
 
 use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
+use App\Models\AuditLog;
 use App\Services\CoordinatorCatalogs;
+use App\Support\CanonicalData;
 use App\Support\PromoterCatalogOptions;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
@@ -33,11 +35,20 @@ class Index extends Component
 
     public bool $provisional = true;
 
+    #[Locked]
+    public array $observedPreview = [];
+
+    #[Locked]
+    public ?string $observedHash = null;
+
+    public array $selectedObserved = [];
+
     public function updatedDomain(): void
     {
         $this->coordinator();
         $this->cancel();
         $this->search = '';
+        $this->reset(['observedPreview', 'observedHash', 'selectedObserved']);
     }
 
     public function edit(int $id): void
@@ -79,6 +90,22 @@ class Index extends Component
         $options = app(CoordinatorCatalogs::class)->query($this->domain)->orderBy('sort_order')->orderBy('name')->get()
             ->filter(fn ($option) => $key === '' || str_contains(PromoterCatalogOptions::commercialKey($option->name), $key));
 
-        return view('livewire.coordinator.catalogs.index', ['options' => $options, 'domains' => CoordinatorCatalogs::LABELS]);
+        return view('livewire.coordinator.catalogs.index', ['options' => $options, 'domains' => CoordinatorCatalogs::LABELS,
+            'changes' => AuditLog::where('details->domain', $this->domain)->where('action', 'like', 'catalog.%')->with('actor:id,name')->latest('id')->limit(20)->get()]);
+    }
+
+    public function reviewObserved(): void
+    {
+        $this->observedPreview = app(CoordinatorCatalogs::class)->observedCommercial($this->coordinator(), $this->domain);
+        $this->observedHash = CanonicalData::hash($this->observedPreview);
+        $this->selectedObserved = array_column($this->observedPreview, 'key');
+    }
+
+    public function adoptObserved(): void
+    {
+        abort_unless($this->observedHash !== null, 422);
+        $count = app(CoordinatorCatalogs::class)->adoptCommercial($this->coordinator(), $this->domain, $this->selectedObserved, $this->observedHash);
+        $this->reset(['observedPreview', 'observedHash', 'selectedObserved']);
+        session()->flash('success', $count.' opciones revisadas incorporadas al catálogo. No se modificó ningún establecimiento.');
     }
 }

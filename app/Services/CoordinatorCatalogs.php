@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Enums\UserRole;
 use App\Models\ChecklistItem;
 use App\Models\CommercialCatalogOption;
+use App\Models\Pharmacy;
 use App\Models\PromoterReasonCategory;
 use App\Models\User;
 use App\Models\VisitReason;
+use App\Support\CanonicalData;
 use App\Support\PromoterCatalogOptions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -83,7 +85,7 @@ class CoordinatorCatalogs
                     $record->update(['is_active' => false]);
                     $old = $record;
                     $record = null;
-                    app(AuditLogger::class)->record($actor, 'catalog.version_retired', $old, ['before' => $before, 'after' => $old->getAttributes()]);
+                    app(AuditLogger::class)->record($actor, 'catalog.version_retired', $old, ['domain' => $domain, 'before' => $before, 'after' => $old->getAttributes()]);
                 }
             }
             $values = array_intersect_key($data, array_flip(['name', 'sort_order', 'is_active']));
@@ -119,5 +121,42 @@ class CoordinatorCatalogs
         }
 
         return hash('sha256', $record->getTable().json_encode($values, JSON_THROW_ON_ERROR));
+    }
+
+    public function observedCommercial(User $actor, string $domain): array
+    {
+        abort_unless($actor->role === UserRole::COORDINATOR && $actor->is_active, 403);
+        abort_unless(in_array($domain, ['client_type', 'category'], true), 422);
+        $known = $this->query($domain)->pluck('normalized_name')->all();
+
+        return Pharmacy::where('is_active', true)->whereNotNull($domain)->orderBy('id')->pluck($domain)
+            ->filter(fn ($value) => PromoterCatalogOptions::clean($value) !== '')
+            ->groupBy(fn ($value) => PromoterCatalogOptions::commercialKey($value))
+            ->reject(fn ($values, $key) => in_array($key, $known, true))
+            ->map(fn ($values, $key) => ['key' => $key, 'name' => PromoterCatalogOptions::clean($values->first()), 'count' => $values->count()])
+            ->sortBy('key')->values()->all();
+    }
+
+    public function adoptCommercial(User $actor, string $domain, array $selected, string $expected): int
+    {
+        abort_unless($actor->role === UserRole::COORDINATOR && $actor->is_active, 403);
+        Validator::make(['selected' => $selected], ['selected' => ['array', 'max:500'], 'selected.*' => ['string', 'max:255']])->validate();
+
+        return DB::transaction(function () use ($actor, $domain, $selected, $expected) {
+            $observed = $this->observedCommercial($actor, $domain);
+            if (! hash_equals(CanonicalData::hash($observed), $expected) || array_diff($selected, array_column($observed, 'key')) !== []) {
+                throw ValidationException::withMessages(['catalog' => 'Las opciones observadas cambiaron. Revise una nueva vista previa.']);
+            }
+            $count = 0;
+            $order = (int) $this->query($domain)->max('sort_order');
+            foreach ($observed as $option) {
+                if (in_array($option['key'], $selected, true)) {
+                    $this->save($actor, $domain, null, ['name' => $option['name'], 'sort_order' => ++$order, 'is_active' => true]);
+                    $count++;
+                }
+            }
+
+            return $count;
+        });
     }
 }

@@ -14,6 +14,7 @@ use App\Models\VisitChecklistEntry;
 use App\Models\VisitReason;
 use App\Services\CoordinatorCatalogs;
 use App\Services\VisitContextRecorder;
+use App\Support\CanonicalData;
 use App\Support\PromoterCatalogOptions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -107,5 +108,42 @@ class CoordinatorCatalogsTest extends TestCase
         $coordinator = User::factory()->coordinator()->create();
         ChecklistItem::create(['name' => '<script>alert(1)</script>', 'sort_order' => 1, 'is_active' => true]);
         Livewire::actingAs($coordinator)->test(Index::class)->assertSee('&lt;script&gt;', false)->assertDontSee('<script>alert(1)</script>', false);
+    }
+
+    public function test_observed_options_need_confirmation_and_do_not_modify_establishments(): void
+    {
+        $actor = User::factory()->coordinator()->create();
+        $first = Pharmacy::factory()->create(['client_type' => 'Farmacia']);
+        $second = Pharmacy::factory()->create(['client_type' => 'FARMÁCIA']);
+        Pharmacy::factory()->create(['client_type' => 'Valor retirado', 'is_active' => false]);
+        $before = [$first->fresh()->getRawOriginal(), $second->fresh()->getRawOriginal()];
+        $service = app(CoordinatorCatalogs::class);
+        $observed = $service->observedCommercial($actor, 'client_type');
+        $this->assertCount(1, $observed);
+        $this->assertSame(2, $observed[0]['count']);
+        $this->assertDatabaseCount('commercial_catalog_options', 0);
+
+        $this->assertSame(1, $service->adoptCommercial($actor, 'client_type', ['farmacia'], CanonicalData::hash($observed)));
+
+        $this->assertSame($before, [$first->fresh()->getRawOriginal(), $second->fresh()->getRawOriginal()]);
+        $this->assertDatabaseCount('pharmacy_changes', 0);
+        $this->assertSame(['Farmacia'], PromoterCatalogOptions::values(User::factory()->promoter()->create(), 'client_type')->all());
+        Livewire::actingAs($actor)->test(Index::class)->set('domain', 'client_type')->assertSee('Historial del catálogo')->assertSee('Opción creada');
+    }
+
+    public function test_revising_a_used_visit_reason_does_not_reinterpret_history(): void
+    {
+        $actor = User::factory()->coordinator()->create();
+        $reason = VisitReason::create(['name' => 'Otro motivo', 'sort_order' => 1, 'is_active' => true]);
+        $visit = Visit::create(['idempotency_key' => (string) Str::uuid(), 'promoter_id' => User::factory()->promoter()->create()->id, 'pharmacy_id' => Pharmacy::factory()->create()->id, 'status' => 'NO_REALIZADA', 'visit_reason_id' => $reason->id, 'notes' => 'Explicación histórica conservada', 'visited_at' => now()]);
+        $service = app(CoordinatorCatalogs::class);
+
+        $next = $service->save($actor, 'visit_reason', $reason->id, ['name' => 'Nuevo motivo revisado', 'sort_order' => 1, 'is_active' => true, 'is_other' => false], $service->fingerprint($reason));
+
+        $this->assertNotSame($reason->id, $next->id);
+        $this->assertSame('Otro motivo', $visit->fresh()->reason->name);
+        $this->assertSame('Explicación histórica conservada', $visit->fresh()->notes);
+        $this->assertFalse($reason->fresh()->is_active);
+        $this->assertFalse($next->needs_explanation);
     }
 }
