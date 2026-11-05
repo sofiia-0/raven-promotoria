@@ -46,6 +46,10 @@ Route::middleware([
 
         Route::view('/catalogs', 'coordinator.catalogs')->name('catalogs.index');
 
+        Route::view('/establishments', 'coordinator.establishments')->name('establishments.index');
+        Route::get('/establishments/{pharmacy}', fn (int $pharmacy) => view('coordinator.establishment-detail', ['pharmacyId' => $pharmacy]))
+            ->whereNumber('pharmacy')->name('establishments.show');
+
         Route::get('/requests', function () {
             return view('coordinator.requests');
         })->name('requests.index');

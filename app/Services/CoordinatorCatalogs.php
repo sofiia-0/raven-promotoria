@@ -45,7 +45,9 @@ class CoordinatorCatalogs
     {
         abort_unless($actor->role === UserRole::COORDINATOR && $actor->is_active, 403);
         $data = Validator::make($input, [
-            'name' => ['required', 'string', 'max:'.($domain === 'visit_reason' ? 120 : 150)],
+            'name' => ['required', 'string', 'max:'.match ($domain) {
+                'category' => 20, 'client_type' => 80, 'visit_reason' => 120, default => 150
+            }],
             'sort_order' => ['required', 'integer', 'min:0', 'max:10000'],
             'is_active' => ['required', 'boolean'],
             'is_other' => ['sometimes', 'boolean'],

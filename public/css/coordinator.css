@@ -3,6 +3,22 @@
 .coordinator-catalog-toolbar > label {flex:1 1 240px; min-width:0;}
 .coordinator-table-wrap {position:relative; min-width:0; max-width:100%; overflow-x:auto;}
 .coordinator-table-wrap .raven-table {min-width:560px;}
+.coordinator-location-fields {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px;}
+.coordinator-location-fields > :last-child {grid-column:1/-1;}
+.coordinator-change {padding:16px 0; border-bottom:1px solid #e5e7ec; overflow-wrap:anywhere;}
+.coordinator-change h3 {font-size:15px;}
+.coordinator-change dt {font-weight:700;}
+.coordinator-change dd {margin:4px 0 12px;}
+.coordinator-shell .promoter-combobox {position:relative; min-width:0;}
+.coordinator-shell .promoter-combobox-control {position:relative;}
+.coordinator-shell .promoter-combobox-control input {padding-right:32px;}
+.coordinator-shell .promoter-combobox-chevron {position:absolute; right:14px; top:10px; pointer-events:none;}
+.coordinator-shell .promoter-combobox-list {position:absolute; top:calc(100% + 6px); z-index:30; width:100%; max-height:240px; overflow-y:auto; overscroll-behavior:contain; list-style:none; margin:0; padding:6px; border:1px solid #dde2e9; border-radius:13px; background:#fff; box-shadow:0 8px 24px #25304414;}
+.coordinator-shell .promoter-combobox-list button {display:block; width:100%; min-height:44px; padding:10px 12px; border:0; border-radius:8px; background:transparent; color:#364254; text-align:left; font-size:16px; white-space:normal; overflow-wrap:anywhere; cursor:pointer;}
+.coordinator-shell .promoter-combobox-list button:is(:hover,.is-highlighted,[aria-selected="true"]) {background:#edf2f8; color:#264f8b;}
+.coordinator-shell .promoter-combobox-empty {position:absolute; top:100%; z-index:31; width:100%; padding:12px; background:#fff; border:1px solid #dde2e9; border-radius:12px;}
+.coordinator-shell .promoter-combobox-clear {justify-self:start; border:0; background:transparent; color:#264f8b; cursor:pointer; text-align:left;}
+@media(max-width:600px) {.coordinator-location-fields {grid-template-columns:minmax(0,1fr);}}
 .coordinator-shell {background: #f4f5f7;}
 .coordinator-shell .raven-app {grid-template-columns: 228px minmax(0, 1fr);}
 .coordinator-shell .raven-sidebar {padding: 30px 18px 20px; background: #f7f8fa; border-color: #e5e7ec;}

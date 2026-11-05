@@ -52,6 +52,10 @@
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16M4 12h16M4 19h16"/><circle cx="8" cy="5" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="10" cy="19" r="2" fill="currentColor"/></svg></span>
                     Catálogos
                 </a>
+                <a href="{{ route('coordinator.establishments.index') }}" class="raven-nav-link {{ request()->routeIs('coordinator.establishments.*') ? 'is-active' : '' }}" @if(request()->routeIs('coordinator.establishments.*')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 21V5h16v16M2 21h20M9 21v-5h6v5M9 9h6m-3-3v6"/></svg></span>
+                    Establecimientos
+                </a>
             </nav>
             <div class="raven-sidebar-footer coordinator-sidebar-footer">
                 <p class="coordinator-sidebar-signature">Laboratorio Raven</p>
