@@ -51,7 +51,7 @@ class CoordinatorPanelTest extends TestCase
         $coordinator = User::factory()->coordinator()->create();
         $this->actingAs($coordinator)->get('/coordinator')
             ->assertOk()
-            ->assertSee('Panel de Coordinación')
+            ->assertSee('Rendimiento del equipo')
             ->assertSee('Coordinadora');
         $this->get('/')->assertRedirect(route('coordinator.dashboard'));
 

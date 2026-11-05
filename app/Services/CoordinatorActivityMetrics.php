@@ -46,8 +46,16 @@ class CoordinatorActivityMetrics
             }
         }
         $plans = $planned->with('week.schedule:id,promoter_id')->get(['id', 'planned_week_id', 'pharmacy_id']);
-        $visits = $realized->with('pharmacy:id,department,category')->get(['id', 'promoter_id', 'pharmacy_id', 'planned_activity_id']);
+        $visits = $realized->with('pharmacy:id,department,category')->get(['id', 'promoter_id', 'pharmacy_id', 'planned_activity_id', 'latitude', 'longitude']);
         $result = $this->summarize($plans, $visits);
+        $result['geolocatedVisits'] = $visits->filter(function (Visit $visit): bool {
+            $raw = $visit->getAttributes();
+            $latitude = $raw['latitude'] ?? null;
+            $longitude = $raw['longitude'] ?? null;
+
+            return is_numeric($latitude) && is_numeric($longitude)
+                && abs((float) $latitude) <= 90 && abs((float) $longitude) <= 180;
+        })->count();
         $promoterIds = $plans->toBase()->map(fn ($plan) => $plan->week->schedule->promoter_id)->merge($visits->pluck('promoter_id'))->unique();
         $users = User::whereIn('id', $promoterIds)->orderBy('name')->get(['id', 'name', 'is_active']);
         $result['promoters'] = $users->map(function ($person) use ($plans, $visits) {

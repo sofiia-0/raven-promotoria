@@ -92,11 +92,39 @@ class CoordinatorMetricsTest extends TestCase
         Livewire::actingAs($actor)->test(PendingNotice::class)->assertSee('Establecimiento ficticio')->assertSee(route('coordinator.requests.show', $request->id), false)->assertSee('Ver todas las solicitudes');
 
         $this->actingAs($actor)->get(route('coordinator.dashboard'))
-            ->assertOk()->assertSee(route('coordinator.requests.show', $request->id), false);
+            ->assertOk()->assertSee(route('coordinator.requests.show', $request->id), false)
+            ->assertDontSee('Solicitudes en espera')->assertDontSee('Seguimiento operativo');
         $this->get(route('coordinator.requests.show', $request->id))
             ->assertOk()->assertSee('Establecimiento ficticio')->assertDontSee('Filtrar solicitudes');
         $this->get(route('coordinator.requests.show', $request->id + 1))->assertNotFound();
         $this->actingAs($request->promoter)->get(route('coordinator.requests.show', $request->id))->assertForbidden();
+    }
+
+    public function test_gps_and_month_comparison_use_the_same_scope_and_hide_open_period_deltas(): void
+    {
+        $this->travelTo(CarbonImmutable::parse('2026-12-15 12:00:00', 'UTC'));
+        $coordinator = User::factory()->coordinator()->create();
+        $person = User::factory()->promoter()->create();
+        $pharmacy = Pharmacy::factory()->create(['department' => 'León', 'category' => 'A']);
+        $elsewhere = Pharmacy::factory()->create(['department' => 'Managua', 'category' => 'AAA']);
+        $coordinates = ['latitude' => 12.434, 'longitude' => -86.877];
+        $this->historicalVisit($person, $pharmacy, $coordinates + ['visited_at' => '2026-10-10 16:00:00']);
+        $this->historicalVisit($person, $pharmacy, $coordinates);
+        $this->historicalVisit($person, $pharmacy);
+        $this->historicalVisit($person, $elsewhere, $coordinates);
+
+        $summary = app(CoordinatorActivityMetrics::class)->forMonth($coordinator, 2026, 11, ['department' => 'León']);
+        $this->assertSame(1, $summary['geolocatedVisits']);
+        $this->assertSame(2, $summary['totalRealized']);
+
+        Livewire::actingAs($coordinator)->test(Metrics::class)
+            ->assertViewHas('comparison', null)
+            ->set('department', 'León')
+            ->set('month', 11)
+            ->assertViewHas('comparison', fn ($previous) => $previous['totalRealized'] === 1)
+            ->assertSee('1 de 2 visitas realizadas con GPS válido')
+            ->assertSee('+1')
+            ->assertDontSee('12.434');
     }
 
     public function test_non_coordinator_roles_cannot_consult_team_metrics_or_notices(): void
