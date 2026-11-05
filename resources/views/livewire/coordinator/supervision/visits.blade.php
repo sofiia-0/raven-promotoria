@@ -37,7 +37,7 @@
                 </select>
             </div>
             <div class="raven-field coordinator-filter-wide">
-                <label class="raven-label" for="visits-search">Farmacia</label>
+                <label class="raven-label" for="visits-search">Establecimiento</label>
                 <input id="visits-search" class="raven-input" type="search" placeholder="Nombre, municipio, departamento o dirección" wire:model.live.debounce.350ms="search">
             </div>
             <button type="button" class="raven-button raven-button-secondary" wire:click="clearFilters">Limpiar</button>
@@ -61,7 +61,7 @@
                     <tr>
                         <th scope="col">Fecha</th>
                         <th scope="col">Promotora</th>
-                        <th scope="col">Farmacia</th>
+                        <th scope="col">Establecimiento</th>
                         <th scope="col">Resultado</th>
                         <th scope="col">Origen</th>
                         <th scope="col"><span class="coordinator-sr-only">Acciones</span></th>

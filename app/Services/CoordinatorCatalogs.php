@@ -132,8 +132,8 @@ class CoordinatorCatalogs
         return Pharmacy::where('is_active', true)->whereNotNull($domain)->orderBy('id')->pluck($domain)
             ->filter(fn ($value) => PromoterCatalogOptions::clean($value) !== '')
             ->groupBy(fn ($value) => PromoterCatalogOptions::commercialKey($value))
-            ->reject(fn ($values, $key) => in_array($key, $known, true))
-            ->map(fn ($values, $key) => ['key' => $key, 'name' => PromoterCatalogOptions::clean($values->first()), 'count' => $values->count()])
+            ->reject(fn ($values, $key) => in_array((string) $key, $known, true))
+            ->map(fn ($values, $key) => ['key' => (string) $key, 'name' => PromoterCatalogOptions::clean($values->first()), 'count' => $values->count()])
             ->sortBy('key')->values()->all();
     }
 

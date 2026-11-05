@@ -261,3 +261,15 @@
 @media (prefers-reduced-motion:reduce) {
  :is(.raven-access,.raven-admin) *, :is(.raven-access,.raven-admin) *::before, :is(.raven-access,.raven-admin) *::after {transition:none!important;animation:none!important;scroll-behavior:auto!important;}
 }
+
+/* Jerarquía compartida de formularios, conservando la composición aprobada. */
+:is(.raven-access,.raven-admin) .access-label {font-size:15px;}
+:is(.raven-access,.raven-admin) .access-input {font-size:16px;}
+:is(.raven-access,.raven-admin) :is(.access-help,.access-error,.access-alert,.access-link,.raven-button) {font-size:14px;}
+.raven-access .access-auth-heading > p:last-child {font-size:14px;}
+.raven-access .access-auth-options {flex-wrap:wrap;}
+.raven-access .access-auth-options :is(.access-link,.access-checkbox) {font-size:14px;}
+.raven-admin .admin-users-table th {font-size:12px;}
+.raven-admin .admin-users-table td,.raven-admin .admin-account strong,.raven-admin .admin-role-label {font-size:14px;}
+.raven-admin .admin-account > div > span,.raven-admin .admin-state {font-size:13px;}
+.raven-admin .admin-editor-heading p,.raven-admin .admin-empty p {font-size:14px;}

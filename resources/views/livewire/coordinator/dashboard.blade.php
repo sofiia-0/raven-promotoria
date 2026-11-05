@@ -8,10 +8,10 @@
             <a class="raven-button raven-button-primary" href="{{ route('coordinator.requests.index') }}">Revisar solicitudes</a>
         </article>
         <article class="raven-card coordinator-kpi">
-            <p class="coordinator-kpi-label">Farmacias activas sin promotora</p>
+            <p class="coordinator-kpi-label">Establecimientos activos sin promotora</p>
             <p class="coordinator-kpi-value">{{ $unassigned }}</p>
             <p class="coordinator-kpi-help">De {{ $activePharmacies }} establecimientos activos</p>
-            <a class="raven-button raven-button-secondary" href="{{ route('coordinator.assignments.index', ['promotora' => 'none']) }}">Asignar farmacias</a>
+            <a class="raven-button raven-button-secondary" href="{{ route('coordinator.assignments.index', ['promotora' => 'none']) }}">Asignar establecimientos</a>
         </article>
         <article class="raven-card coordinator-kpi">
             <p class="coordinator-kpi-label">Promotoras activas</p>

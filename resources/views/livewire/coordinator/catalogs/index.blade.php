@@ -26,7 +26,6 @@
         <h2 id="catalog-form-title" class="raven-section-title">{{ $editingId ? 'Editar opción' : 'Añadir opción' }}</h2>
         <p class="raven-page-description">Una denominación utilizada en visitas se conserva en el historial. Si cambia su nombre, se crea una nueva versión.</p>
         <form wire:submit="save" class="raven-stack">
-            @error('catalog') <p class="raven-alert raven-alert-danger" role="alert">{{ $message }}</p> @enderror
             <label class="raven-field" for="catalog-name">Nombre<input id="catalog-name" class="raven-input" wire:model="name" maxlength="{{ match ($domain) { 'category' => 20, 'client_type' => 80, 'visit_reason' => 120, default => 150 } }}" required>@error('name')<span role="alert">{{ $message }}</span>@enderror</label>
             <label class="raven-field" for="catalog-order">Orden<input id="catalog-order" type="number" class="raven-input" wire:model="sortOrder" min="0" max="10000" required>@error('sort_order')<span role="alert">{{ $message }}</span>@enderror</label>
             <label><input type="checkbox" wire:model="active"> Disponible para nuevos registros</label>

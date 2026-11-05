@@ -113,8 +113,8 @@ class CoordinatorCatalogsTest extends TestCase
     public function test_observed_options_need_confirmation_and_do_not_modify_establishments(): void
     {
         $actor = User::factory()->coordinator()->create();
-        $first = Pharmacy::factory()->create(['client_type' => 'Farmacia']);
-        $second = Pharmacy::factory()->create(['client_type' => 'FARMÁCIA']);
+        $first = Pharmacy::factory()->create(['client_type' => 'Farmacia', 'category' => '1']);
+        $second = Pharmacy::factory()->create(['client_type' => 'FARMÁCIA', 'category' => '1']);
         Pharmacy::factory()->create(['client_type' => 'Valor retirado', 'is_active' => false]);
         $before = [$first->fresh()->getRawOriginal(), $second->fresh()->getRawOriginal()];
         $service = app(CoordinatorCatalogs::class);
@@ -124,6 +124,9 @@ class CoordinatorCatalogsTest extends TestCase
         $this->assertDatabaseCount('commercial_catalog_options', 0);
 
         $this->assertSame(1, $service->adoptCommercial($actor, 'client_type', ['farmacia'], CanonicalData::hash($observed)));
+        $numeric = $service->observedCommercial($actor, 'category');
+        $this->assertSame(['1'], array_column($numeric, 'key'));
+        $this->assertSame(1, $service->adoptCommercial($actor, 'category', ['1'], CanonicalData::hash($numeric)));
 
         $this->assertSame($before, [$first->fresh()->getRawOriginal(), $second->fresh()->getRawOriginal()]);
         $this->assertDatabaseCount('pharmacy_changes', 0);
