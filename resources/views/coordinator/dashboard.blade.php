@@ -10,5 +10,5 @@
             <p class="raven-page-description">Solicitudes, asignaciones y avance de planificación y visitas del equipo.</p>
         </div>
     </header>
-    <livewire:coordinator.dashboard />
+    <livewire:coordinator.metrics />
 @endsection

@@ -57,6 +57,9 @@ Route::middleware([
             return view('coordinator.requests');
         })->name('requests.index');
 
+        Route::get('/requests/{requestId}', fn (int $requestId) => view('coordinator.requests', ['requestId' => $requestId]))
+            ->whereNumber('requestId')->name('requests.show');
+
         Route::get('/assignments', function () {
             return view('coordinator.assignments');
         })->name('assignments.index');

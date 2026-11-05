@@ -88,8 +88,15 @@ class CoordinatorMetricsTest extends TestCase
         $actor = User::factory()->coordinator()->create();
         Livewire::actingAs($actor)->test(Metrics::class)->assertSee('—')->assertSee('No hay visitas realizadas para este período.');
         Livewire::actingAs($actor)->test(PendingNotice::class)->assertSee('No hay solicitudes pendientes.');
-        PharmacyRequest::create(['promoter_id' => User::factory()->promoter()->create()->id, 'type' => 'alta', 'status' => 'pending', 'reason' => 'Justificación de demostración', 'data' => ['name' => 'Establecimiento ficticio']]);
-        Livewire::actingAs($actor)->test(PendingNotice::class)->assertSee('1 solicitud requiere revisión.')->assertSee('Revisar solicitudes pendientes');
+        $request = PharmacyRequest::create(['promoter_id' => User::factory()->promoter()->create()->id, 'type' => 'alta', 'status' => 'pending', 'reason' => 'Justificación de demostración', 'data' => ['name' => 'Establecimiento ficticio']]);
+        Livewire::actingAs($actor)->test(PendingNotice::class)->assertSee('Establecimiento ficticio')->assertSee(route('coordinator.requests.show', $request->id), false)->assertSee('Ver todas las solicitudes');
+
+        $this->actingAs($actor)->get(route('coordinator.dashboard'))
+            ->assertOk()->assertSee(route('coordinator.requests.show', $request->id), false);
+        $this->get(route('coordinator.requests.show', $request->id))
+            ->assertOk()->assertSee('Establecimiento ficticio')->assertDontSee('Filtrar solicitudes');
+        $this->get(route('coordinator.requests.show', $request->id + 1))->assertNotFound();
+        $this->actingAs($request->promoter)->get(route('coordinator.requests.show', $request->id))->assertForbidden();
     }
 
     public function test_non_coordinator_roles_cannot_consult_team_metrics_or_notices(): void

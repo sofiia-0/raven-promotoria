@@ -12,8 +12,8 @@
     $line = fn ($field) => implode(' ', array_map(fn ($i, $point) => (30 + $i * 96).','.round(165 - 140 * $point[$field] / $maxTrend, 2), array_keys($trend), $trend));
 @endphp
 <section class="raven-stack" aria-labelledby="team-metrics-title">
-    <div class="raven-card"><h2 id="team-metrics-title" class="raven-section-title">Resultados del equipo · {{ $summary['label'] }}</h2><p class="raven-card-description">Seleccione el período y los establecimientos que desea analizar.</p>
-        <div class="coordinator-filters">
+    <div class="raven-card coordinator-period"><h2 id="team-metrics-title" class="raven-section-title">Resultados del equipo <span>{{ $summary['label'] }}</span></h2>
+        <div class="coordinator-filters coordinator-metric-filters">
             <label class="raven-field">Mes<select class="raven-select" wire:model.live="month">@for($m=1;$m<=12;$m++)<option value="{{ $m }}">{{ \Carbon\CarbonImmutable::create(2026,$m,1)->locale('es')->translatedFormat('F') }}</option>@endfor</select></label>
             <label class="raven-field">Año<select class="raven-select" wire:model.live="year">@foreach($years as $y)<option value="{{ $y }}">{{ $y }}</option>@endforeach</select></label>
             <label class="raven-field">Promotora<select class="raven-select" wire:model.live="promoter"><option value="">Todo el equipo</option>@foreach($promoters as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label>
@@ -23,11 +23,12 @@
     </div>
     <div class="coordinator-metric-kpis">
         <article class="raven-card"><h3 class="coordinator-kpi-label">Establecimientos programados</h3><p class="coordinator-kpi-value">{{ $summary['scheduledEstablishments'] }}</p><p>Ubicaciones únicas en cronogramas enviados</p></article>
-        <article class="raven-card"><h3 class="coordinator-kpi-label">Cobertura</h3><p class="coordinator-kpi-value">{{ $pct($summary['coverage']) }}</p><p>{{ $summary['coveredEstablishments'] }} de {{ $summary['scheduledEstablishments'] }} establecimientos programados visitados</p></article>
-        <article class="raven-card"><h3 class="coordinator-kpi-label">Cumplimiento del plan</h3><p class="coordinator-kpi-value">{{ $pct($summary['compliance']) }}</p><p>{{ $summary['completedPlanned'] }} de {{ $summary['scheduledVisits'] }} actividades programadas realizadas</p></article>
+        <article class="raven-card"><h3 class="coordinator-kpi-label">Cobertura de establecimientos</h3><p class="coordinator-kpi-value">{{ $pct($summary['coverage']) }}</p><p>{{ $summary['coveredEstablishments'] }} de {{ $summary['scheduledEstablishments'] }} establecimientos programados visitados</p></article>
+        <article class="raven-card"><h3 class="coordinator-kpi-label">Cumplimiento de visitas planificadas</h3><p class="coordinator-kpi-value">{{ $pct($summary['compliance']) }}</p><p>{{ $summary['completedPlanned'] }} de {{ $summary['scheduledVisits'] }} actividades programadas realizadas</p></article>
         <article class="raven-card"><h3 class="coordinator-kpi-label">Visitas realizadas</h3><p class="coordinator-kpi-value">{{ $summary['totalRealized'] }}</p><p>{{ $summary['visitedEstablishments'] }} {{ $summary['visitedEstablishments'] === 1 ? 'establecimiento distinto' : 'establecimientos distintos' }} · {{ $summary['outsidePlan'] }} {{ $summary['outsidePlan'] === 1 ? 'visita fuera del plan' : 'visitas fuera del plan' }}</p></article>
     </div>
-    <div class="coordinator-columns">
+    <livewire:coordinator.dashboard />
+    <div class="coordinator-columns coordinator-chart-grid">
         <figure class="raven-card coordinator-chart"><figcaption><h3 class="raven-section-title">Evolución de seis meses</h3><p class="raven-field-help">Actividades programadas y visitas realizadas; son cantidades, no establecimientos únicos.</p></figcaption>
             @if(array_sum(array_column($trend, 'scheduled')) + array_sum(array_column($trend, 'realized')))
                 <svg viewBox="0 0 540 200" role="img" aria-label="Evolución mensual. Las cantidades exactas están disponibles debajo."><path d="M30 165H510" stroke="#d5dce5"/><polyline points="{{ $line('scheduled') }}" fill="none" stroke="#756193" stroke-width="3" stroke-dasharray="6 4"/><polyline points="{{ $line('realized') }}" fill="none" stroke="#315f98" stroke-width="3"/>@foreach($trend as $i => $point)<text x="{{ 30 + $i * 96 }}" y="190" text-anchor="middle" font-size="12" fill="#475569">{{ $point['label'] }}</text>@endforeach</svg>
@@ -39,7 +40,20 @@
             @if($summary['totalRealized'])<div class="coordinator-donut" style="background:conic-gradient({{ implode(', ', $stops) }})" role="img" aria-label="Distribución de {{ $summary['totalRealized'] }} visitas realizadas por categoría"><span>{{ $summary['totalRealized'] }}<small>visitas</small></span></div><ul class="coordinator-chart-legend">@foreach($summary['categories'] as $item)<li>{{ $item['label'] }} <strong>{{ $item['total'] }} · {{ $pct($item['percentage']) }}</strong></li>@endforeach</ul>@else<p>No hay visitas realizadas para este período.</p>@endif
         </figure>
     </div>
+    <div class="coordinator-columns coordinator-chart-grid">
     <section class="raven-card"><h3 class="raven-section-title">Resultados por departamento</h3>@forelse($summary['departments'] as $item)<div class="coordinator-territory"><div><span>{{ $item['label'] }}</span><strong>{{ $item['total'] }} visitas · {{ $pct($item['percentage']) }}</strong></div><meter min="0" max="100" value="{{ $item['percentage'] }}" aria-label="{{ $item['label'] }}: {{ $pct($item['percentage']) }} de las visitas"></meter></div>@empty<p>No hay visitas realizadas para estos filtros.</p>@endforelse</section>
-    <section class="raven-card"><h3 class="raven-section-title">Cumplimiento por promotora</h3><div class="coordinator-table-wrap" role="region" tabindex="0" aria-label="Resultados de cada promotora"><table class="raven-table"><thead><tr><th>Promotora</th><th>Establecimientos programados / visitados</th><th>Cobertura</th><th>Visitas programadas / realizadas del plan</th><th>Cumplimiento</th><th>Total realizadas</th></tr></thead><tbody>@forelse($summary['promoters'] as $person)<tr><td>{{ $person['name'] }}{{ $person['active'] ? '' : ' (cuenta inactiva)' }}</td><td>{{ $person['scheduledEstablishments'] }} / {{ $person['coveredEstablishments'] }}</td><td>{{ $pct($person['coverage']) }}</td><td>{{ $person['scheduledVisits'] }} / {{ $person['completedPlanned'] }}</td><td>{{ $pct($person['compliance']) }}</td><td>{{ $person['totalRealized'] }}</td></tr>@empty<tr><td colspan="6">No hay actividad para los filtros seleccionados.</td></tr>@endforelse</tbody></table></div></section>
+    <section class="raven-card">
+        <h3 class="raven-section-title">Cumplimiento por promotora</h3>
+        @forelse($summary['promoters'] as $person)
+            <div class="coordinator-territory coordinator-compliance">
+                <div><span>{{ $person['name'] }}{{ $person['active'] ? '' : ' (cuenta inactiva)' }}</span><strong>{{ $pct($person['compliance']) }}</strong></div>
+                @if($person['compliance'] !== null)<meter min="0" max="100" value="{{ $person['compliance'] }}" aria-label="Cumplimiento de {{ $person['name'] }}"></meter>@endif
+                <p class="raven-field-help">{{ $person['completedPlanned'] }} de {{ $person['scheduledVisits'] }} actividades del plan realizadas · Cobertura {{ $pct($person['coverage']) }} · {{ $person['totalRealized'] }} visitas realizadas</p>
+            </div>
+        @empty
+            <p class="coordinator-empty-note">No hay actividad para los filtros seleccionados.</p>
+        @endforelse
+    </section>
+    </div>
     <details class="raven-card"><summary>Cómo se calculan estos indicadores</summary><p>Se incluyen visitas programadas en cronogramas enviados y visitas realizadas durante el mes en hora de Managua. Los borradores no forman parte del plan.</p><p>Cobertura: establecimientos programados distintos que tuvieron al menos una visita realizada, divididos entre establecimientos programados distintos. Una ubicación compartida cuenta una vez en el total del equipo.</p><p>Cumplimiento: actividades del plan con al menos una visita realizada vinculada, divididas entre actividades programadas. Las visitas repetidas no aumentan este numerador.</p><p>Las distribuciones incluyen todas las visitas realizadas, incluso repetidas o fuera del plan, según la categoría y departamento actuales. Si el denominador es cero se muestra «—».</p></details>
 </section>

@@ -267,7 +267,7 @@ class PromoterFinalAdjustmentsTest extends TestCase
     {
         $this->synchronize();
         $category = $this->category('request_alta', 'new_establishment');
-        Livewire::actingAs($this->actor)->test(Requests::class)->call('openForm', 'alta')->assertSee('Categoría del motivo de alta')->assertSee('role="combobox"', false)->set('altaName', 'Establecimiento ficticio')->set('altaDepartment', 'Boaco')->set('altaCity', 'Camoapa')->set('altaAddress', 'Dirección ficticia de prueba.')->set('altaReasonCategoryId', (string) $category->id)->set('altaReason', 'Explicación detallada de prueba.')->call('submitAlta')->assertHasNoErrors();
+        Livewire::actingAs($this->actor)->test(Requests::class)->call('openForm', 'alta')->assertSee('Motivo de alta')->assertSee('role="combobox"', false)->set('altaName', 'Establecimiento ficticio')->set('altaDepartment', 'Boaco')->set('altaCity', 'Camoapa')->set('altaAddress', 'Dirección ficticia de prueba.')->set('altaReasonCategoryId', (string) $category->id)->set('altaReason', 'Explicación detallada de prueba.')->call('submitAlta')->assertHasNoErrors();
         $this->assertSame($category->id, PharmacyRequest::first()->data['reason_category']['id']);
     }
 

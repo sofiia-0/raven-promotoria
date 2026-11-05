@@ -7,10 +7,13 @@ use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\PharmacyRequest;
 use App\Models\User;
 use App\Services\PharmacyRequestReview;
+use App\Services\SchedulePlanner;
 use App\Support\CoordinatorRequestSearch;
 use App\Support\EstablishmentSearch;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -29,20 +32,31 @@ class Index extends Component
     #[Url(as: 'q')]
     public string $search = '';
 
+    #[Url(as: 'periodo')]
+    public string $period = '';
+
+    #[Locked]
+    public bool $standalone = false;
+
     public ?int $selectedId = null;
 
     public string $assigneeId = '';
 
     public string $reviewNote = '';
 
-    public function mount(): void
+    public function mount(?int $requestId = null): void
     {
         $this->coordinator();
+
+        if ($requestId !== null) {
+            $this->standalone = true;
+            $this->select($requestId);
+        }
     }
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['status', 'type', 'search'], true)) {
+        if (in_array($property, ['status', 'type', 'search', 'period'], true)) {
             $this->resetPage();
         }
     }
@@ -79,6 +93,7 @@ class Index extends Component
         session()->flash('success', $request->type === PharmacyRequest::TYPE_ALTA
             ? 'Alta aprobada: el establecimiento ya forma parte del fichero y quedó asignado.'
             : 'Baja aprobada: el establecimiento quedó inactivo y conserva su historial.');
+        $this->returnToQueue();
     }
 
     public function reject(PharmacyRequestReview $review): void
@@ -96,6 +111,14 @@ class Index extends Component
         $this->closeReview();
         $this->dispatch('coordinator-request-reviewed');
         session()->flash('success', 'Solicitud rechazada. La promotora verá el motivo en su historial.');
+        $this->returnToQueue();
+    }
+
+    private function returnToQueue(): void
+    {
+        if ($this->standalone) {
+            $this->redirectRoute('coordinator.requests.index');
+        }
     }
 
     public function render(PharmacyRequestReview $review): View
@@ -108,6 +131,11 @@ class Index extends Component
                 fn (Builder $q) => $q->where('status', $this->status))
             ->when(in_array($this->type, [PharmacyRequest::TYPE_ALTA, PharmacyRequest::TYPE_BAJA], true),
                 fn (Builder $q) => $q->where('type', $this->type));
+
+        if (preg_match('/^[1-9][0-9]{3}-(0[1-9]|1[0-2])$/D', $this->period)) {
+            $start = CarbonImmutable::parse($this->period.'-01', SchedulePlanner::TIMEZONE);
+            $query->where('created_at', '>=', $start->utc())->where('created_at', '<', $start->addMonth()->utc());
+        }
 
         if (($term = trim($this->search)) !== '') {
             foreach (EstablishmentSearch::terms($term) as $part) {
@@ -125,12 +153,14 @@ class Index extends Component
             : null;
 
         return view('livewire.coordinator.requests.index', [
-            'requests' => $query->paginate(15),
+            'requests' => $this->standalone ? null : $query->paginate(15),
             'selected' => $selected,
             'duplicates' => $selected ? $review->possibleDuplicates($selected) : collect(),
             'pendingPlanned' => $selected?->type === PharmacyRequest::TYPE_BAJA && $selected->pharmacy_id
                 ? $review->pendingPlannedVisits($selected->pharmacy_id) : 0,
-            'promoters' => User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'promoters' => $selected?->type === PharmacyRequest::TYPE_ALTA && $selected->status === PharmacyRequest::PENDING
+                ? User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
+                : collect(),
             'pendingCount' => PharmacyRequest::query()->where('status', PharmacyRequest::PENDING)->count(),
         ]);
     }

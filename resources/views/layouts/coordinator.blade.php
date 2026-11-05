@@ -76,7 +76,7 @@
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="raven-logout">Salir</button>
+                        <button type="submit" class="raven-logout" aria-label="Cerrar sesión"><x-access.icon name="logout" /><span>Cerrar sesión</span></button>
                     </form>
                 </div>
             </header>
