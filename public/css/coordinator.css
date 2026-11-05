@@ -377,3 +377,28 @@
     .coordinator-schedule-table tfoot { display: none; }
     .coordinator-schedule-cell-label { display: block; color: var(--coord-muted); font-size: 11px; }
 }
+
+.coordinator-catalog-nav { margin-bottom: 0; }
+.coordinator-catalog-nav button { background: #fff; border-color: var(--coord-line); }
+.coordinator-catalog-editor { border-left: 3px solid var(--coord-aqua) !important; }
+.coordinator-fixed-options { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; }
+.coordinator-fixed-options li { border: 1px solid var(--coord-line); background: var(--coord-soft); border-radius: 10px; padding: 8px 12px; }
+.coordinator-directory-toolbar { display: flex; justify-content: flex-end; }
+.coordinator-register-filters { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.coordinator-record-header { padding: 14px 0; border-bottom: 1px solid var(--coord-line); }
+.coordinator-record-nav, .coordinator-import-counts { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+.coordinator-record-nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--coord-accent); font-weight: 700; }
+.coordinator-timeline article { border-bottom: 0; border-left: 2px solid #d5deec; padding: 12px 0 12px 16px; }
+.coordinator-timeline article h3 { margin: 0; }
+.coordinator-import-steps { list-style: none; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; margin: 0; padding: 0; }
+.coordinator-import-steps li { display: flex; gap: 8px; align-items: center; padding: 10px; border: 1px solid var(--coord-line); border-radius: 10px; color: var(--coord-muted); font-size: 13px; font-weight: 700; }
+.coordinator-import-steps li span { display: grid; place-items: center; flex: 0 0 24px; height: 24px; border-radius: 8px; background: #fff; }
+.coordinator-import-steps [aria-current="step"] { color: var(--coord-accent); background: #eaf0fa; border-color: #c9d7eb; }
+.coordinator-import-counts { margin: 12px 0; }
+@media (max-width: 700px) {
+    .coordinator-register-filters, .coordinator-import-steps { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 420px) {
+    .coordinator-register-filters { grid-template-columns: minmax(0,1fr); }
+    .coordinator-import-steps li { font-size: 12px; }
+}

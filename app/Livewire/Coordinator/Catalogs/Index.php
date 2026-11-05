@@ -6,6 +6,7 @@ use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\AuditLog;
 use App\Services\CoordinatorCatalogs;
 use App\Support\CanonicalData;
+use App\Support\NicaraguaGeography;
 use App\Support\PromoterCatalogOptions;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
@@ -18,6 +19,11 @@ class Index extends Component
     public string $domain = 'checklist';
 
     public string $search = '';
+
+    public string $department = '';
+
+    #[Locked]
+    public bool $editorOpen = false;
 
     #[Locked]
     public ?int $editingId = null;
@@ -47,13 +53,27 @@ class Index extends Component
     {
         $this->coordinator();
         $this->cancel();
-        $this->search = '';
+        $this->reset(['search', 'department']);
         $this->reset(['observedPreview', 'observedHash', 'selectedObserved']);
+    }
+
+    public function startNew(): void
+    {
+        abort_unless($this->editable(), 403);
+        $this->cancel();
+        $this->editorOpen = true;
+    }
+
+    private function editable(): bool
+    {
+        return isset(CoordinatorCatalogs::LABELS[$this->domain]) && $this->domain !== 'category';
     }
 
     public function edit(int $id): void
     {
         $this->coordinator();
+        abort_unless($this->editable(), 403);
+        $this->editorOpen = true;
         $service = app(CoordinatorCatalogs::class);
         $record = $service->query($this->domain)->findOrFail($id);
         $this->editingId = $record->id;
@@ -69,13 +89,15 @@ class Index extends Component
     public function cancel(): void
     {
         $this->coordinator();
-        $this->reset(['editingId', 'expected', 'name', 'sortOrder', 'active', 'other', 'provisional']);
+        $this->reset(['editorOpen', 'editingId', 'expected', 'name', 'sortOrder', 'active', 'other', 'provisional']);
         $this->resetValidation();
     }
 
     public function save(): void
     {
-        app(CoordinatorCatalogs::class)->save($this->coordinator(), $this->domain, $this->editingId, [
+        $coordinator = $this->coordinator();
+        abort_unless($this->editable(), 403);
+        app(CoordinatorCatalogs::class)->save($coordinator, $this->domain, $this->editingId, [
             'name' => $this->name, 'sort_order' => $this->sortOrder, 'is_active' => $this->active,
             'is_other' => $this->other, 'is_provisional' => $this->provisional,
         ], $this->expected);
@@ -87,11 +109,25 @@ class Index extends Component
     {
         $this->coordinator();
         $key = PromoterCatalogOptions::commercialKey($this->search);
-        $options = app(CoordinatorCatalogs::class)->query($this->domain)->orderBy('sort_order')->orderBy('name')->get()
-            ->filter(fn ($option) => $key === '' || str_contains(PromoterCatalogOptions::commercialKey($option->name), $key));
+        $editable = $this->editable();
+        $matches = fn (string $name) => $key === '' || str_contains(PromoterCatalogOptions::commercialKey($name), $key);
+        $departments = NicaraguaGeography::departments();
+        $fixed = match ($this->domain) {
+            'category' => collect(CoordinatorCatalogs::FIXED_CATEGORIES),
+            'departments' => $departments,
+            'municipalities' => NicaraguaGeography::municipalities($this->department),
+            default => collect(),
+        };
 
-        return view('livewire.coordinator.catalogs.index', ['options' => $options, 'domains' => CoordinatorCatalogs::LABELS,
-            'changes' => AuditLog::where('details->domain', $this->domain)->where('action', 'like', 'catalog.%')->with('actor:id,name')->latest('id')->limit(20)->get()]);
+        return view('livewire.coordinator.catalogs.index', [
+            'options' => $editable ? app(CoordinatorCatalogs::class)->query($this->domain)->orderBy('sort_order')->orderBy('name')->get()
+                ->filter(fn ($option) => $matches($option->name)) : collect(),
+            'editable' => $editable,
+            'fixedOptions' => $fixed->filter($matches),
+            'departments' => $departments,
+            'domains' => CoordinatorCatalogs::LABELS + ['departments' => 'Departamentos y regiones', 'municipalities' => 'Municipios'],
+            'changes' => $editable ? AuditLog::where('details->domain', $this->domain)->where('action', 'like', 'catalog.%')->with('actor:id,name')->latest('id')->limit(20)->get() : collect(),
+        ]);
     }
 
     public function reviewObserved(): void
