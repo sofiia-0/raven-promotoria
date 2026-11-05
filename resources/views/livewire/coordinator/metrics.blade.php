@@ -6,13 +6,16 @@
         $others = array_sum(array_column(array_slice($summary['categories'], 5), 'total'));
         $segments[] = ['label' => 'Otras categorías', 'total' => $others, 'percentage' => round(100 * $others / $summary['totalRealized'], 1)];
     }
-    $stops = []; $cursor = 0;
-    foreach ($segments as $i => $segment) { $next = $cursor + 100 * $segment['total'] / max(1, $summary['totalRealized']); $stops[] = $colors[$i].' '.$cursor.'% '.$next.'%'; $cursor = $next; }
-    $maxTrend = max(1, ...array_column($trend, 'scheduled'), ...array_column($trend, 'realized'));
-    $line = fn ($field) => implode(' ', array_map(fn ($i, $point) => (30 + $i * 96).','.round(165 - 140 * $point[$field] / $maxTrend, 2), array_keys($trend), $trend));
+    $peak = max(1, ...array_column($trend, 'scheduled'), ...array_column($trend, 'realized'));
+    $step = max(1, (int) ceil($peak / 4));
+    $maxTrend = $step * 4;
+    $trendX = fn ($i) => 40 + $i * 80;
+    $trendY = fn ($value) => round(156 - 150 * $value / $maxTrend, 2);
+    $line = fn ($field) => implode(' ', array_map(fn ($i, $point) => $trendX($i).','.$trendY($point[$field]), array_keys($trend), $trend));
 @endphp
 <section class="raven-stack" aria-labelledby="team-metrics-title">
-    <div class="raven-card coordinator-period"><h2 id="team-metrics-title" class="raven-section-title">Resultados del equipo <span>{{ $summary['label'] }}</span></h2>
+    <details class="raven-card coordinator-period" x-data x-init="$el.open = matchMedia('(min-width: 821px)').matches">
+        <summary id="team-metrics-title"><strong>Filtros del equipo</strong><span>{{ $summary['label'] }}</span></summary>
         <div class="coordinator-filters coordinator-metric-filters">
             <label class="raven-field">Mes<select class="raven-select" wire:model.live="month">@for($m=1;$m<=12;$m++)<option value="{{ $m }}">{{ \Carbon\CarbonImmutable::create(2026,$m,1)->locale('es')->translatedFormat('F') }}</option>@endfor</select></label>
             <label class="raven-field">Año<select class="raven-select" wire:model.live="year">@foreach($years as $y)<option value="{{ $y }}">{{ $y }}</option>@endforeach</select></label>
@@ -20,24 +23,53 @@
             <label class="raven-field">Departamento<select class="raven-select" wire:model.live="department"><option value="">Todos</option>@foreach($departments as $value)<option value="{{ $value }}">{{ $value }}</option>@endforeach</select></label>
             <label class="raven-field">Categoría<select class="raven-select" wire:model.live="category"><option value="">Todas</option>@foreach($categories as $value)<option value="{{ $value }}">{{ $value }}</option>@endforeach</select></label>
         </div>
-    </div>
+    </details>
     <div class="coordinator-metric-kpis">
-        <article class="raven-card"><h3 class="coordinator-kpi-label">Establecimientos programados</h3><p class="coordinator-kpi-value">{{ $summary['scheduledEstablishments'] }}</p><p>Ubicaciones únicas en cronogramas enviados</p></article>
-        <article class="raven-card"><h3 class="coordinator-kpi-label">Cobertura de establecimientos</h3><p class="coordinator-kpi-value">{{ $pct($summary['coverage']) }}</p><p>{{ $summary['coveredEstablishments'] }} de {{ $summary['scheduledEstablishments'] }} establecimientos programados visitados</p></article>
-        <article class="raven-card"><h3 class="coordinator-kpi-label">Cumplimiento de visitas planificadas</h3><p class="coordinator-kpi-value">{{ $pct($summary['compliance']) }}</p><p>{{ $summary['completedPlanned'] }} de {{ $summary['scheduledVisits'] }} actividades programadas realizadas</p></article>
-        <article class="raven-card"><h3 class="coordinator-kpi-label">Visitas realizadas</h3><p class="coordinator-kpi-value">{{ $summary['totalRealized'] }}</p><p>{{ $summary['visitedEstablishments'] }} {{ $summary['visitedEstablishments'] === 1 ? 'establecimiento distinto' : 'establecimientos distintos' }} · {{ $summary['outsidePlan'] }} {{ $summary['outsidePlan'] === 1 ? 'visita fuera del plan' : 'visitas fuera del plan' }}</p></article>
+        <article class="raven-card"><span class="coord-kpi-icon"><x-promoter.icon name="pharmacy" /></span><h3 class="coordinator-kpi-label">Establecimientos programados</h3><p class="coordinator-kpi-value">{{ $summary['scheduledEstablishments'] }}</p><p>Ubicaciones únicas en cronogramas enviados</p></article>
+        <article class="raven-card"><span class="coord-kpi-icon"><x-promoter.icon name="location" /></span><h3 class="coordinator-kpi-label">Cobertura de establecimientos</h3><p class="coordinator-kpi-value">{{ $pct($summary['coverage']) }}</p><p>{{ $summary['coveredEstablishments'] }} de {{ $summary['scheduledEstablishments'] }} establecimientos programados visitados</p></article>
+        <article class="raven-card"><span class="coord-kpi-icon"><x-promoter.icon name="calendar" /></span><h3 class="coordinator-kpi-label">Cumplimiento de visitas planificadas</h3><p class="coordinator-kpi-value">{{ $pct($summary['compliance']) }}</p><p>{{ $summary['completedPlanned'] }} de {{ $summary['scheduledVisits'] }} actividades programadas realizadas</p></article>
+        <article class="raven-card"><span class="coord-kpi-icon"><x-promoter.icon name="check" /></span><h3 class="coordinator-kpi-label">Visitas realizadas</h3><p class="coordinator-kpi-value">{{ $summary['totalRealized'] }}</p><p>{{ $summary['visitedEstablishments'] }} {{ $summary['visitedEstablishments'] === 1 ? 'establecimiento distinto' : 'establecimientos distintos' }} · {{ $summary['outsidePlan'] }} {{ $summary['outsidePlan'] === 1 ? 'visita fuera del plan' : 'visitas fuera del plan' }}</p></article>
     </div>
     <livewire:coordinator.dashboard />
     <div class="coordinator-columns coordinator-chart-grid">
         <figure class="raven-card coordinator-chart"><figcaption><h3 class="raven-section-title">Evolución de seis meses</h3><p class="raven-field-help">Actividades programadas y visitas realizadas; son cantidades, no establecimientos únicos.</p></figcaption>
             @if(array_sum(array_column($trend, 'scheduled')) + array_sum(array_column($trend, 'realized')))
-                <svg viewBox="0 0 540 200" role="img" aria-label="Evolución mensual. Las cantidades exactas están disponibles debajo."><path d="M30 165H510" stroke="#d5dce5"/><polyline points="{{ $line('scheduled') }}" fill="none" stroke="#756193" stroke-width="3" stroke-dasharray="6 4"/><polyline points="{{ $line('realized') }}" fill="none" stroke="#315f98" stroke-width="3"/>@foreach($trend as $i => $point)<text x="{{ 30 + $i * 96 }}" y="190" text-anchor="middle" font-size="12" fill="#475569">{{ $point['label'] }}</text>@endforeach</svg>
-                <p class="raven-field-help">Línea continua azul: realizadas · Línea discontinua morada: programadas</p>
+                <div class="coord-trend">
+                    <div class="coord-trend-axis" aria-hidden="true">@for($tick = 4; $tick >= 0; $tick--)<span>{{ $tick * $step }}</span>@endfor</div>
+                    <svg viewBox="0 0 480 162" preserveAspectRatio="none" role="img" aria-label="Evolución mensual de actividades y visitas. Consulte las cifras exactas debajo.">
+                        @for($tick = 0; $tick <= 4; $tick++)
+                            <path d="M0 {{ $trendY($tick * $step) }}H480" stroke="#cbd9e2" vector-effect="non-scaling-stroke"/>
+                        @endfor
+                        <polyline points="{{ $line('scheduled') }}" fill="none" stroke="#695282" stroke-width="2.4" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>
+                        <polyline points="{{ $line('realized') }}" fill="none" stroke="#226b69" stroke-width="2.4" vector-effect="non-scaling-stroke"/>
+                        @foreach($trend as $i => $point)
+                            <path d="M{{ $trendX($i) }} {{ $trendY($point['realized']) }}h.1" stroke="#226b69" stroke-width="5" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+                        @endforeach
+                    </svg>
+                    <div class="coord-trend-months" aria-hidden="true">@foreach($trend as $point)<span>{{ $point['label'] }}</span>@endforeach</div>
+                </div>
+                <ul class="coord-chart-keys"><li><i aria-hidden="true"></i>Programadas</li><li><i aria-hidden="true"></i>Realizadas</li></ul>
             @else <p>No hay actividad para estos seis meses con los filtros seleccionados.</p> @endif
             <details><summary>Consultar cifras mensuales</summary><div class="coordinator-table-wrap"><table class="raven-table"><thead><tr><th>Mes</th><th>Programadas</th><th>Realizadas</th></tr></thead><tbody>@foreach($trend as $point)<tr><td>{{ $point['label'] }}</td><td>{{ $point['scheduled'] }}</td><td>{{ $point['realized'] }}</td></tr>@endforeach</tbody></table></div></details>
         </figure>
         <figure class="raven-card coordinator-chart"><figcaption><h3 class="raven-section-title">Visitas por categoría</h3><p class="raven-field-help">Clasificación actual de los establecimientos visitados.</p></figcaption>
-            @if($summary['totalRealized'])<div class="coordinator-donut" style="background:conic-gradient({{ implode(', ', $stops) }})" role="img" aria-label="Distribución de {{ $summary['totalRealized'] }} visitas realizadas por categoría"><span>{{ $summary['totalRealized'] }}<small>visitas</small></span></div><ul class="coordinator-chart-legend">@foreach($summary['categories'] as $item)<li>{{ $item['label'] }} <strong>{{ $item['total'] }} · {{ $pct($item['percentage']) }}</strong></li>@endforeach</ul>@else<p>No hay visitas realizadas para este período.</p>@endif
+            @if(count($segments) > 1)
+                <div class="coord-distribution" aria-hidden="true">
+                    @foreach($segments as $i => $segment)<span style="flex:{{ $segment['total'] }};background:{{ $colors[$i] }}"></span>@endforeach
+                </div>
+            @endif
+            @if($summary['totalRealized'])
+                <ul class="coordinator-chart-legend">
+                    @foreach($segments as $i => $item)
+                        <li><span class="coord-chart-category"><i aria-hidden="true" style="background:{{ $colors[$i] }}"></i>{{ $item['label'] === 'N/A' ? 'No aplica' : $item['label'] }}</span><strong>{{ $item['total'] }} · {{ $pct($item['percentage']) }}</strong></li>
+                    @endforeach
+                </ul>
+                @if(count($summary['categories']) > 5)
+                    <details><summary>Consultar todas las categorías</summary><ul class="coordinator-chart-legend">
+                        @foreach($summary['categories'] as $item)<li>{{ $item['label'] === 'N/A' ? 'No aplica' : $item['label'] }} <strong>{{ $item['total'] }} · {{ $pct($item['percentage']) }}</strong></li>@endforeach
+                    </ul></details>
+                @endif
+            @else<p>No hay visitas realizadas para este período.</p>@endif
         </figure>
     </div>
     <div class="coordinator-columns coordinator-chart-grid">
@@ -48,7 +80,7 @@
             <div class="coordinator-territory coordinator-compliance">
                 <div><span>{{ $person['name'] }}{{ $person['active'] ? '' : ' (cuenta inactiva)' }}</span><strong>{{ $pct($person['compliance']) }}</strong></div>
                 @if($person['compliance'] !== null)<meter min="0" max="100" value="{{ $person['compliance'] }}" aria-label="Cumplimiento de {{ $person['name'] }}"></meter>@endif
-                <p class="raven-field-help">{{ $person['completedPlanned'] }} de {{ $person['scheduledVisits'] }} actividades del plan realizadas · Cobertura {{ $pct($person['coverage']) }} · {{ $person['totalRealized'] }} visitas realizadas</p>
+                <p class="raven-field-help">{{ $person['completedPlanned'] }} de {{ $person['scheduledVisits'] }} actividades del plan realizadas · Cobertura {{ $pct($person['coverage']) }} · {{ $person['totalRealized'] }} {{ $person['totalRealized'] === 1 ? 'visita realizada' : 'visitas realizadas' }}</p>
             </div>
         @empty
             <p class="coordinator-empty-note">No hay actividad para los filtros seleccionados.</p>

@@ -26,7 +26,7 @@
         </div>
     </section>
 
-    <section class="raven-card" aria-label="Filtrar establecimientos">
+    <x-coordinator.filters label="Filtros de establecimientos">
         <div class="coordinator-filters">
             <div class="raven-field">
                 <label class="raven-label" for="assignments-search">Buscar</label>
@@ -54,7 +54,7 @@
             </div>
             <button type="button" class="raven-button raven-button-secondary" wire:click="clearFilters">Limpiar</button>
         </div>
-    </section>
+    </x-coordinator.filters>
 
     @if($batchMode)
     <section class="raven-card coordinator-batch" aria-labelledby="batch-title">
@@ -112,15 +112,12 @@
                                 <input type="checkbox" value="{{ $pharmacy->id }}" wire:model.live="selected" id="select-{{ $pharmacy->id }}">
                                 <label for="select-{{ $pharmacy->id }}" class="coordinator-sr-only">Seleccionar {{ $pharmacy->display_name }}</label>
                             @endif
-                            <div>
-                                <h3 class="coordinator-list-title">{{ $pharmacy->display_name }}</h3>
-                                <x-promoter.location :department="$pharmacy->department" :city="$pharmacy->city" :address="$pharmacy->address" :neighborhood="$pharmacy->neighborhood" />
-                            </div>
+                            <x-coordinator.record-name :name="$pharmacy->display_name" :locality="$pharmacy->display_locality" :address="$pharmacy->display_address" />
                         </div>
                         <div class="coordinator-relation-list">
                             @forelse($pharmacy->activeAssignments as $relation)
                                 <details class="coordinator-relation" wire:key="relation-{{ $relation->id }}" x-data @click.outside="$el.open = false" @keydown.escape.stop="$el.open = false; $refs.trigger.focus()">
-                                    <summary x-ref="trigger"><span>{{ $relation->promoter?->name }}</span>@if($relation->assignment_kind === 'coverage')<small>Cobertura</small>@endif<span aria-hidden="true">⌄</span></summary>
+                                    <summary x-ref="trigger"><span class="coord-person-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($relation->promoter?->name ?? '?', 0, 1)) }}</span><span>{{ $relation->promoter?->name }}</span>@if($relation->assignment_kind === 'coverage')<small>Cobertura</small>@endif<span aria-hidden="true">⌄</span></summary>
                                     <div class="coordinator-relation-menu">
                                         @if($relation->assignment_kind === 'coverage')
                                             <p class="coordinator-list-meta">{{ $relation->coverage_starts_on?->format('d/m/Y') }} a {{ $relation->coverage_ends_on?->format('d/m/Y') }}</p>
@@ -135,7 +132,7 @@
                             @empty
                                 <span class="raven-badge raven-badge-rose">Sin promotora</span>
                             @endforelse
-                            <button type="button" class="raven-button raven-button-secondary" wire:click="openEditor({{ $pharmacy->id }}, 'add')" aria-expanded="{{ $editingPharmacyId === $pharmacy->id && $editingOperation === 'add' ? 'true' : 'false' }}">+ Añadir promotora</button>
+                            <button type="button" class="raven-button raven-button-secondary coord-add-person" wire:click="openEditor({{ $pharmacy->id }}, 'add')" aria-expanded="{{ $editingPharmacyId === $pharmacy->id && $editingOperation === 'add' ? 'true' : 'false' }}">+ Añadir promotora</button>
                         </div>
                         <div class="coordinator-directory-actions">
                             <button type="button" class="raven-button raven-button-ghost" wire:click="openEditor({{ $pharmacy->id }}, 'coverage')" aria-expanded="{{ $editingPharmacyId === $pharmacy->id && $editingOperation === 'coverage' ? 'true' : 'false' }}">Cobertura temporal</button>

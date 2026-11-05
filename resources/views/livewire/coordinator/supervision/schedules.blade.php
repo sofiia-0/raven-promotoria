@@ -1,82 +1,55 @@
 <div class="raven-stack">
     <section class="raven-card coordinator-month-nav" aria-label="Seleccionar mes">
-        <button type="button" class="raven-button raven-button-secondary" wire:click="previousMonth">‹ Mes anterior</button>
+        <button type="button" class="raven-button raven-button-secondary" wire:click="previousMonth" aria-label="Mes anterior"><span aria-hidden="true">‹</span><span class="coord-month-label">Mes anterior</span></button>
         <label class="raven-field coordinator-schedule-period"><span class="raven-label">Período</span><input class="raven-input" type="month" wire:model.live="period" aria-label="Período del cronograma"><span class="coordinator-sr-only">{{ $monthLabel }}</span></label>
-        <button type="button" class="raven-button raven-button-secondary" wire:click="nextMonth">Mes siguiente ›</button>
+        <button type="button" class="raven-button raven-button-secondary" wire:click="nextMonth" aria-label="Mes siguiente"><span class="coord-month-label">Mes siguiente</span><span aria-hidden="true">›</span></button>
     </section>
 
     <div class="coordinator-schedule-totals" aria-label="Resumen del período">
-        <span><strong>{{ $rows->filter(fn ($row) => $row['schedule'] && ! $row['schedule']->isDraft())->count() }}</strong> enviados</span>
-        <span><strong>{{ $rows->filter(fn ($row) => $row['schedule']?->isDraft())->count() }}</strong> borradores</span>
+        <span><strong>{{ $sent = $rows->filter(fn ($row) => $row['schedule'] && ! $row['schedule']->isDraft())->count() }}</strong> {{ $sent === 1 ? 'enviado' : 'enviados' }}</span>
+        <span><strong>{{ $drafts = $rows->filter(fn ($row) => $row['schedule']?->isDraft())->count() }}</strong> {{ $drafts === 1 ? 'borrador' : 'borradores' }}</span>
         <span><strong>{{ $rows->whereNull('schedule')->count() }}</strong> sin crear</span>
         <span><strong>{{ $totals['pending'] }}</strong> visitas pendientes</span>
     </div>
 
-    <section class="raven-card coordinator-table-shell" tabindex="0" aria-label="Cronogramas de {{ $monthLabel }}">
-        @if($rows->isEmpty())
-            <div class="coordinator-empty">
-                <p class="raven-card-title">No hay promotoras activas</p>
-                <p class="raven-card-description">Cuando Administración cree cuentas de promotora aparecerán aquí.</p>
-            </div>
-        @else
-            <table class="coordinator-table coordinator-schedule-table">
-                <thead>
-                    <tr>
-                        <th scope="col">Promotora</th>
-                        <th scope="col">Cronograma</th>
-                        <th scope="col" class="coordinator-numeric">Visitas planificadas</th>
-                        <th scope="col" class="coordinator-numeric">Realizadas</th>
-                        <th scope="col" class="coordinator-numeric">No realizadas</th>
-                        <th scope="col" class="coordinator-numeric">Pendientes</th>
-                        <th scope="col" class="coordinator-numeric">Reprogramadas</th>
-                        <th scope="col" class="coordinator-numeric">Otras actividades</th>
-                        <th scope="col" class="coordinator-numeric">Fuera de plan</th>
-                        <th scope="col"><span class="coordinator-sr-only">Acciones</span></th>
-                    </tr>
-                </thead>
-                <tbody>
+    <section class="raven-card">
+        @if($rows->isEmpty() || $rows->whereNotNull('schedule')->isEmpty())
+            <x-coordinator.empty kind="calendar" :title="$rows->isEmpty() ? 'No hay promotoras activas' : 'No hay cronogramas para este período'" description="Seleccione otro mes para consultar su planificación." />
+        @endif
+        @if($rows->isNotEmpty())
+            <x-coordinator.table :label="'Cronogramas de '.$monthLabel" variant="schedules">
+                <thead role="rowgroup"><tr role="row"><th scope="col">Promotora</th><th scope="col">Estado</th><th scope="col">Actividades planificadas</th><th scope="col">Progreso de visitas</th><th scope="col">Acción</th></tr></thead>
+                <tbody role="rowgroup">
                     @foreach($rows as $row)
-                        <tr wire:key="schedule-row-{{ $row['promoter']->id }}">
-                            <td>
-                                <span class="coordinator-list-title">{{ $row['promoter']->name }}</span>
+                        <tr role="row" wire:key="schedule-row-{{ $row['promoter']->id }}">
+                            <td role="cell"><strong class="coordinator-list-title">{{ $row['promoter']->name }}</strong>
                                 @unless($row['promoter']->is_active)<span class="coordinator-list-meta">Cuenta inactiva</span>@endunless
                             </td>
-                            <td>
-                                @if(! $row['schedule'])
-                                    <span class="raven-badge raven-badge-neutral">Sin crear</span>
-                                @elseif($row['schedule']->isDraft())
-                                    <span class="raven-badge raven-badge-info">Borrador</span>
+                            <td role="cell">
+                                @if(! $row['schedule'])<span class="raven-badge raven-badge-neutral">Sin crear</span>
+                                @elseif($row['schedule']->isDraft())<span class="raven-badge raven-badge-info">Borrador</span>
+                                @else<span class="raven-badge raven-badge-success">Enviado</span>@endif
+                            </td>
+                            <td role="cell"><span class="coord-cell-label" aria-hidden="true">Actividades planificadas</span><strong>{{ $row['planned'] + $row['other'] }}</strong>
+                                <span class="coordinator-list-meta">{{ $row['planned'] }} {{ $row['planned'] === 1 ? 'visita' : 'visitas' }} · {{ $row['other'] }} {{ $row['other'] === 1 ? 'otra actividad' : 'otras actividades' }}</span>
+                            </td>
+                            <td role="cell" class="coord-progress">
+                                @if($row['planned'] > 0 && $row['schedule'] && !$row['schedule']->isDraft())
+                                    <meter min="0" max="{{ $row['planned'] }}" value="{{ $row['done'] }}" aria-label="Visitas realizadas de {{ $row['promoter']->name }}"></meter>
+                                    <span>{{ $row['done'] }} de {{ $row['planned'] }} realizadas</span>
                                 @else
-                                    <span class="raven-badge raven-badge-success">Enviado</span>
-                                    <span class="coordinator-list-meta">{{ $row['schedule']->submitted_at?->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</span>
+                                    <span>{{ $row['schedule']?->isDraft() ? 'En planificación' : 'Sin visitas planificadas' }}</span>
                                 @endif
                             </td>
-                            <td class="coordinator-numeric"><span class="coordinator-schedule-cell-label">Visitas planificadas</span>{{ $row['planned'] }}</td>
-                            <td class="coordinator-numeric"><span class="coordinator-schedule-cell-label">Realizadas</span>{{ $row['done'] }}</td>
-                            <td class="coordinator-numeric"><span class="coordinator-schedule-cell-label">No realizadas</span>{{ $row['not_done'] }}</td>
-                            <td class="coordinator-numeric"><span class="coordinator-schedule-cell-label">Pendientes</span>{{ $row['pending'] }}</td>
-                            <td class="coordinator-numeric"><span class="coordinator-schedule-cell-label">Reprogramadas</span>{{ $row['rescheduled'] }}</td>
-                            <td class="coordinator-numeric"><span class="coordinator-schedule-cell-label">Otras actividades</span>{{ $row['other'] }}</td>
-                            <td class="coordinator-numeric"><span class="coordinator-schedule-cell-label">Fuera de plan</span>{{ $row['unplanned'] }}</td>
-                            <td class="coordinator-table-actions">
+                            <td role="cell" @class(['coord-no-action' => !$row['schedule']])>
                                 @if($row['schedule'])
-                                    <a class="raven-button raven-button-ghost" href="{{ route('coordinator.schedules.show', ['schedule' => $row['schedule']->id]) }}">Ver cronograma<span class="coordinator-sr-only"> de {{ $row['promoter']->name }}</span></a>
+                                    <a class="raven-button raven-button-secondary" href="{{ route('coordinator.schedules.show', $row['schedule']->id) }}">Ver cronograma <x-promoter.icon name="arrow" /><span class="coordinator-sr-only"> de {{ $row['promoter']->name }}</span></a>
                                 @endif
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
-                <tfoot>
-                    <tr class="coordinator-total-row">
-                        <th scope="row" colspan="2">Total del equipo</th>
-                        @foreach(['planned', 'done', 'not_done', 'pending', 'rescheduled', 'other', 'unplanned'] as $key)
-                            <td class="coordinator-numeric">{{ $totals[$key] }}</td>
-                        @endforeach
-                        <td></td>
-                    </tr>
-                </tfoot>
-            </table>
+            </x-coordinator.table>
         @endif
     </section>
-    <p class="coordinator-muted">Pendientes incluye visitas futuras y atrasadas sin registro. «Fuera de plan» cuenta visitas registradas en el mes sin actividad planificada.</p>
 </div>

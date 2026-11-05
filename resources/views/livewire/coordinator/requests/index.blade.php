@@ -161,37 +161,35 @@
 
     @if($requests->isEmpty())
         <section class="raven-card coordinator-empty">
-            <p class="raven-card-title">No hay solicitudes con estos filtros</p>
-            <p class="raven-card-description">Cuando una promotora solicite un alta o una baja, aparecerá aquí.</p>
+            <x-coordinator.empty kind="inbox" title="No hay solicitudes con estos filtros" description="Las solicitudes de las promotoras aparecerán aquí." />
         </section>
     @else
-        <section class="raven-card coordinator-table-shell" tabindex="0">
-            <table class="coordinator-table">
-                <thead>
-                    <tr>
-                        <th scope="col">Fecha</th>
-                        <th scope="col">Tipo</th>
+        <section class="raven-card">
+            <x-coordinator.table label="Solicitudes de alta y baja" variant="requests">
+                <thead role="rowgroup">
+                    <tr role="row">
                         <th scope="col">Establecimiento</th>
+                            <th scope="col">Fecha</th>
+                        <th scope="col">Tipo</th>
                         <th scope="col">Promotora y motivo</th>
                         <th scope="col">Estado</th>
                         <th scope="col"><span class="coordinator-sr-only">Acciones</span></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                     @foreach($requests as $item)
-                        <tr wire:key="request-row-{{ $item->id }}" @if($selectedId === $item->id) aria-current="true" class="is-selected" @endif>
-                            <td>{{ $item->created_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</td>
-                            <td><span class="raven-badge {{ $item->type === PharmacyRequest::TYPE_ALTA ? 'raven-badge-info' : 'raven-badge-rose' }}">{{ $item->type === PharmacyRequest::TYPE_ALTA ? 'Alta' : 'Baja' }}</span></td>
-                            <td>
-                                <span class="coordinator-list-title">{{ $item->establishmentTitle() }}</span>
-                                <span class="coordinator-list-meta">{{ $item->establishmentLocality() }}</span>
+                        <tr role="row" wire:key="request-row-{{ $item->id }}" @if($selectedId === $item->id) aria-current="true" class="is-selected" @endif>
+                            <td role="cell">
+                                <x-coordinator.record-name :name="$item->establishmentTitle()" :locality="$item->establishmentLocality()" />
                             </td>
-                            <td>{{ $item->promoter?->name ?? 'Promotora' }}<span class="coordinator-list-meta">{{ $item->reasonLabel() }}</span></td>
-                            <td>
+                            <td role="cell">{{ $item->created_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</td>
+                            <td role="cell"><span class="raven-badge {{ $item->type === PharmacyRequest::TYPE_ALTA ? 'raven-badge-info' : 'raven-badge-rose' }}">{{ $item->type === PharmacyRequest::TYPE_ALTA ? 'Alta' : 'Baja' }}</span></td>
+                            <td role="cell"><span class="coord-cell-label" aria-hidden="true">Promotora</span>{{ $item->promoter?->name ?? 'Promotora' }}<span class="coordinator-list-meta">{{ $item->reasonLabel() }}</span></td>
+                            <td role="cell">
                                 <span class="raven-badge {{ $statusBadges[$item->status] ?? 'raven-badge-neutral' }}">{{ $statusLabels[$item->status] ?? $item->status }}</span>
                                 @if($item->reviewer)<span class="coordinator-list-meta">{{ $item->reviewer->name }}</span>@endif
                             </td>
-                            <td class="coordinator-table-actions">
+                            <td role="cell" class="coordinator-table-actions">
                                 <a class="raven-button raven-button-secondary" href="{{ route('coordinator.requests.show', $item->id) }}">
                                     {{ $item->status === PharmacyRequest::PENDING ? 'Revisar' : 'Ver detalle' }}<span class="coordinator-sr-only"> {{ $item->establishmentTitle() }}</span>
                                 </a>
@@ -199,7 +197,7 @@
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-coordinator.table>
         </section>
         <div class="coordinator-pagination">{{ $requests->links() }}</div>
     @endif

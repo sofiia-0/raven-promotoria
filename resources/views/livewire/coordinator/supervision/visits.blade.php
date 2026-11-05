@@ -1,6 +1,6 @@
 <div class="raven-stack">
     @if($selectedPharmacy)<section class="raven-card" aria-label="Establecimiento seleccionado"><h2 class="raven-section-title">{{ $selectedPharmacy->display_name }}</h2><x-promoter.location :department="$selectedPharmacy->department" :city="$selectedPharmacy->city" :address="$selectedPharmacy->address" :neighborhood="$selectedPharmacy->neighborhood" /><p class="raven-field-help">Historial de todas las promotoras. Puede limitarlo mediante los filtros.</p></section>@endif
-    <section class="raven-card" aria-label="Filtrar visitas">
+    <x-coordinator.filters label="Filtros de visitas">
         <div class="coordinator-filters coordinator-filters--visits">
             <div class="raven-field">
                 <label class="raven-label" for="visits-promoter">Promotora</label>
@@ -49,7 +49,7 @@
             </div>
             <button type="button" class="raven-button raven-button-secondary" wire:click="clearFilters">Limpiar</button>
         </div>
-    </section>
+    </x-coordinator.filters>
 
     <div class="coordinator-results-head">
         <p class="coordinator-results-count">{{ (int) $summary->total }} {{ (int) $summary->total === 1 ? 'registro' : 'registros' }} · {{ (int) $summary->done }} realizadas · {{ (int) $summary->unplanned }} fuera de plan</p>
@@ -58,43 +58,41 @@
 
     @if($visits->isEmpty())
         <section class="raven-card coordinator-empty">
-            <p class="raven-card-title">No hay visitas con estos filtros</p>
-            <p class="raven-card-description">Ajuste el rango de fechas o limpie los filtros.</p>
+            <x-coordinator.empty kind="visit" title="No hay visitas con estos filtros" description="Ajuste el rango de fechas o limpie los filtros." />
         </section>
     @else
-        <section class="raven-card coordinator-table-shell" tabindex="0">
-            <table class="coordinator-table">
-                <thead>
-                    <tr>
-                        <th scope="col">Fecha</th>
-                        <th scope="col">Promotora</th>
+        <section class="raven-card">
+            <x-coordinator.table label="Visitas registradas" variant="visits">
+                <thead role="rowgroup">
+                    <tr role="row">
                         <th scope="col">Establecimiento</th>
+                            <th scope="col">Fecha</th>
+                        <th scope="col">Promotora</th>
                         <th scope="col">Resultado</th>
                         <th scope="col">Origen</th>
                         <th scope="col"><span class="coordinator-sr-only">Acciones</span></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody role="rowgroup">
                     @foreach($visits as $visit)
-                        <tr wire:key="visit-{{ $visit->id }}">
-                            <td>{{ $visit->visited_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</td>
-                            <td>{{ $visit->promoter?->name }}</td>
-                            <td>
-                                <span class="coordinator-list-title">{{ $visit->pharmacy?->display_name }}</span>
-                                <span class="coordinator-list-meta">{{ $visit->pharmacy?->display_locality }}<span class="coordinator-list-meta">{{ $visit->pharmacy?->display_address }}</span></span>
+                        <tr role="row" wire:key="visit-{{ $visit->id }}">
+                            <td role="cell">
+                                <x-coordinator.record-name :name="$visit->pharmacy?->display_name" :locality="$visit->pharmacy?->display_locality" />
                             </td>
-                            <td>
+                            <td role="cell">{{ $visit->visited_at->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</td>
+                            <td role="cell"><span class="coord-cell-label" aria-hidden="true">Promotora</span>{{ $visit->promoter?->name }}</td>
+                            <td role="cell">
                                 <span class="raven-badge {{ $visit->status === \App\Enums\VisitStatus::REALIZADA ? 'raven-badge-success' : 'raven-badge-danger' }}">{{ $visit->status->label() }}</span>
                                 @if($visit->reason)<span class="coordinator-list-meta">{{ $visit->reason->name }}</span>@endif
                             </td>
-                            <td><span class="raven-badge {{ $visit->isUnplanned() ? 'raven-badge-rose' : 'raven-badge-neutral' }}">{{ $visit->isUnplanned() ? 'Fuera de plan' : 'Planificada' }}</span></td>
-                            <td class="coordinator-table-actions">
-                                <a class="raven-button raven-button-ghost" href="{{ route('coordinator.visits.show', ['visit' => $visit->id]) }}">Ver detalle<span class="coordinator-sr-only"> de la visita a {{ $visit->pharmacy?->display_name }}</span></a>
+                            <td role="cell"><span class="raven-badge {{ $visit->isUnplanned() ? 'raven-badge-rose' : 'raven-badge-neutral' }}">{{ $visit->isUnplanned() ? 'Fuera de plan' : 'Planificada' }}</span></td>
+                            <td role="cell" class="coordinator-table-actions">
+                                <a class="raven-button raven-button-ghost" href="{{ route('coordinator.visits.show', ['visit' => $visit->id]) }}">Ver detalle <x-promoter.icon name="arrow" /><span class="coordinator-sr-only"> de la visita a {{ $visit->pharmacy?->display_name }}</span></a>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </x-coordinator.table>
         </section>
         <div class="coordinator-pagination">{{ $visits->links() }}</div>
     @endif

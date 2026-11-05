@@ -1,18 +1,32 @@
 <div class="raven-stack">
     <div class="coordinator-directory-toolbar"><a class="raven-button raven-button-secondary" href="{{ route('coordinator.establishments.exchange', $this->only(['search', 'department', 'city', 'category', 'status', 'promoter'])) }}">Importar o exportar Excel</a></div>
-    <section class="raven-card" aria-label="Filtros de establecimientos"><div class="coordinator-filters coordinator-register-filters">
+    <x-coordinator.filters label="Filtros de establecimientos"><div class="coordinator-filters coordinator-register-filters">
         <x-promoter.field model="search" label="Buscar" :value="$search" live max="255" />
         <x-promoter.searchable-select model="department" label="Departamento" :value="$department" :options="$departments" clearable />
         <x-promoter.searchable-select model="city" label="Municipio" :value="$city" :options="$cities" :disabled="$department === ''" clearable />
         <x-promoter.searchable-select model="category" label="Categoría" :value="$category" :options="$categories" :labels="['N/A' => 'No aplica']" clearable />
         <label class="raven-field">Estado<select class="raven-select" wire:model.live="status"><option value="">Todos</option><option value="active">Activo</option><option value="inactive">Inactivo</option></select></label>
         <label class="raven-field">Promotora<select class="raven-select" wire:model.live="promoter"><option value="">Todas</option><option value="none">Sin asignación vigente</option>@foreach($promoters as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label>
-    </div></section>
+    </div></x-coordinator.filters>
     <section class="raven-card"><div class="coordinator-section-head"><h2 class="raven-section-title">Catálogo central</h2><span>{{ $establishments->total() }} establecimientos</span></div>
-        <div class="coordinator-table-wrap" role="region" aria-label="Listado de establecimientos" tabindex="0"><table class="raven-table"><thead><tr><th>Establecimiento</th><th>Clasificación</th><th>Responsables actuales</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
-        @forelse($establishments as $item)
-            <tr wire:key="establishment-{{ $item->id }}"><td><strong class="coordinator-list-title">{{ $item->display_name }}</strong><span class="coordinator-list-meta">{{ $item->display_locality }}</span><span class="coordinator-list-meta">{{ $item->display_address ?: 'Dirección no registrada' }}</span></td><td>{{ $item->client_type ?: 'Sin tipo' }}<br>{{ $item->category === 'N/A' ? 'No aplica' : ($item->category ?: 'Sin categoría') }}</td><td>{{ $item->activeAssignments->pluck('promoter.name')->filter()->unique()->join(', ') ?: 'Sin asignación vigente' }}</td><td><span class="raven-badge {{ $item->is_active ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $item->is_active ? 'Activo' : 'Inactivo' }}</span></td><td><a class="raven-button raven-button-secondary" href="{{ route('coordinator.establishments.show', $item->id) }}">Ver ficha</a></td></tr>
-        @empty <tr><td colspan="5">No se encontraron establecimientos con estos filtros.</td></tr> @endforelse
-        </tbody></table></div>{{ $establishments->links() }}
+        @if($establishments->isEmpty())
+            <x-coordinator.empty title="No se encontraron establecimientos con estos filtros" description="Pruebe con otro nombre o ajuste los filtros." />
+        @else
+            <x-coordinator.table label="Listado de establecimientos" variant="directory">
+                <thead role="rowgroup"><tr role="row"><th scope="col">Establecimiento</th><th scope="col">Clasificación</th><th scope="col">Responsables</th><th scope="col">Estado</th><th scope="col">Acción</th></tr></thead>
+                <tbody role="rowgroup">
+                    @foreach($establishments as $item)
+                        <tr role="row" wire:key="establishment-{{ $item->id }}">
+                            <td role="cell"><x-coordinator.record-name :name="$item->display_name" :locality="$item->display_locality" :address="$item->display_address" /></td>
+                            <td role="cell"><span class="coord-cell-label" aria-hidden="true">Clasificación</span>{{ $item->client_type ?: 'Sin tipo' }} <span class="coordinator-list-meta">{{ $item->category === 'N/A' ? 'No aplica' : ($item->category ?: 'Sin categoría') }}</span></td>
+                            <td role="cell"><span class="coord-cell-label" aria-hidden="true">Responsables</span>{{ $item->activeAssignments->pluck('promoter.name')->filter()->unique()->join(', ') ?: 'Sin asignación vigente' }}</td>
+                            <td role="cell"><span class="raven-badge {{ $item->is_active ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $item->is_active ? 'Activo' : 'Inactivo' }}</span></td>
+                            <td role="cell"><a class="raven-button raven-button-secondary" href="{{ route('coordinator.establishments.show', $item->id) }}">Ver ficha <x-promoter.icon name="arrow" /></a></td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </x-coordinator.table>
+        @endif
+        {{ $establishments->links() }}
     </section>
 </div>

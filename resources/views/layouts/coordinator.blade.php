@@ -12,12 +12,16 @@
 <body class="coordinator-shell">
     <a href="#coordinator-content" class="coordinator-skip-link">Ir al contenido principal</a>
     <div class="raven-app">
-        <aside class="raven-sidebar">
+        <aside class="raven-sidebar" x-data="{ menuOpen: false }" @keydown.escape="if (menuOpen) { menuOpen = false; $refs.menu.focus() }">
             <a href="{{ route('coordinator.dashboard') }}" class="raven-brand" aria-label="Raven — Inicio de Coordinación">
                 <img src="{{ asset('images/raven-logo.png') }}" alt="Raven">
             </a>
             <p class="coordinator-nav-label">Coordinación</p>
-            <nav class="raven-nav" aria-label="Navegación de coordinación">
+            <button type="button" class="coordinator-menu-toggle raven-button raven-button-secondary" x-ref="menu"
+                    @click="menuOpen = !menuOpen" :aria-expanded="menuOpen.toString()" aria-controls="coordinator-navigation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg> Menú
+            </button>
+            <nav id="coordinator-navigation" class="raven-nav" :class="{'is-open': menuOpen}" aria-label="Navegación de coordinación">
                 <a href="{{ route('coordinator.dashboard') }}"
                    class="raven-nav-link {{ request()->routeIs('coordinator.dashboard') ? 'is-active' : '' }}"
                    @if(request()->routeIs('coordinator.dashboard')) aria-current="page" @endif>
@@ -64,7 +68,7 @@
         <div class="raven-main">
             <header class="raven-topbar">
                 <div class="raven-topbar-context">
-                    <p class="raven-topbar-title">Coordinación <span aria-hidden="true">/</span> <span class="coordinator-topbar-section">@yield('section', 'Inicio')</span></p>
+                    <p class="raven-topbar-title"><span class="coord-crumb-root">Coordinación</span> <span class="coord-crumb-divider" aria-hidden="true">/</span> <span class="coordinator-topbar-section">@yield('section', 'Inicio')</span></p>
                     <p class="raven-topbar-subtitle">Laboratorio Raven</p>
                 </div>
                 <div class="raven-user">

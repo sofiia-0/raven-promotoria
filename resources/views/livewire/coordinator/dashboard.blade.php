@@ -7,7 +7,11 @@
             </div>
             <a class="coordinator-text-link" href="{{ route('coordinator.requests.index') }}">Ver todas</a>
         </div>
-        <x-coordinator.request-queue :requests="$oldestRequests" />
+        @if($oldestRequests->isEmpty())
+            <x-coordinator.empty kind="inbox" title="No hay solicitudes pendientes" description="Las nuevas solicitudes aparecerán en esta bandeja." />
+        @else
+            <x-coordinator.request-queue :requests="$oldestRequests" />
+        @endif
     </section>
     <section class="raven-card" aria-labelledby="operational-title">
         <div class="coordinator-section-head">
