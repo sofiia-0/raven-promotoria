@@ -26,20 +26,20 @@
         </dl>
     </section>
 
-    <div class="coordinator-columns coordinator-visit-sections">
-        <section class="raven-card" aria-labelledby="visit-location-title">
-            <h2 id="visit-location-title" class="raven-section-title">Ubicación registrada</h2>
+    <div class="raven-stack coordinator-visit-sections">
+        <section class="raven-card coord-visit-map" aria-labelledby="visit-location-title">
+            <h2 id="visit-location-title" class="raven-section-title"><x-promoter.icon name="location" /> Ubicación registrada</h2>
             @if($mapUrl)
                 <p class="coordinator-list-meta">{{ $visit->latitude }}, {{ $visit->longitude }}@if($visit->location_accuracy !== null) · Precisión indicada: ± {{ $visit->location_accuracy }} m @endif</p>
+                <p class="raven-field-help" id="coord-map-disclosure">Al abrir el mapa, OpenStreetMap recibe las coordenadas registradas y su dirección IP.</p>
                 <details class="coordinator-map" x-data="{ open: false }" @toggle="open = $el.open">
-                    <summary>Mostrar mapa de OpenStreetMap</summary>
-                    <p class="raven-field-help">Al abrir el mapa, OpenStreetMap recibe las coordenadas registradas y su dirección IP.</p>
+                    <summary aria-describedby="coord-map-disclosure">Mostrar mapa de OpenStreetMap</summary>
                     <template x-if="open">
                         <iframe src="{{ $mapUrl }}" title="Mapa de la ubicación registrada" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin"></iframe>
                     </template>
                 </details>
             @else
-                <p class="coordinator-empty-note">Esta visita no tiene ubicación registrada.</p>
+                <x-coordinator.empty kind="visit" title="Esta visita no tiene ubicación registrada." />
             @endif
         </section>
         <section class="raven-card" aria-labelledby="visit-result-title">

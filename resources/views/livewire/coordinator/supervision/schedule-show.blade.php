@@ -21,8 +21,23 @@
         </div>
     </section>
 
+    @php
+        $activities = $schedule->weeks->flatMap->activities;
+        $visits = $activities->filter(fn ($activity) => $activity->activity_type === \App\Enums\ActivityType::VISITA);
+    @endphp
+    <div class="coordinator-schedule-totals" aria-label="Resumen del cronograma">
+        <span><strong>{{ $activities->count() }}</strong> actividades</span>
+        <span><strong>{{ $visits->filter(fn ($activity) => $activity->reschedule_count > 0)->count() }}</strong> reprogramadas</span>
+        @unless($schedule->isDraft())
+            <span><strong>{{ $visits->filter(fn ($activity) => $activity->progress() === \App\Enums\ActivityProgress::REALIZADA)->count() }}</strong> realizadas</span>
+            <span><strong>{{ $visits->filter(fn ($activity) => $activity->progress() === \App\Enums\ActivityProgress::PENDIENTE)->count() }}</strong> pendientes</span>
+        @endunless
+    </div>
+    @if($activities->isEmpty())
+        <section class="raven-card"><x-coordinator.empty kind="calendar" title="Sin actividades planificadas" /></section>
+    @endif
     <div class="coordinator-weeks">
-        @foreach($schedule->weeks as $week)
+        @foreach($schedule->weeks->filter(fn ($week) => $week->activities->isNotEmpty()) as $week)
             <section class="raven-card" wire:key="week-{{ $week->id }}" aria-labelledby="week-title-{{ $week->id }}">
                 <div class="coordinator-section-head">
                     <div>
@@ -54,7 +69,7 @@
                                     @endforeach
                                 </div>
                                 <div class="coordinator-badges coordinator-activity-status">
-                                    <span class="raven-badge raven-badge-neutral">{{ $activity->activity_type->label() }}</span>
+                                    <span class="raven-badge raven-badge-neutral"><x-promoter.icon :name="$activity->pharmacy ? 'pharmacy' : 'calendar'" />{{ $activity->activity_type->label() }}</span>
                                     @if($progress)<span class="raven-badge {{ $progress->badge() }}">{{ $progress->label() }}</span>@endif
                                     @foreach($activity->visits as $visit)
                                         <a class="raven-button raven-button-ghost" href="{{ route('coordinator.visits.show', ['visit' => $visit->id]) }}">Ver registro{{ $activity->visits->count() > 1 ? ' '.($loop->iteration) : '' }}</a>
@@ -66,5 +81,16 @@
                 @endif
             </section>
         @endforeach
+        @php($emptyWeeks = $schedule->weeks->filter(fn ($week) => $week->activities->isEmpty()))
+        @if($emptyWeeks->isNotEmpty())
+            <details class="coord-weeks-empty">
+                <summary>Semanas sin actividades ({{ $emptyWeeks->count() }})</summary>
+                <ul class="coordinator-list">
+                    @foreach($emptyWeeks as $week)
+                        <li class="coordinator-list-row"><strong>Semana {{ $week->week_number }}</strong><span class="coordinator-muted">{{ $week->starts_on->format('d/m') }} – {{ $week->ends_on->format('d/m') }}</span></li>
+                    @endforeach
+                </ul>
+            </details>
+        @endif
     </div>
 </div>
