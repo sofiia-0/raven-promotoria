@@ -6,35 +6,6 @@
             <button type="button" wire:click="$set('domain', '{{ $value }}')" aria-pressed="{{ $domain === $value ? 'true' : 'false' }}">{{ $label }}</button>
         @endforeach
     </nav>
-    <section class="raven-card">
-        <div class="coordinator-catalog-toolbar">
-            <div>
-                <h2 class="raven-section-title">{{ $domains[$domain] ?? 'Catálogo' }}</h2>
-                @unless($editable)<p class="raven-field-help">Catálogo fijo de consulta</p>@endunless
-            </div>
-            @if($domain === 'municipalities')
-                <label class="raven-field">Departamento o región autónoma<select class="raven-select" wire:model.live="department"><option value="">Seleccione una opción</option>
-                    @foreach($departments as $item)<option value="{{ $item }}">{{ $item }}</option>@endforeach
-                </select></label>
-            @endif
-            <label class="raven-field">Buscar opción<input type="search" class="raven-input" wire:model.live.debounce.250ms="search" maxlength="255"></label>
-            @if($editable)<button type="button" class="raven-button raven-button-primary" wire:click="startNew" aria-expanded="{{ $editorOpen && !$editingId ? 'true' : 'false' }}">Añadir opción</button>@endif
-        </div>
-        @if($editable)
-        <div class="coordinator-table-wrap" role="region" aria-label="Opciones del catálogo" tabindex="0">
-            <table class="raven-table"><thead><tr><th>Opción</th><th>Orden</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
-            @forelse($options as $option)
-                <tr wire:key="{{ $domain }}-{{ $option->id }}"><td>{{ $option->name }} @if($option->is_provisional)<span class="raven-badge raven-badge-neutral">Provisional</span>@endif</td><td>{{ $option->sort_order }}</td><td><span class="raven-badge {{ $option->is_active ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $option->is_active ? 'Activa' : 'Inactiva' }}</span></td><td><button type="button" class="raven-button raven-button-secondary" wire:click="edit({{ $option->id }})" aria-label="Editar {{ $option->name }}">Editar</button></td></tr>
-            @empty <tr><td colspan="4">No hay opciones que coincidan. Puede añadir una opción verificada.</td></tr> @endforelse
-            </tbody></table>
-        </div>
-        @else
-            <ul class="coordinator-fixed-options">
-                @forelse($fixedOptions as $item)<li>{{ $item }}</li>
-                @empty<li>{{ $domain === 'municipalities' && $department === '' ? 'Seleccione un departamento o región autónoma.' : 'No hay opciones con esta búsqueda.' }}</li>@endforelse
-            </ul>
-        @endif
-    </section>
     @if($editable && $editorOpen)
     <section class="raven-card coordinator-catalog-editor" aria-labelledby="catalog-form-title">
         <h2 id="catalog-form-title" class="raven-section-title">{{ $editingId ? 'Editar opción' : 'Añadir opción' }}</h2>
@@ -55,6 +26,35 @@
         </form>
     </section>
     @endif
+    <section class="raven-card">
+        <div class="coordinator-catalog-toolbar">
+            <div>
+                <h2 class="raven-section-title">{{ $domains[$domain] ?? 'Catálogo' }}</h2>
+                @unless($editable)<p class="raven-field-help">Catálogo fijo de consulta</p>@endunless
+            </div>
+            @if($domain === 'municipalities')
+                <label class="raven-field">Departamento o región autónoma<select class="raven-select" wire:model.live="department"><option value="">Seleccione una opción</option>
+                    @foreach($departments as $item)<option value="{{ $item }}">{{ $item }}</option>@endforeach
+                </select></label>
+            @endif
+            <label class="raven-field">Buscar opción<input type="search" class="raven-input" wire:model.live.debounce.250ms="search" maxlength="255"></label>
+            @if($editable)<button type="button" class="raven-button raven-button-primary" wire:click="startNew" aria-expanded="{{ $editorOpen && !$editingId ? 'true' : 'false' }}">Añadir opción</button>@endif
+        </div>
+        @if($editable)
+        <div class="coordinator-table-wrap" role="region" aria-label="Opciones del catálogo" tabindex="0">
+            <table class="raven-table"><thead><tr><th>Opción</th><th>Orden</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+            @forelse($options as $option)
+                <tr wire:key="{{ $domain }}-{{ $option->id }}"><td>{{ $option->name }} @if($option->is_provisional)<span class="raven-badge raven-badge-neutral">Provisional</span>@endif</td><td>{{ $option->sort_order }}</td><td><span class="raven-badge {{ $option->is_active ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $domain === 'checklist' && in_array($option->name, \App\Models\ChecklistItem::OBSOLETE_NAMES, true) ? 'Histórica' : ($option->is_active ? 'Activa' : 'Inactiva') }}</span></td><td><button type="button" class="raven-button raven-button-secondary" wire:click="edit({{ $option->id }})" aria-label="Editar {{ $option->name }}">Editar</button></td></tr>
+            @empty <tr><td colspan="4">No hay opciones que coincidan. Puede añadir una opción verificada.</td></tr> @endforelse
+            </tbody></table>
+        </div>
+        @else
+            <ul class="coordinator-fixed-options">
+                @forelse($fixedOptions as $item)<li>{{ $item }}</li>
+                @empty<li>{{ $domain === 'municipalities' && $department === '' ? 'Seleccione un departamento o región autónoma.' : 'No hay opciones con esta búsqueda.' }}</li>@endforelse
+            </ul>
+        @endif
+    </section>
     @if($domain === 'client_type')
         <details class="raven-card" @if($observedHash !== null) open @endif><summary class="raven-section-title">Opciones utilizadas actualmente</summary><p>Puede revisar valores observados en establecimientos activos e incorporar únicamente las opciones que confirme. Los datos de los establecimientos se conservan.</p><button class="raven-button raven-button-secondary" type="button" wire:click="reviewObserved">Revisar opciones existentes</button>
             @if($observedHash !== null)

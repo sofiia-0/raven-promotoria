@@ -29,6 +29,7 @@
 
             @error('review') <div class="raven-alert raven-alert-danger" role="alert">{{ $message }}</div> @enderror
 
+            <h3 class="raven-section-title">Información del establecimiento</h3>
             <dl class="coordinator-detail-list">
                 @if($selected->type === PharmacyRequest::TYPE_ALTA)
                     @foreach(['client_type' => 'Tipo de establecimiento', 'category' => 'Categoría', 'department' => 'Departamento', 'city' => 'Municipio', 'address' => 'Dirección', 'phone' => 'Teléfono', 'email' => 'Correo'] as $field => $label)
@@ -47,6 +48,9 @@
                     <div><dt>Responsables y coberturas</dt><dd>{{ $selected->pharmacy->activeAssignments->pluck('promoter.name')->filter()->unique()->join(', ') ?: 'Sin asignación vigente' }}</dd></div>
                     <div><dt>Estado de la ficha</dt><dd>{{ $selected->pharmacy->is_active ? 'Activa' : 'Inactiva' }}</dd></div>
                 @endif
+            </dl>
+
+            <dl class="coordinator-detail-list coordinator-review-reason">
                 <div class="coordinator-detail-wide">
                     <dt>{{ $selected->type === PharmacyRequest::TYPE_ALTA ? 'Motivo de alta' : 'Motivo de baja' }}</dt>
                     <dd>
@@ -79,6 +83,7 @@
 
             @if($selected->status === PharmacyRequest::PENDING)
                 <form class="coordinator-review-form" wire:submit="approve">
+                    <h3 class="raven-section-title">Resolver solicitud</h3>
                     <div class="raven-form-grid">
                         @if($selected->type === PharmacyRequest::TYPE_ALTA)
                             <div class="raven-field">
@@ -110,6 +115,7 @@
                     </div>
                 </form>
             @else
+                <h3 class="raven-section-title coordinator-review-title">Historial de revisión</h3>
                 <dl class="coordinator-detail-list coordinator-review-outcome">
                     <div><dt>Resuelta por</dt><dd>{{ $selected->reviewer?->name ?? 'Sin dato' }} · {{ $selected->reviewed_at?->timezone(\App\Services\SchedulePlanner::TIMEZONE)->format('d/m/Y H:i') }}</dd></div>
                     <div><dt>Nota de revisión</dt><dd>{{ $selected->review_note ?: 'Sin nota' }}</dd></div>

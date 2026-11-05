@@ -129,6 +129,7 @@ class CoordinatorSupervisionTest extends TestCase
         $this->anaOctober();
         $bea = User::factory()->promoter()->create(['name' => 'Bea Promotora']);
         $beaPharmacy = $this->assigned($bea, 'Farmacia del Norte');
+        $beaPharmacy->update(['department' => 'Matagalpa']);
         // 15/10 23:30 en Managua = 16/10 05:30 UTC.
         $this->travelTo(CarbonImmutable::parse('2026-10-16 05:30:00', 'UTC'));
         (new VisitRecorder)->register($bea, ['idempotency_key' => (string) Str::uuid(), 'status' => 'REALIZADA', 'pharmacy_id' => $beaPharmacy->id]);
@@ -138,6 +139,13 @@ class CoordinatorSupervisionTest extends TestCase
         Livewire::actingAs($this->coordinator)->test(Visits::class)
             ->assertViewHas('visits', fn ($v) => $v->total() === 4)
             ->assertSee('Farmacia del Norte')
+            ->set('search', 'bea norte')
+            ->assertViewHas('visits', fn ($v) => $v->total() === 1)
+            ->set('department', 'León')
+            ->assertViewHas('visits', fn ($v) => $v->total() === 0)
+            ->set('department', 'Matagalpa')
+            ->assertViewHas('visits', fn ($v) => $v->total() === 1)
+            ->set('search', '')->set('department', '')
             ->set('promoter', (string) $bea->id)
             ->assertViewHas('visits', fn ($v) => $v->total() === 1)
             ->set('promoter', '')

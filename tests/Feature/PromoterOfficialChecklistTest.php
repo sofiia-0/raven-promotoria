@@ -85,6 +85,10 @@ class PromoterOfficialChecklistTest extends TestCase
             $ids[] = ChecklistItem::factory()->create(['name' => $name])->id;
         }
         $visit = $this->visit([$ids[0] => true]);
+        $this->assertFalse($visit->checklist()->where('checklist_item_id', $ids[0])->exists());
+        foreach (array_slice($ids, 0, count(ChecklistItem::OBSOLETE_NAMES)) as $index => $id) {
+            $visit->checklist()->create(['checklist_item_id' => $id, 'checked' => $index === 0]);
+        }
         $beforeVisits = $this->rows('visits');
         $answers = $this->rows('visit_checklist');
         $labels = ChecklistItem::orderBy('id')->get(['id', 'name', 'description'])->toJson();
@@ -102,7 +106,7 @@ class PromoterOfficialChecklistTest extends TestCase
         $new = $this->visit([$official[0]->id => true, $ids[0] => true, 999999 => true]);
         $this->assertCount(7, $new->checklist);
         $this->assertSame(1, $new->checklist->where('checked', true)->count());
-        $this->assertSame($ids, $visit->fresh()->checklist->pluck('checklist_item_id')->all());
+        $this->assertSame($ids, $visit->fresh()->checklist->pluck('checklist_item_id')->sort()->values()->all());
         $before = $this->rows('checklist_items');
         $this->assertSame(0, $s->apply($s->preview()['sha256'], $this->directory)['changed']);
         $this->assertSame($before, $this->rows('checklist_items'));

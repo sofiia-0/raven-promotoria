@@ -59,6 +59,13 @@ class CoordinatorCatalogs
             'is_provisional' => ['sometimes', 'boolean'],
         ])->validate();
         $data['name'] = PromoterCatalogOptions::clean($data['name']);
+        if ($domain === 'checklist' && $data['is_active'] && in_array(
+            PromoterCatalogOptions::commercialKey($data['name']),
+            array_map(PromoterCatalogOptions::commercialKey(...), ChecklistItem::OBSOLETE_NAMES),
+            true
+        )) {
+            throw ValidationException::withMessages(['name' => 'Esta denominación histórica no está disponible para visitas nuevas.']);
+        }
         if ($data['name'] === '') {
             throw ValidationException::withMessages(['name' => 'Escriba el nombre de la opción.']);
         }

@@ -23,7 +23,7 @@ class OfficialVisitChecklist
     ];
 
     public const RETIRED = [
-        'Capacitación o revisión de plan de exhibición', 'Entrega de Plan paciente',
+        ...ChecklistItem::OBSOLETE_NAMES,
         'Exhibición de productos', 'Inventario disponible', 'Precios visibles',
         'Material promocional', 'Capacitación al personal', 'Productos próximos a vencer',
         'Entrega de Plan de recomendación',
