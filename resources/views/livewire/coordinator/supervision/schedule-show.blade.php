@@ -46,6 +46,9 @@
                                     <p class="coordinator-list-title">{{ $activity->pharmacy?->display_name ?? $activity->activity_type->label() }}</p>
                                     @if($activity->pharmacy)<x-promoter.location :department="$activity->pharmacy->department" :city="$activity->pharmacy->city" :address="$activity->pharmacy->address" :neighborhood="$activity->pharmacy->neighborhood" />@endif
                                     @if($activity->notes)<p class="coordinator-list-meta">{{ $activity->notes }}</p>@endif
+                                    @foreach($activity->visits->pluck('objective.category_label')->filter()->unique() as $label)
+                                        <p class="coordinator-list-meta">Objetivo registrado: {{ $label }}</p>
+                                    @endforeach
                                     @foreach($activity->reschedules as $reschedule)
                                         <p class="coordinator-list-meta">Reprogramada {{ $reschedule->from_date->format('d/m') }} → {{ $reschedule->to_date->format('d/m') }} · {{ $reschedule->reason?->name }}</p>
                                     @endforeach

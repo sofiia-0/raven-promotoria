@@ -5,6 +5,7 @@ namespace App\Livewire\Coordinator\Supervision;
 use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\Visit;
 use App\Services\VisitEvidenceStorage;
+use App\Support\VisitMap;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Locked;
@@ -31,7 +32,7 @@ class VisitShow extends Component
             'promoter:id,name',
             'pharmacy',
             'reason:id,name',
-            'checklist.item:id,name,description',
+            'checklist.item:id,name,description,is_active',
             'plannedActivity.reschedules.reason:id,name',
             'plannedActivity.week.schedule:id,promoter_id,year,month',
         ])->findOrFail($this->visitId);
@@ -40,6 +41,7 @@ class VisitShow extends Component
 
         return view('livewire.coordinator.supervision.visit-show', [
             'visit' => $visit,
+            'mapUrl' => VisitMap::url($visit),
             'evidenceAvailable' => $evidenceAvailable,
             'evidences' => $evidenceAvailable ? $visit->evidences()->where('status', 'attached')->get() : collect(),
             'objective' => Schema::hasTable('visit_objectives') ? $visit->objective : null,

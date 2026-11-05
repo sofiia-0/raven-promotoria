@@ -36,9 +36,16 @@
                     <option value="fuera">Fuera de plan</option>
                 </select>
             </div>
+            <div class="raven-field">
+                <label class="raven-label" for="visits-department">Departamento</label>
+                <select id="visits-department" class="raven-select" wire:model.live="department">
+                    <option value="">Todos</option>
+                    @foreach($departments as $departmentOption)<option value="{{ $departmentOption }}">{{ $departmentOption }}</option>@endforeach
+                </select>
+            </div>
             <div class="raven-field coordinator-filter-wide">
-                <label class="raven-label" for="visits-search">Establecimiento</label>
-                <input id="visits-search" class="raven-input" type="search" placeholder="Nombre, municipio, departamento o dirección" wire:model.live.debounce.350ms="search">
+                <label class="raven-label" for="visits-search">Buscar visita</label>
+                <input id="visits-search" class="raven-input" type="search" placeholder="Establecimiento o promotora" wire:model.live.debounce.350ms="search">
             </div>
             <button type="button" class="raven-button raven-button-secondary" wire:click="clearFilters">Limpiar</button>
         </div>
