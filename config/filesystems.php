@@ -1,5 +1,20 @@
 <?php
 
+$privateS3 = [
+    'driver' => 's3',
+    'key' => env('AWS_ACCESS_KEY_ID'),
+    'secret' => env('AWS_SECRET_ACCESS_KEY'),
+    'region' => env('AWS_DEFAULT_REGION', env('AWS_REGION', 'auto')),
+    'bucket' => env('AWS_BUCKET'),
+    'url' => env('AWS_URL'),
+    'endpoint' => env('AWS_ENDPOINT', env('AWS_ENDPOINT_URL')),
+    'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+    'visibility' => 'private',
+    'serve' => false,
+    'throw' => true,
+    'report' => false,
+];
+
 return [
 
     /*
@@ -29,7 +44,7 @@ return [
     */
 
     'disks' => [
-        'visit_evidence' => [
+        'visit_evidence' => env('VISIT_EVIDENCE_DRIVER', 'local') === 's3' ? $privateS3 : [
             'driver' => 'local',
             'root' => storage_path('app/visit-evidence'),
             'visibility' => 'private',
@@ -55,18 +70,7 @@ return [
             'report' => false,
         ],
 
-        's3' => [
-            'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
-            'throw' => false,
-            'report' => false,
-        ],
+        's3' => $privateS3,
 
     ],
 
