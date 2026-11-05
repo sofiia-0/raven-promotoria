@@ -254,8 +254,8 @@ class SharedAssignmentsAndCoverageTest extends TestCase
             $this->service->replace($this->coordinator, $this->pharmacy->id, $old->id, $this->three);
             $this->fail('A stale relation requires review.');
         } catch (ValidationException) {
-            $this->assertSame($this->two->id,$this->pharmacy->fresh()->currentAssignment->promoter_id);
+            $this->assertSame($this->two->id, $this->pharmacy->fresh()->currentAssignment->promoter_id);
         }
-        $this->assertSame(2,$this->pharmacy->assignments()->count());
+        $this->assertSame(2, $this->pharmacy->assignments()->count());
     }
 }

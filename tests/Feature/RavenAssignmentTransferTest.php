@@ -19,7 +19,7 @@ class RavenAssignmentTransferTest extends TestCase
         $one = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => true]);
         $two = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => true]);
         $pharmacy = Pharmacy::create(['name' => 'DEMO Establecimiento reasignable']);
-        $service = new PharmacyAssignmentService();
+        $service = new PharmacyAssignmentService;
 
         $service->reassign($pharmacy, $one);
         $this->assertSame(1, $one->assignedPharmacies()->count());
@@ -36,7 +36,7 @@ class RavenAssignmentTransferTest extends TestCase
     {
         $one = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => true]);
         $pharmacy = Pharmacy::create(['name' => 'DEMO Establecimiento']);
-        $service = new PharmacyAssignmentService();
+        $service = new PharmacyAssignmentService;
         $service->reassign($pharmacy, $one);
         $service->reassign($pharmacy, $one);
         $this->assertSame(1, $pharmacy->assignments()->count());
@@ -47,7 +47,7 @@ class RavenAssignmentTransferTest extends TestCase
         $admin = User::factory()->create(['role' => UserRole::ADMIN, 'is_active' => true]);
         $pharmacy = Pharmacy::create(['name' => 'DEMO Establecimiento']);
         $this->expectException(DomainException::class);
-        (new PharmacyAssignmentService())->reassign($pharmacy, $admin);
+        (new PharmacyAssignmentService)->reassign($pharmacy, $admin);
     }
 
     public function test_inactive_promoter_cannot_receive_assignment(): void
@@ -55,6 +55,6 @@ class RavenAssignmentTransferTest extends TestCase
         $invalid = User::factory()->create(['role' => UserRole::PROMOTER, 'is_active' => false]);
         $pharmacy = Pharmacy::create(['name' => 'DEMO Establecimiento']);
         $this->expectException(DomainException::class);
-        (new PharmacyAssignmentService())->reassign($pharmacy, $invalid);
+        (new PharmacyAssignmentService)->reassign($pharmacy, $invalid);
     }
 }

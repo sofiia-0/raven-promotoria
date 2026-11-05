@@ -36,6 +36,7 @@ class SetupRavenDemoPromoters extends Command
             || ! in_array($host, ['127.0.0.1', 'localhost', '::1'], true)
             || $database !== 'raven_promotoria') {
             $this->error('Bloqueado: requiere APP_ENV=local y MySQL local raven_promotoria. Nunca usar en staging.');
+
             return self::FAILURE;
         }
 
@@ -57,6 +58,7 @@ class SetupRavenDemoPromoters extends Command
                 array_map(function ($source, $i) use (&$map) {
                     $email = self::DEMO_EMAILS[$i];
                     $map[$source['name']] = $email;
+
                     return ['Promotora DEMO '.($i + 1), $email, $source['count']];
                 }, $sources, array_keys($sources)));
             $this->line('Todas las cuentas son ficticias. Ningún correo se enviará a @raven.test.');
@@ -75,6 +77,7 @@ class SetupRavenDemoPromoters extends Command
             }
             if (! $this->option('commit')) {
                 $this->info('SIMULACIÓN terminada. Sin cambios. Usá --commit para crear cuentas y el JSON privado.');
+
                 return self::SUCCESS;
             }
 
@@ -115,9 +118,11 @@ class SetupRavenDemoPromoters extends Command
             if ($missing->isEmpty()) {
                 $this->line('Cuentas existentes conservadas: no se cambiaron contraseñas.');
             }
+
             return self::SUCCESS;
         } catch (Throwable $e) {
             $this->error($e->getMessage());
+
             return self::FAILURE;
         }
     }
@@ -130,6 +135,7 @@ class SetupRavenDemoPromoters extends Command
         if (! is_file($path) || ! is_readable($path)) {
             throw new RuntimeException('No se puede leer el CSV: '.$path);
         }
+
         return $path;
     }
 
@@ -175,6 +181,7 @@ class SetupRavenDemoPromoters extends Command
             foreach ($owners as $name => $count) {
                 $sources[] = ['name' => $name, 'count' => $count];
             }
+
             return [$sources, array_keys($refs)];
         } finally {
             fclose($handle);

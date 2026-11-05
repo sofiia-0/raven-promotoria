@@ -50,7 +50,7 @@ class VisitEvidenceController
     {
         $request->user()->visits()->whereKey($visit)->firstOrFail();
         $file = VisitEvidence::whereKey($id)->where('visit_id', $visit)->where('status', 'attached')->firstOrFail();
-        abort_unless(Gate::allows('view',$file), 404);
+        abort_unless(Gate::allows('view', $file), 404);
 
         return $file;
     }
