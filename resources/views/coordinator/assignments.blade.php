@@ -6,7 +6,7 @@
 @section('content')
     <header class="raven-page-header">
         <div>
-            <h1 class="raven-page-title">Asignaciones de farmacias</h1>
+            <h1 class="raven-page-title">Asignaciones de establecimientos</h1>
             <p class="raven-page-description">Distribuya los establecimientos activos entre las promotoras. Cada cambio conserva el historial.</p>
         </div>
     </header>

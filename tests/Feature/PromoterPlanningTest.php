@@ -347,11 +347,7 @@ class PromoterPlanningTest extends TestCase
             ->assertSee('No hay cronograma')
             ->assertDontSee('Farmacia Privada');
 
-        try {
-            Livewire::actingAs($intruder)->test(Index::class)->call('removeActivity', $activity->id);
-            $this->fail('Una promotora ajena no debería eliminar actividades.');
-        } catch (ModelNotFoundException) {
-        }
+        Livewire::actingAs($intruder)->test(Index::class)->call('removeActivity', $activity->id)->assertNotFound();
 
         try {
             $planner->submit($intruder, $schedule->id);

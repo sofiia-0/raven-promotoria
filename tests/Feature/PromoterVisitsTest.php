@@ -270,11 +270,7 @@ class PromoterVisitsTest extends TestCase
         $foreignPharmacy = $this->assignedPharmacy(User::factory()->promoter()->create(), 'Farmacia Ajena');
         $activity = $this->activityOn('2026-10-15');
 
-        try {
-            Livewire::actingAs($intruder)->test(Register::class, ['actividad' => $activity->id])->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId());
-            $this->fail('Una promotora ajena no debería abrir esta actividad.');
-        } catch (ModelNotFoundException) {
-        }
+        Livewire::actingAs($intruder)->test(Register::class, ['actividad' => $activity->id])->assertNotFound();
 
         try {
             (new VisitRecorder)->register($intruder, $this->payload());

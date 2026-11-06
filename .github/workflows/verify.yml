@@ -1,0 +1,73 @@
+name: Verificar Raven
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [sqlite, mysql]
+    services:
+      mysql:
+        image: "${{ matrix.engine == 'mysql' && 'mysql:8.4' || '' }}"
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ github.run_id }}-qa-${{ github.run_attempt }}
+          MYSQL_ROOT_HOST: '%'
+          MYSQL_DATABASE: raven_round1_isolated_test
+        ports:
+          - 13329:3306
+        options: --health-cmd="mysqladmin ping -h 127.0.0.1" --health-interval=5s --health-timeout=5s --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, pdo_sqlite, mbstring, zip, dom, xmlreader, fileinfo
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist --no-scripts
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: composer audit --locked --no-dev
+      - run: npm audit --audit-level=high
+      - run: php vendor/bin/pint --test
+        if: matrix.engine == 'sqlite'
+      - name: Comprobar el diff
+        env:
+          COMPARE_FROM: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if git cat-file -e "${COMPARE_FROM}^{commit}" 2>/dev/null; then
+            git diff --check "$COMPARE_FROM" HEAD
+          else
+            git diff --check "$(git merge-base origin/main HEAD)" HEAD
+          fi
+      - run: php vendor/bin/phpunit
+        if: matrix.engine == 'sqlite'
+      - run: php vendor/bin/phpunit
+        if: matrix.engine == 'mysql'
+        env:
+          RAVEN_ISOLATED_MYSQL_TEST: '1'
+          RAVEN_CI_MYSQL_TEST: '1'
+          DB_HOST: 127.0.0.1
+          DB_PORT: '13329'
+          DB_DATABASE: raven_round1_isolated_test
+          DB_USERNAME: root
+          DB_PASSWORD: ${{ github.run_id }}-qa-${{ github.run_attempt }}

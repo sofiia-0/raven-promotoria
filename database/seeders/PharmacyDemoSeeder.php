@@ -14,6 +14,7 @@ class PharmacyDemoSeeder extends Seeder
         // Este seeder es SOLO para pruebas locales; no ejecutarlo en staging.
         if (! app()->environment(['local', 'testing'])) {
             $this->command?->warn('Seeder omitido: solo puede ejecutarse en local/testing.');
+
             return;
         }
 
@@ -24,6 +25,7 @@ class PharmacyDemoSeeder extends Seeder
 
         if (! $promoter) {
             $this->command?->warn('Primero creá una promotora local para asignarle farmacias DEMO.');
+
             return;
         }
 

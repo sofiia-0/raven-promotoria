@@ -10,7 +10,6 @@ use App\Models\PharmacyRequest;
 use App\Models\User;
 use App\Services\PharmacyAssignmentService;
 use App\Services\PharmacyRequestService;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -87,15 +86,10 @@ class PromoterPharmacyRequestsTest extends TestCase
         $other = $this->promoter();
         $p = $this->pharmacy($owner);
 
-        try {
-            Livewire::actingAs($other)->test(Index::class)
-                ->set('pharmacyId', (string) $p->id)
-                ->set('bajaReason', 'Solicitud de baja sin autorización.')
-                ->call('submitBaja');
-            $this->fail('Una promotora no puede solicitar bajas de farmacias ajenas.');
-        } catch (ModelNotFoundException $e) {
-            $this->assertSame(Pharmacy::class, $e->getModel());
-        }
+        Livewire::actingAs($other)->test(Index::class)
+            ->set('pharmacyId', (string) $p->id)
+            ->set('bajaReason', 'Solicitud de baja sin autorización.')
+            ->call('submitBaja')->assertNotFound();
         $this->assertSame(0, PharmacyRequest::count());
     }
 
@@ -120,17 +114,11 @@ class PromoterPharmacyRequestsTest extends TestCase
         $first = $this->promoter();
         $second = $this->promoter();
         $p = $this->pharmacy($first);
-        $form = Livewire::actingAs($first)->test(Index::class);
+        $form = Livewire::actingAs($first)->test(Index::class)
+            ->set('pharmacyId', (string) $p->id)->set('bajaReason', 'Antes estaba asignada a mi fichero.');
         (new PharmacyAssignmentService)->reassign($p, $second);
 
-        try {
-            $form->set('pharmacyId', (string) $p->id)
-                ->set('bajaReason', 'Antes estaba asignada a mi fichero.')
-                ->call('submitBaja');
-            $this->fail('No se permite solicitar baja tras una reasignación.');
-        } catch (ModelNotFoundException $e) {
-            $this->assertSame(Pharmacy::class, $e->getModel());
-        }
+        $form->call('submitBaja')->assertNotFound();
         $this->assertSame(0, PharmacyRequest::count());
     }
 

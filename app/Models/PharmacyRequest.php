@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PharmacyRequest extends Model
 {
     public const TYPE_ALTA = 'alta';
+
     public const TYPE_BAJA = 'baja';
+
     public const PENDING = 'pending';
+
     public const APPROVED = 'approved';
+
     public const REJECTED = 'rejected';
 
     protected $fillable = [

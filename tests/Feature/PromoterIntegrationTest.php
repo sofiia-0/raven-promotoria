@@ -15,17 +15,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Concerns\RequiresIsolatedPromoterDatabase;
 use Tests\TestCase;
 
 class PromoterIntegrationTest extends TestCase
 {
-    use RefreshDatabase;
-
-    public function beforeRefreshingDatabase(): void
-    {
-        if (config('database.default') !== 'sqlite' || config('database.connections.sqlite.database') !== ':memory:') {
-            throw new \RuntimeException('Integration tests require isolated SQLite :memory:.');
-        }
+    use RefreshDatabase, RequiresIsolatedPromoterDatabase {
+        RequiresIsolatedPromoterDatabase::beforeRefreshingDatabase insteadof RefreshDatabase;
     }
 
     public function test_new_routes_render_the_approved_navigation_and_correct_context(): void
@@ -107,6 +103,9 @@ class PromoterIntegrationTest extends TestCase
 
     public function test_planning_and_visits_migrations_roundtrip_without_changing_existing_catalog(): void
     {
+        if (DB::getDriverName() !== 'sqlite') {
+            $this->markTestSkipped('La reversión manual con PRAGMA se verifica en SQLite; las migraciones completas y restricciones MySQL se prueban en la suite del servidor aislado.');
+        }
         $actor = User::factory()->promoter()->create();
         $pharmacy = Pharmacy::factory()->create(['name' => 'Ensayo 9']);
         PharmacyAssignment::factory()->create(['pharmacy_id' => $pharmacy->id, 'promoter_id' => $actor->id]);

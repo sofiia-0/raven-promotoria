@@ -79,6 +79,6 @@ class PromoterMultiPickerTest extends TestCase
         $this->assertSame(0, PlannedActivity::count());
         $c->call('confirmBatch')->assertHasNoErrors();
         $this->assertSame(5, PlannedActivity::count());
-        Livewire::actingAs($this->actor)->test(Register::class)->assertDontSee('aria-multiselectable="true"', false)->assertDontSee('Cerrar lista')->set('pharmacyId',(string) $this->pharmacies[0]->id)->assertViewHas('selectedPharmacy',fn ($p) => $p->id === $this->pharmacies[0]->id);
+        Livewire::actingAs($this->actor)->test(Register::class)->assertDontSee('aria-multiselectable="true"', false)->assertDontSee('Cerrar lista')->set('pharmacyId', (string) $this->pharmacies[0]->id)->assertViewHas('selectedPharmacy', fn ($p) => $p->id === $this->pharmacies[0]->id);
     }
 }
