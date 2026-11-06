@@ -162,7 +162,7 @@ class PromoterEstablishmentPresentationTest extends TestCase
         $p = $this->assigned($actor);
         $before = $p->exists ? $p->fresh()->getAttributes() : $p->getAttributes();
         PharmacyChange::create(['pharmacy_id' => $p->id, 'actor_id' => $actor->id, 'before' => ['phone' => null], 'after' => ['phone' => '2222']]);
-        PharmacyRequest::create(['promoter_id' => $actor->id, 'pharmacy_id' => $p->id, 'type' => 'baja', 'status' => 'pendiente', 'data' => [], 'reason' => 'Motivo sintético de revisión.']);
+        PharmacyRequest::create(['promoter_id' => $actor->id, 'pharmacy_id' => $p->id, 'type' => 'baja', 'status' => PharmacyRequest::PENDING, 'data' => [], 'reason' => 'Motivo sintético de revisión.']);
         $planner = new SchedulePlanner;
         $schedule = $planner->create($actor, 2026, 10);
         $activity = $planner->addActivity($actor, $schedule->id, ['activity_type' => 'VISITA', 'scheduled_date' => '2026-10-15', 'pharmacy_id' => $p->id]);

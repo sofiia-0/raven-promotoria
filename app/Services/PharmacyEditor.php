@@ -39,7 +39,7 @@ class PharmacyEditor
             $pharmacy = Pharmacy::query()->whereKey($pharmacyId)->lockForUpdate()->firstOrFail();
 
             if (! $pharmacy->is_active || ! $pharmacy->assignments()
-                ->where('promoter_id', $actor->id)->whereNull('ended_at')->exists()) {
+                ->where('promoter_id', $actor->id)->operational()->exists()) {
                 throw (new ModelNotFoundException)->setModel(Pharmacy::class, [$pharmacyId]);
             }
 

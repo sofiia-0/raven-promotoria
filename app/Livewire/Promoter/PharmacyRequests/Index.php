@@ -199,7 +199,7 @@ class Index extends Component
             ->where('promoter_id', $actor->id)
             ->with(['pharmacy' => fn ($query) => $query
                 ->where('is_active', true)
-                ->whereHas('assignments', fn ($assigned) => $assigned->where('promoter_id', $actor->id)->whereNull('ended_at'))])
+                ->whereHas('assignments', fn ($assigned) => $assigned->where('promoter_id', $actor->id)->operational())])
             ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(10);

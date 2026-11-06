@@ -8,6 +8,8 @@ use App\Enums\UserRole;
 use App\Enums\VisitStatus;
 use App\Models\ActivityReschedule;
 use App\Models\MonthlySchedule;
+use App\Models\Pharmacy;
+use App\Models\PharmacyAssignment;
 use App\Models\PlannedActivity;
 use App\Models\User;
 use App\Models\VisitReason;
@@ -124,6 +126,29 @@ class SchedulePlanner
         }
     }
 
+    /**
+     * Visitas de cronogramas enviados, desde hoy y sin realizar, para estas farmacias
+     * (opcionalmente solo las de una promotora). Tras una baja o una reasignación ya no
+     * podrán registrarse: Coordinación lo usa para avisar del impacto.
+     *
+     * @param  list<int>  $pharmacyIds
+     */
+    public function pendingPlannedVisits(array $pharmacyIds, ?int $promoterId = null): int
+    {
+        if ($pharmacyIds === []) {
+            return 0;
+        }
+
+        return PlannedActivity::query()
+            ->whereIn('pharmacy_id', $pharmacyIds)
+            ->where('activity_type', ActivityType::VISITA)
+            ->whereDate('scheduled_date', '>=', self::today()->toDateString())
+            ->whereHas('week.schedule', fn ($q) => $q->where('status', ScheduleStatus::ENVIADO)
+                ->when($promoterId, fn ($q) => $q->where('promoter_id', $promoterId)))
+            ->whereDoesntHave('visits', fn ($q) => $q->where('status', VisitStatus::REALIZADA))
+            ->count();
+    }
+
     public function find(User $promoter, int $year, int $month): ?MonthlySchedule
     {
         return MonthlySchedule::query()
@@ -161,11 +186,14 @@ class SchedulePlanner
                 if ($type->requiresPharmacy()) {
                     $pharmacyId = (int) ($data['pharmacy_id'] ?? 0);
 
+                    // Serializa el permiso actual con altas, retiros y sustituciones de responsables.
+                    Pharmacy::whereKey($pharmacyId)->lockForUpdate()->first();
                     // Solo establecimientos activos asignados HOY a esta promotora.
                     $allowed = $promoter->assignedPharmacies()
                         ->where('pharmacies.id', $pharmacyId)
                         ->where('pharmacies.is_active', true)
-                        ->exists();
+                        ->where(fn ($query) => PharmacyAssignment::constrainOperational($query, 'pharmacy_assignments.', $date->toDateString()))
+                        ->lockForUpdate()->first(['pharmacies.id']) !== null;
 
                     if (! $allowed) {
                         throw ValidationException::withMessages([

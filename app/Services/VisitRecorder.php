@@ -8,6 +8,7 @@ use App\Enums\ScheduleStatus;
 use App\Enums\UserRole;
 use App\Enums\VisitStatus;
 use App\Models\ChecklistItem;
+use App\Models\Pharmacy;
 use App\Models\PlannedActivity;
 use App\Models\User;
 use App\Models\Visit;
@@ -68,11 +69,13 @@ class VisitRecorder
                     $pharmacyId = (int) ($data['pharmacy_id'] ?? 0);
                 }
 
+                // Serializa el permiso actual con altas, retiros y sustituciones de responsables.
+                Pharmacy::whereKey($pharmacyId)->lockForUpdate()->first();
                 // Solo establecimientos activos asignados HOY a esta promotora.
                 $allowed = $promoter->assignedPharmacies()
                     ->where('pharmacies.id', $pharmacyId)
                     ->where('pharmacies.is_active', true)
-                    ->exists();
+                    ->lockForUpdate()->first(['pharmacies.id']) !== null;
                 if (! $allowed) {
                     throw ValidationException::withMessages([
                         'pharmacyId' => 'La farmacia no está entre sus asignaciones activas.',

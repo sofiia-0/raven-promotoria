@@ -58,7 +58,15 @@ class Pharmacy extends Model
 
     public function currentAssignment(): HasOne
     {
-        return $this->hasOne(PharmacyAssignment::class)->whereNull('ended_at');
+        // Compatibilidad de lectura singular: nunca escoger una responsable arbitraria.
+        // Las pantallas nuevas utilizan activeAssignments; con varias, esta relación es nula.
+        return $this->hasOne(PharmacyAssignment::class)->whereIn('id', PharmacyAssignment::query()->operational()
+            ->selectRaw('MIN(id)')->groupBy('pharmacy_id')->havingRaw('COUNT(*) = 1'));
+    }
+
+    public function activeAssignments(): HasMany
+    {
+        return $this->hasMany(PharmacyAssignment::class)->operational()->orderBy('id');
     }
 
     public function getDisplayNameAttribute(): string

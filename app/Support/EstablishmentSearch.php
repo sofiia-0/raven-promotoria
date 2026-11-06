@@ -29,7 +29,7 @@ class EstablishmentSearch
         abort_unless($actor->role === UserRole::PROMOTER && $actor->is_active, 403);
         $query = Pharmacy::query()->where('pharmacies.is_active', true)
             ->whereHas('assignments', fn (Builder $assigned) => $assigned
-                ->where('promoter_id', $actor->id)->whereNull('ended_at'));
+                ->where('promoter_id', $actor->id)->operational());
 
         return self::apply($query, $search);
     }
@@ -41,11 +41,19 @@ class EstablishmentSearch
             return $query;
         }
 
-        $connection = $query->getConnection();
-        $grammar = $connection->getQueryGrammar();
         // Las referencias históricas de sucursal siguen en name; no se reescriben.
         $columns = ['name', 'department', 'city', 'neighborhood', 'address', 'source_reference'];
+        $grammar = $query->getConnection()->getQueryGrammar();
         $parts = array_map(fn ($column) => 'COALESCE('.$grammar->wrap('pharmacies.'.$column).", '')", $columns);
+
+        return self::applyExpressions($query, $search, $parts);
+    }
+
+    /** SQL expressions are application-owned, never supplied by a user. */
+    public static function applyExpressions(Builder $query, string $search, array $parts): Builder
+    {
+        $terms = self::terms($search);
+        $connection = $query->getConnection();
 
         if ($connection->getDriverName() === 'sqlite') {
             $connection->getPdo()->sqliteCreateFunction(
