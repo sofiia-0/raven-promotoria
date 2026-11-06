@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\AuditLog;
 use App\Models\Pharmacy;
+use App\Models\PharmacyAssignment;
 use App\Models\User;
 use App\Models\Visit;
 use App\Services\PharmacyAssignmentService;
@@ -26,6 +27,12 @@ class Show extends Component
     #[Locked]
     public bool $compact = false;
 
+    #[Locked]
+    public bool $editorOpen = false;
+
+    #[Locked]
+    public bool $operationCompleted = false;
+
     public string $targetPromoterId = '';
 
     public string $operation = 'add';
@@ -45,15 +52,36 @@ class Show extends Component
         $this->pharmacyId = $pharmacy->id;
         $this->compact = $compact;
         if ($compact) {
-            abort_unless(in_array($initialOperation, ['add', 'coverage', 'replace'], true), 404);
-            $this->operation = $initialOperation;
-            if ($initialOperation === 'replace') {
-                $this->sourceAssignmentId = (string) $pharmacy->assignments()
-                    ->where('assignment_kind', 'responsible')->whereNull('ended_at')->findOrFail($assignmentId)->id;
-            }
+            $this->openEditor($initialOperation, $assignmentId);
         }
         $this->coverageStartsOn = SchedulePlanner::today()->toDateString();
         $this->coverageEndsOn = $this->coverageStartsOn;
+    }
+
+    public function openEditor(string $operation, ?int $assignmentId = null): void
+    {
+        $this->coordinator();
+        abort_unless(in_array($operation, ['add', 'coverage', 'replace', 'end'], true), 404);
+        $pharmacy = Pharmacy::query()->findOrFail($this->pharmacyId);
+        abort_unless($pharmacy->is_active || $operation === 'end', 404);
+
+        $relation = in_array($operation, ['replace', 'end'], true)
+            ? $pharmacy->assignments()->whereNull('ended_at')
+                ->when($operation === 'replace', fn ($q) => $q->where('assignment_kind', 'responsible'))
+                ->findOrFail($assignmentId) : null;
+
+        $this->resetValidation();
+        $this->reset(['targetPromoterId', 'coverageReason', 'operationCompleted']);
+        $this->operation = $operation;
+        $this->sourceAssignmentId = $relation ? (string) $relation->id : '';
+        $this->editorOpen = true;
+    }
+
+    public function closeEditor(): void
+    {
+        $this->coordinator();
+        $this->editorOpen = false;
+        $this->resetValidation();
     }
 
     public function assign(PharmacyAssignmentService $assignments): void
@@ -80,7 +108,14 @@ class Show extends Component
             $message = $result['changed'] === 0 ? 'La promotora ya es responsable de este establecimiento.' : 'Responsable añadida sin retirar a las demás.';
         }
 
+        $this->complete($message);
+    }
+
+    private function complete(string $message): void
+    {
         $this->reset('targetPromoterId', 'sourceAssignmentId', 'coverageReason');
+        $this->operationCompleted = true;
+        $this->editorOpen = false;
         if ($this->compact) {
             $this->dispatch('coordinator-assignment-saved');
         }
@@ -90,7 +125,7 @@ class Show extends Component
     public function endAssignment(int $assignmentId, PharmacyAssignmentService $assignments): void
     {
         $assignments->end($this->coordinator(), $this->pharmacyId, $assignmentId);
-        session()->flash('success', 'Se finalizó únicamente la relación seleccionada. El historial se conserva.');
+        $this->complete('Se finalizó únicamente la relación seleccionada. El historial se conserva.');
     }
 
     public function render(): View
@@ -99,24 +134,30 @@ class Show extends Component
         $pharmacy = Pharmacy::query()->with(['activeAssignments.promoter:id,name', 'assignments' => fn ($q) => $q->with(['promoter:id,name', 'creator:id,name', 'ender:id,name'])->latest('assigned_at')->latest('id')])
             ->findOrFail($this->pharmacyId);
 
+        $source = $pharmacy->assignments->firstWhere('id', (int) $this->sourceAssignmentId);
+        $editor = [
+            'pharmacy' => $pharmacy,
+            'source' => $source,
+            'pendingImpact' => $this->editorOpen && $source?->operational
+                && ! $pharmacy->activeAssignments->contains(fn (PharmacyAssignment $relation) => $relation->id !== $source->id && $relation->promoter_id === $source->promoter_id)
+                ? app(SchedulePlanner::class)->pendingPlannedVisits([$pharmacy->id], $source->promoter_id) : 0,
+            'promoters' => $this->editorOpen && $this->operation !== 'end'
+                ? User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
+                : collect(),
+        ];
         if ($this->compact) {
-            return view('livewire.coordinator.assignments.editor', [
-                'pharmacy' => $pharmacy,
-                'promoters' => User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            ]);
+            return view('livewire.coordinator.assignments.editor', $editor);
         }
 
-        // Quién hizo cada cambio desde el panel: la tabla de asignaciones no guarda el actor.
+        // Los eventos auditados conservan el motivo y la relación afectada.
         $changes = AuditLog::query()->with('actor:id,name')
             ->where('auditable_type', $pharmacy->getTable())->where('auditable_id', $pharmacy->id)
             ->whereIn('action', ['assignment.changed', 'assignment.added', 'assignment.replaced', 'assignment.ended', 'coverage.created', 'coverage.ended'])
             ->latest()->latest('id')->limit(20)->get();
 
-        return view('livewire.coordinator.assignments.show', [
-            'pharmacy' => $pharmacy,
+        return view('livewire.coordinator.assignments.show', $editor + [
             'changes' => $changes,
             'recentVisits' => Visit::where('pharmacy_id', $this->pharmacyId)->with('promoter:id,name')->latest('visited_at')->latest('id')->limit(10)->get(),
-            'promoters' => User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 }

@@ -4,11 +4,6 @@
 @section('section', 'Asignaciones')
 
 @section('content')
-    <header class="raven-page-header">
-        <div>
-            <h1 class="raven-page-title">Asignaciones de establecimientos</h1>
-            <p class="raven-page-description">Distribuya los establecimientos activos entre las promotoras. Cada cambio conserva el historial.</p>
-        </div>
-    </header>
+    <link rel="stylesheet" href="{{ asset('css/coordinator-assignments.css') }}">
     <livewire:coordinator.assignments.index />
 @endsection

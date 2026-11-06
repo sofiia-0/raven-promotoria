@@ -70,6 +70,44 @@ class CoordinatorAssignmentsTest extends TestCase
         $this->assertSame('Apoyo temporal al equipo', AuditLog::where('action', 'coverage.created')->sole()->details['reason']);
     }
 
+    public function test_directory_counts_shared_sites_once_and_lists_coverage_without_a_responsible(): void
+    {
+        $shared = $this->assignedTo($this->ana, 'Establecimiento compartido');
+        $service = app(PharmacyAssignmentService::class);
+        $service->assignMany($this->coordinator, [$shared->id], $this->bea);
+        $coverage = Pharmacy::factory()->create(['name' => 'Establecimiento solo con cobertura', 'is_active' => true]);
+        $service->cover($this->coordinator, $coverage->id, $this->ana, '2026-10-15', '2026-10-15');
+
+        Livewire::actingAs($this->coordinator)->test(Index::class)
+            ->assertViewHas('distinctCount', 2)
+            ->assertViewHas('unassignedCount', 1)
+            ->assertViewHas('promoters', fn ($people) => $people->firstWhere('id', $this->ana->id)->active_pharmacies === 2
+                && $people->firstWhere('id', $this->bea->id)->active_pharmacies === 1)
+            ->set('promoter', 'none')
+            ->assertViewHas('pharmacies', fn ($sites) => $sites->total() === 1 && $sites->first()->is($coverage));
+    }
+
+    public function test_contextual_removal_warns_about_pending_visits_and_retires_only_its_relation(): void
+    {
+        $pharmacy = $this->assignedTo($this->ana, 'Farmacia compartida');
+        app(PharmacyAssignmentService::class)->assignMany($this->coordinator, [$pharmacy->id], $this->bea);
+        $planner = new SchedulePlanner;
+        $schedule = $planner->create($this->ana, 2026, 10);
+        $planned = $planner->addActivity($this->ana, $schedule->id, ['activity_type' => 'VISITA', 'scheduled_date' => '2026-10-15', 'pharmacy_id' => $pharmacy->id]);
+        $planner->submit($this->ana, $schedule->id);
+        $relation = $pharmacy->assignments()->where('promoter_id', $this->ana->id)->sole();
+
+        Livewire::actingAs($this->coordinator)->test(Show::class, ['pharmacyId' => $pharmacy->id])
+            ->call('openEditor', 'end', $relation->id)
+            ->assertSee('1 visita planificada pendiente')
+            ->call('endAssignment', $relation->id)
+            ->assertHasNoErrors()->assertSee('únicamente la relación seleccionada');
+
+        $this->assertNotNull($relation->fresh()->ended_at);
+        $this->assertEquals([$this->bea->id], $pharmacy->activeAssignments()->pluck('promoter_id')->all());
+        $this->assertDatabaseHas('planned_activities', ['id' => $planned->id, 'pharmacy_id' => $pharmacy->id]);
+    }
+
     /** RF-FAR: asignar en lote farmacias sin promotora. */
     public function test_coordinator_assigns_unassigned_pharmacies_in_batch(): void
     {

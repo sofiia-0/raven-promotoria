@@ -4,10 +4,6 @@
 @section('section', 'Asignaciones')
 
 @section('content')
-    <header class="raven-page-header">
-        <div>
-            <h1 class="raven-page-title">Historial de asignaciones</h1>
-        </div>
-    </header>
+    <link rel="stylesheet" href="{{ asset('css/coordinator-assignments.css') }}">
     <livewire:coordinator.assignments.show :pharmacy-id="$pharmacyId" />
 @endsection
