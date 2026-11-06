@@ -151,7 +151,7 @@ class VisitEvidenceTest extends TestCase
         $file = $this->files->upload($this->actor, $data['idempotency_key'], $this->image());
         $visit = (new VisitWithEvidenceRecorder)->register($this->actor, $data, [$file->id]);
         $this->assertSame($a->id, $visit->planned_activity_id);
-        $this->assertCount(6, $visit->checklist);
+        $this->assertCount(7, $visit->checklist);
         $this->assertSame($before, $a->fresh()->getAttributes());
     }
 

@@ -30,11 +30,13 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use LogicException;
+use Tests\Concerns\WithPilotVisitRequirements;
 use Tests\TestCase;
 
 class PromoterVisitsTest extends TestCase
 {
     use RefreshDatabase;
+    use WithPilotVisitRequirements;
 
     private User $promoter;
 
@@ -104,7 +106,7 @@ class PromoterVisitsTest extends TestCase
         $activity = $this->activityOn('2026-10-15');
 
         Livewire::actingAs($this->promoter)
-            ->test(Register::class, ['actividad' => $activity->id])
+            ->test(Register::class, ['actividad' => $activity->id])->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->assertSee('Farmacia Central')
             ->assertSee('Exhibición')
             ->assertDontSee('Ítem retirado')
@@ -151,7 +153,7 @@ class PromoterVisitsTest extends TestCase
         $this->assertSame(1, AuditLog::query()->where('action', 'visit.registered')->count());
 
         // Doble clic en el formulario: misma clave generada al abrirlo.
-        $form = Livewire::actingAs($this->promoter)->test(Register::class)
+        $form = Livewire::actingAs($this->promoter)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->set('pharmacyId', (string) $this->pharmacy->id);
         $form->call('save')->assertHasNoErrors();
         $form->call('save')->assertHasNoErrors();
@@ -175,7 +177,7 @@ class PromoterVisitsTest extends TestCase
         $activity = $this->activityOn('2026-10-15');
 
         Livewire::actingAs($this->promoter)
-            ->test(Register::class, ['actividad' => $activity->id])
+            ->test(Register::class, ['actividad' => $activity->id])->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->set('status', 'NO_REALIZADA')
             ->call('save')
             ->assertHasErrors(['reasonId' => 'required']);
@@ -183,7 +185,7 @@ class PromoterVisitsTest extends TestCase
         $this->assertSame(0, Visit::count());
 
         Livewire::actingAs($this->promoter)
-            ->test(Register::class, ['actividad' => $activity->id])
+            ->test(Register::class, ['actividad' => $activity->id])->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->set('status', 'NO_REALIZADA')
             ->set('reasonId', (string) $this->reason->id)
             ->set('checklist.1', true)
@@ -213,12 +215,12 @@ class PromoterVisitsTest extends TestCase
         ]);
     }
 
-    /** RF-VIS: la geolocalización es opcional. */
-    public function test_visit_without_location_is_registered(): void
+    /** Compatibilidad: registros históricos previos a la ubicación obligatoria. */
+    public function test_legacy_visit_without_location_remains_readable(): void
     {
         $this->sentSchedule();
 
-        $visit = (new VisitRecorder)->register($this->promoter, $this->payload());
+        $visit = Visit::create(['idempotency_key' => (string) Str::uuid(), 'promoter_id' => $this->promoter->id, 'pharmacy_id' => $this->pharmacy->id, 'planned_activity_id' => $this->activityOn('2026-10-15')->id, 'attempt' => 0, 'status' => 'REALIZADA', 'visited_at' => now()]);
 
         $this->assertNull($visit->latitude);
         $this->assertNull($visit->longitude);
@@ -232,7 +234,7 @@ class PromoterVisitsTest extends TestCase
 
         $future = $this->activityOn('2026-10-20');
         Livewire::actingAs($this->promoter)
-            ->test(Register::class, ['actividad' => $future->id])
+            ->test(Register::class, ['actividad' => $future->id])->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->assertSee('Si va a realizarla antes, reprográmela para hoy')
             ->assertDontSee('Registrar visita</button>', false);
 
@@ -269,7 +271,7 @@ class PromoterVisitsTest extends TestCase
         $activity = $this->activityOn('2026-10-15');
 
         try {
-            Livewire::actingAs($intruder)->test(Register::class, ['actividad' => $activity->id]);
+            Livewire::actingAs($intruder)->test(Register::class, ['actividad' => $activity->id])->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId());
             $this->fail('Una promotora ajena no debería abrir esta actividad.');
         } catch (ModelNotFoundException) {
         }
@@ -280,7 +282,7 @@ class PromoterVisitsTest extends TestCase
         } catch (ModelNotFoundException) {
         }
 
-        Livewire::actingAs($this->promoter)->test(Register::class)
+        Livewire::actingAs($this->promoter)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->assertDontSee('Farmacia Ajena')
             ->set('pharmacyId', (string) $foreignPharmacy->id)
             ->call('save')
@@ -298,7 +300,7 @@ class PromoterVisitsTest extends TestCase
     {
         $other = $this->assignedPharmacy($this->promoter, 'Farmacia Sorpresa');
 
-        Livewire::actingAs($this->promoter)->test(Register::class)
+        Livewire::actingAs($this->promoter)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->assertSee('Fuera de plan')
             ->call('save')
             ->assertHasErrors(['pharmacyId' => 'required'])

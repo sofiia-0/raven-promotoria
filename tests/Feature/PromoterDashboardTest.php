@@ -106,13 +106,12 @@ class PromoterDashboardTest extends TestCase
             ->assertViewHas('totalActive', 1);
     }
 
-    public function test_dashboard_has_no_visits_metrics_before_visits_module_exists(): void
+    public function test_dashboard_shows_empty_real_activity_metrics_after_visits_integration(): void
     {
         $mine = $this->promoter();
 
         $this->actingAs($mine)->get('/promoter')->assertOk()
-            ->assertSee('Planificación y visitas')
-            ->assertSee('módulo de planificación y registro de visitas');
+            ->assertSee('Su actividad mensual')->assertSee('Cobertura de establecimientos')->assertSee('No hay visitas realizadas para este período.')->assertDontSee('módulo de planificación y registro de visitas');
     }
 
     public function test_admin_cannot_access_promoter_dashboard(): void

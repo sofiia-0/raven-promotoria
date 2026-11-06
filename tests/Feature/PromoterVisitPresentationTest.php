@@ -16,6 +16,7 @@ use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Concerns\RequiresIsolatedPromoterDatabase;
+use Tests\Concerns\WithPilotVisitRequirements;
 use Tests\TestCase;
 
 class PromoterVisitPresentationTest extends TestCase
@@ -23,6 +24,7 @@ class PromoterVisitPresentationTest extends TestCase
     use RefreshDatabase, RequiresIsolatedPromoterDatabase {
         RequiresIsolatedPromoterDatabase::beforeRefreshingDatabase insteadof RefreshDatabase;
     }
+    use WithPilotVisitRequirements;
 
     private User $actor;
 
@@ -54,27 +56,28 @@ class PromoterVisitPresentationTest extends TestCase
         libxml_use_internal_errors($previous);
         $x = new DOMXPath($doc);
         $this->assertSame(1, $x->query('//form[@id="promoter-record-form"]')->length);
-        $this->assertSame(6, $x->query('//form[@id="promoter-record-form"]//input[@type="checkbox"]')->length);
+        $this->assertSame(7, $x->query('//form[@id="promoter-record-form"]//input[@type="checkbox"]')->length);
         $this->assertSame(2, $x->query('//form[@id="promoter-record-form"]//input[@type="radio"]')->length);
         $this->assertSame(1, $x->query('//form[@id="promoter-record-form"]//textarea[@id="visit-notes"]')->length);
         $this->assertSame(0, $x->query('//aside//input')->length);
-        $this->assertSame(3, $x->query('//aside//button[@type="button"]')->length);
+        $this->assertSame(0, $x->query('//aside//button[@type="button"]')->length);
+        $this->assertSame(1, $x->query('//form[@id="promoter-record-form"]//button[@id="capture-visit-location"]')->length);
         $this->assertSame(0, $x->query('//aside//button[@type="submit"]')->length);
         $this->assertSame($before, $this->pharmacy->fresh()->getAttributes());
         $this->assertSame(0, Visit::count());
     }
 
-    public function test_outside_plan_registration_preserves_six_answers_and_optional_location_from_component_state(): void
+    public function test_outside_plan_registration_preserves_seven_answers_and_captured_location_from_component_state(): void
     {
         $ids = ChecklistItem::active()->pluck('id');
-        Livewire::actingAs($this->actor)->test(Register::class)
+        Livewire::actingAs($this->actor)->test(Register::class)->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('objectiveId', $this->pilotObjectiveId())
             ->set('pharmacyId', (string) $this->pharmacy->id)
             ->set('checklist', [$ids[0] => true, $ids[5] => true])
             ->set('latitude', '12.1234567')->set('longitude', '-86.1234567')->set('locationAccuracy', 20)
             ->call('save')->assertHasNoErrors();
         $visit = Visit::sole();
         $this->assertSame($this->pharmacy->id, $visit->pharmacy_id);
-        $this->assertCount(6, $visit->checklist);
+        $this->assertCount(7, $visit->checklist);
         $this->assertSame(2, $visit->checklist->where('checked', true)->count());
         $this->assertSame('12.1234567', $visit->latitude);
         $this->assertSame('-86.1234567', $visit->longitude);
