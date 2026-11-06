@@ -38,6 +38,9 @@ class Index extends Component
     #[Locked]
     public bool $standalone = false;
 
+    #[Locked]
+    public int $returnPage = 1;
+
     public ?int $selectedId = null;
 
     public string $assigneeId = '';
@@ -50,6 +53,7 @@ class Index extends Component
 
         if ($requestId !== null) {
             $this->standalone = true;
+            $this->returnPage = filter_var(request()->query('page'), FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
             $this->select($requestId);
         }
     }
@@ -64,10 +68,10 @@ class Index extends Component
     public function select(int $requestId): void
     {
         $this->coordinator();
-        $request = PharmacyRequest::query()->findOrFail($requestId);
+        $request = PharmacyRequest::query()->with('promoter:id,is_active')->findOrFail($requestId);
         $this->resetValidation();
         $this->selectedId = $request->id;
-        $this->assigneeId = (string) $request->promoter_id;
+        $this->assigneeId = $request->promoter?->is_active ? (string) $request->promoter_id : '';
         $this->reviewNote = '';
     }
 
@@ -89,7 +93,6 @@ class Index extends Component
             $validated['assigneeId'] ? (int) $validated['assigneeId'] : null, $validated['reviewNote']);
 
         $this->closeReview();
-        $this->dispatch('coordinator-request-reviewed');
         session()->flash('success', $request->type === PharmacyRequest::TYPE_ALTA
             ? 'Alta aprobada: el establecimiento ya forma parte del fichero y quedó asignado.'
             : 'Baja aprobada: el establecimiento quedó inactivo y conserva su historial.');
@@ -109,7 +112,6 @@ class Index extends Component
         $review->reject($this->coordinator(), $validated['selectedId'], $validated['reviewNote']);
 
         $this->closeReview();
-        $this->dispatch('coordinator-request-reviewed');
         session()->flash('success', 'Solicitud rechazada. La promotora verá el motivo en su historial.');
         $this->returnToQueue();
     }
@@ -117,8 +119,25 @@ class Index extends Component
     private function returnToQueue(): void
     {
         if ($this->standalone) {
-            $this->redirectRoute('coordinator.requests.index');
+            $this->redirectRoute('coordinator.requests.index', $this->queueParameters());
+
+            return;
         }
+
+        $this->dispatch('coordinator-request-reviewed');
+    }
+
+    private function queueParameters(): array
+    {
+        $page = $this->standalone ? $this->returnPage : $this->getPage();
+
+        return array_filter([
+            'estado' => $this->status === PharmacyRequest::PENDING ? null : $this->status,
+            'tipo' => $this->type ?: null,
+            'q' => $this->search !== '' ? $this->search : null,
+            'periodo' => $this->period ?: null,
+            'page' => $page > 1 ? $page : null,
+        ], fn ($value) => $value !== null);
     }
 
     public function render(PharmacyRequestReview $review): View
@@ -155,13 +174,15 @@ class Index extends Component
         return view('livewire.coordinator.requests.index', [
             'requests' => $this->standalone ? null : $query->paginate(15),
             'selected' => $selected,
-            'duplicates' => $selected ? $review->possibleDuplicates($selected) : collect(),
-            'pendingPlanned' => $selected?->type === PharmacyRequest::TYPE_BAJA && $selected->pharmacy_id
+            'duplicates' => $selected?->status === PharmacyRequest::PENDING ? $review->possibleDuplicates($selected) : collect(),
+            'pendingPlanned' => $selected?->type === PharmacyRequest::TYPE_BAJA && $selected->status === PharmacyRequest::PENDING && $selected->pharmacy_id
                 ? $review->pendingPlannedVisits($selected->pharmacy_id) : 0,
             'promoters' => $selected?->type === PharmacyRequest::TYPE_ALTA && $selected->status === PharmacyRequest::PENDING
                 ? User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)->orderBy('name')->get(['id', 'name'])
                 : collect(),
-            'pendingCount' => PharmacyRequest::query()->where('status', PharmacyRequest::PENDING)->count(),
+            'counts' => $this->standalone ? collect() : PharmacyRequest::query()
+                ->selectRaw('status, COUNT(*) AS total')->groupBy('status')->pluck('total', 'status'),
+            'queueParameters' => $this->queueParameters(),
         ]);
     }
 }
