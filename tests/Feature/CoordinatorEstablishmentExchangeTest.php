@@ -151,6 +151,24 @@ class CoordinatorEstablishmentExchangeTest extends TestCase
         $this->actingAs($actor)->get(route('coordinator.establishments.exchange'))->assertOk();
     }
 
+    public function test_preview_resets_pagination_when_showing_only_errors(): void
+    {
+        $actor = User::factory()->coordinator()->create();
+        $rows = array_map(fn (int $number): array => [
+            'source_reference' => 'PREVIEW-'.$number, 'name' => 'Farmacia de prueba '.$number,
+            'department' => 'Managua', 'city' => 'Managua', 'address' => 'Local '.$number, 'is_active' => 1,
+        ], range(1, 25));
+        $rows[] = ['source_reference' => 'INVALIDA', 'name' => 'Farmacia sin dirección'];
+        $upload = UploadedFile::fake()->createWithContent('fichero.xlsx', file_get_contents($this->file($rows)));
+
+        Livewire::actingAs($actor)->test(Exchange::class)->set('workbook', $upload)->call('preview')
+            ->assertHasNoErrors()->assertSee('Mostrando 1–25 de 26')
+            ->call('gotoPage', 2)->assertSee('Mostrando 26 de 26')
+            ->set('onlyErrors', true)->assertSee('Mostrando 1 de 1')->assertSee('INVALIDA');
+
+        $this->assertDatabaseCount('pharmacies', 0);
+    }
+
     public function test_manifest_ownership_and_confirmation_hash_are_enforced(): void
     {
         $actor = User::factory()->coordinator()->create();

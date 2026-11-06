@@ -11,6 +11,7 @@ use App\Support\CanonicalData;
 use App\Support\CoordinatorEstablishmentQuery;
 use App\Support\NicaraguaGeography;
 use App\Support\PromoterCatalogOptions;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
@@ -43,6 +44,38 @@ class EstablishmentExchange
             app(AuditLogger::class)->record($actor, 'establishment.exported', $actor, ['scope' => $complete ? 'complete' : 'filtered', 'filters' => $complete ? [] : array_intersect_key($filters, array_flip(['search', 'department', 'city', 'category', 'status', 'promoter'])), 'rows' => $count]);
         } catch (\Throwable $error) {
             @unlink($path);
+            throw $error;
+        }
+
+        return $path;
+    }
+
+    public function exportMaster(User $actor, array $filters, bool $complete = false): string
+    {
+        $this->authorize($actor);
+        $filters = $complete ? [] : array_filter(array_intersect_key($filters, array_flip([
+            'search', 'department', 'city', 'category', 'status', 'promoter',
+        ])), fn ($value) => is_string($value) && trim($value) !== '');
+        abort_if(! $complete && $filters === [], 422, 'Seleccione al menos un filtro para esta descarga.');
+        $day = SchedulePlanner::today()->toDateString();
+        $query = CoordinatorEstablishmentQuery::for($actor, $filters)->with([
+            'assignments' => function (HasMany $relations) use ($complete, $day): void {
+                if (! $complete) {
+                    $relations->getQuery()->operationalOn($day);
+                }
+                $relations->with('promoter:id,name')->orderBy('id');
+            },
+        ]);
+        $path = $this->temporaryPath();
+
+        try {
+            $counts = app(EstablishmentMasterWorkbook::class)->write($path, $query->lazyById(250), $complete, $filters);
+            app(AuditLogger::class)->record($actor, 'establishment.master_exported', $actor, [
+                'scope' => $complete ? 'complete' : 'filtered', 'filters' => $filters,
+            ] + $counts);
+        } catch (\Throwable $error) {
+            @unlink($path);
+
             throw $error;
         }
 

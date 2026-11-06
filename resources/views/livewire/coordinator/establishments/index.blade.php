@@ -8,6 +8,7 @@
         <label class="raven-field">Estado<select class="raven-select" wire:model.live="status"><option value="">Todos</option><option value="active">Activo</option><option value="inactive">Inactivo</option></select></label>
         <label class="raven-field">Promotora<select class="raven-select" wire:model.live="promoter"><option value="">Todas</option><option value="none">Sin asignación vigente</option><option value="without-responsible">Sin responsable vigente</option>@foreach($promoters as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label>
     </div></x-coordinator.filters>
+    <x-coordinator.master-export :has-filters="$hasMasterFilters" />
     <section class="raven-card"><div class="coordinator-section-head"><h2 class="raven-section-title">Catálogo central</h2><span>{{ $establishments->total() }} establecimientos</span></div>
         @if($establishments->isEmpty())
             <x-coordinator.empty title="No se encontraron establecimientos con estos filtros" description="Pruebe con otro nombre o ajuste los filtros." />
@@ -27,6 +28,6 @@
                 </tbody>
             </x-coordinator.table>
         @endif
-        {{ $establishments->links() }}
+        {{ $establishments->onEachSide(1)->links('livewire.coordinator.pagination', ['record' => 'establecimiento', 'records' => 'establecimientos']) }}
     </section>
 </div>

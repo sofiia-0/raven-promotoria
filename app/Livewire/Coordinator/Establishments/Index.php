@@ -3,6 +3,7 @@
 namespace App\Livewire\Coordinator\Establishments;
 
 use App\Enums\UserRole;
+use App\Livewire\Coordinator\Concerns\DownloadsEstablishmentMaster;
 use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\Pharmacy;
 use App\Models\User;
@@ -15,7 +16,7 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use ResolvesCoordinator, WithPagination;
+    use DownloadsEstablishmentMaster, ResolvesCoordinator, WithPagination;
 
     #[Url]
     public string $search = '';
@@ -44,13 +45,20 @@ class Index extends Component
         $this->resetPage();
     }
 
+    protected function establishmentFilters(): array
+    {
+        return $this->only(['search', 'department', 'city', 'category', 'status', 'promoter']);
+    }
+
     public function render(): View
     {
         $actor = $this->coordinator();
+        $filters = $this->establishmentFilters();
 
         return view('livewire.coordinator.establishments.index', [
-            'establishments' => CoordinatorEstablishmentQuery::for($actor, $this->only(['search', 'department', 'city', 'category', 'status', 'promoter']))
+            'establishments' => CoordinatorEstablishmentQuery::for($actor, $filters)
                 ->with('activeAssignments.promoter:id,name')->orderBy('name')->orderBy('id')->paginate(20),
+            'hasMasterFilters' => collect($filters)->contains(fn (string $value): bool => trim($value) !== ''),
             'departments' => NicaraguaGeography::departments()->merge(Pharmacy::whereNotNull('department')->distinct()->pluck('department'))->unique()->sort()->values(),
             'cities' => NicaraguaGeography::municipalities($this->department)->merge(Pharmacy::where('department', $this->department)->whereNotNull('city')->distinct()->pluck('city'))->unique()->sort()->values(),
             'categories' => Pharmacy::whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),

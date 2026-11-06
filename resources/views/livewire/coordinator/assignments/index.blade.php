@@ -5,7 +5,7 @@
 
     <header class="assign-heading">
         <div><p class="assign-kicker">Distribución del equipo</p><h1 class="raven-page-title">Asignaciones de establecimientos</h1>
-            <p>Consulte la carga del equipo y gestione responsables y coberturas por establecimiento.</p></div>
+            <p>Consulte la carga del equipo y gestione responsables y coberturas.</p></div>
         <x-coordinator.team-motif />
     </header>
 
@@ -32,6 +32,12 @@
                 </div>
             </details>
         @endif
+        @if($promoter !== '')
+            <div class="assign-workload-selection">
+                <span>Filtro de promotora: <strong>{{ $promoter === 'none' ? 'Sin responsable vigente' : ($promoters->firstWhere('id', $promoter)?->name ?? 'Promotora seleccionada') }}</strong></span>
+                <button type="button" wire:click="$set('promoter', '')">Quitar filtro de promotora</button>
+            </div>
+        @endif
         <p class="assign-hint">La carga individual incluye coberturas vigentes. Los establecimientos compartidos cuentan una vez en el total.</p>
     </section>
 
@@ -48,16 +54,6 @@
                     <option value="">Todos</option>
                     @foreach($departments as $option)
                         <option value="{{ $option }}">{{ $option }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="raven-field">
-                <label class="raven-label" for="assignments-promoter">Promotora</label>
-                <select id="assignments-promoter" class="raven-select" wire:model.live="promoter">
-                    <option value="">Todas</option>
-                    <option value="none">Sin responsable</option>
-                    @foreach($promoters as $item)
-                        <option value="{{ $item->id }}">{{ $item->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -99,6 +95,7 @@
     <div class="assign-section-head assign-directory-head">
         <div><h2 class="raven-section-title" id="assignment-directory-title">Directorio de establecimientos</h2><p class="assign-hint">{{ $pharmacies->total() }} {{ $pharmacies->total() === 1 ? 'establecimiento activo' : 'establecimientos activos' }}</p></div>
         <div class="coordinator-badges">
+            <x-coordinator.master-export />
             <button type="button" class="raven-button raven-button-secondary" wire:click="toggleBatchMode" aria-pressed="{{ $batchMode ? 'true' : 'false' }}">{{ $batchMode ? 'Salir de selección múltiple' : 'Selección múltiple' }}</button>
         @if($batchMode && $pharmacies->isNotEmpty())
             <button type="button" class="raven-button raven-button-ghost" wire:click="selectPage({{ json_encode($pharmacies->pluck('id')->all()) }})">Seleccionar los de esta página</button>
@@ -155,5 +152,5 @@
             @endforeach
         </ul>
     @endif
-    @if($pharmacies->hasPages())<div class="coordinator-pagination">{{ $pharmacies->links() }}</div>@endif
+    {{ $pharmacies->onEachSide(1)->links('livewire.coordinator.pagination', ['record' => 'establecimiento', 'records' => 'establecimientos']) }}
 </div>

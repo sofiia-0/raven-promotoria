@@ -94,6 +94,6 @@
                 </tbody>
             </x-coordinator.table>
         </section>
-        <div class="coordinator-pagination">{{ $visits->links() }}</div>
+        {{ $visits->onEachSide(1)->links('livewire.coordinator.pagination', ['record' => 'visita', 'records' => 'visitas']) }}
     @endif
 </div>

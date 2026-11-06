@@ -3,6 +3,7 @@
 namespace App\Livewire\Coordinator\Assignments;
 
 use App\Enums\UserRole;
+use App\Livewire\Coordinator\Concerns\DownloadsEstablishmentMaster;
 use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\Pharmacy;
 use App\Models\User;
@@ -20,7 +21,7 @@ use Livewire\WithPagination;
 /** Asignación de farmacias activas a promotoras, individual o en lote (RF-FAR). */
 class Index extends Component
 {
-    use ResolvesCoordinator, WithPagination;
+    use DownloadsEstablishmentMaster, ResolvesCoordinator, WithPagination;
 
     #[Url(as: 'q')]
     public string $search = '';
@@ -169,15 +170,21 @@ class Index extends Component
         return $text;
     }
 
-    public function render(): View
+    protected function establishmentFilters(): array
     {
-        $actor = $this->coordinator();
-        $query = CoordinatorEstablishmentQuery::for($actor, [
+        return [
             'status' => 'active',
             'search' => $this->search,
             'department' => $this->department,
             'promoter' => $this->promoter === 'none' ? 'without-responsible' : $this->promoter,
-        ])->with('activeAssignments.promoter:id,name,is_active');
+        ];
+    }
+
+    public function render(): View
+    {
+        $actor = $this->coordinator();
+        $query = CoordinatorEstablishmentQuery::for($actor, $this->establishmentFilters())
+            ->with('activeAssignments.promoter:id,name,is_active');
         $promoters = User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)
             ->withCount(['pharmacyAssignments as active_pharmacies' => fn (Builder $q) => $q->select(DB::raw('COUNT(DISTINCT pharmacy_id)'))->operational()
                 ->whereHas('pharmacy', fn (Builder $p) => $p->where('is_active', true))])

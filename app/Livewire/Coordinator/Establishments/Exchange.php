@@ -57,6 +57,11 @@ class Exchange extends Component
         $this->resetPage();
     }
 
+    public function updatedOnlyErrors(): void
+    {
+        $this->resetPage();
+    }
+
     public function apply(): void
     {
         abort_unless($this->batchId && $this->manifestHash, 422);

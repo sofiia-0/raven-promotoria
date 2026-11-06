@@ -68,47 +68,49 @@
             @if($requests->isEmpty())
                 <x-coordinator.empty kind="inbox" title="No hay solicitudes con estos filtros" description="Cambie el estado o ajuste la búsqueda para ampliar los resultados." />
             @else
-                <table class="requests-list" role="table" aria-label="Solicitudes de alta y baja">
-                    <thead role="rowgroup">
-                        <tr role="row">
-                            <th scope="col" role="columnheader">Establecimiento</th>
-                            <th scope="col" role="columnheader">Promotora y motivo</th>
-                            <th scope="col" role="columnheader">Envío</th>
-                            <th scope="col" role="columnheader">Estado</th>
-                            <th scope="col" role="columnheader"><span class="coordinator-sr-only">Acciones</span></th>
-                        </tr>
-                    </thead>
-                    <tbody role="rowgroup">
-                        @foreach($requests as $item)
-                            @php($sentAt = $item->created_at?->timezone(SchedulePlanner::TIMEZONE))
-                            <tr role="row" wire:key="request-row-{{ $item->id }}">
-                                <td class="requests-establishment" role="cell">
-                                    <div class="requests-establishment-info">
-                                        <x-coordinator.record-name :name="$item->establishmentTitle()" :locality="$item->establishmentLocality() ?: 'Ubicación sin registrar'" class="requests-row-title" />
-                                        <x-coordinator.request-badge :value="$item->type" />
-                                    </div>
-                                </td>
-                                <td class="requests-sender" role="cell">
-                                    <strong>{{ $item->promoter?->name ?? 'Promotora sin registrar' }}</strong>
-                                    @if(filled($item->reasonLabel()))<p>{{ $item->reasonLabel() }}</p>@endif
-                                </td>
-                                <td class="requests-date" role="cell">
-                                    @if($sentAt)<time datetime="{{ $sentAt->toAtomString() }}"><span>{{ $sentAt->format('d/m/Y') }}</span><small>{{ $sentAt->format('H:i') }}</small></time>
-                                    @else<span>Sin fecha</span>@endif
-                                </td>
-                                <td class="requests-row-status" role="cell"><x-coordinator.request-badge :value="$item->status" /></td>
-                                <td class="requests-row-action" role="cell">
-                                    <a class="requests-action" href="{{ route('coordinator.requests.show', ['requestId' => $item->id] + $queueParameters) }}">
-                                        {{ $item->status === PharmacyRequest::PENDING ? 'Revisar' : 'Ver detalle' }}
-                                        <x-promoter.icon name="arrow" /><span class="coordinator-sr-only"> {{ $item->establishmentTitle() }}</span>
-                                    </a>
-                                </td>
+                <div class="requests-table-frame">
+                    <table class="requests-list" role="table" aria-label="Solicitudes de alta y baja">
+                        <thead role="rowgroup">
+                            <tr role="row">
+                                <th scope="col" role="columnheader">Establecimiento</th>
+                                <th scope="col" role="columnheader">Promotora y motivo</th>
+                                <th scope="col" role="columnheader">Envío</th>
+                                <th scope="col" role="columnheader">Estado</th>
+                                <th scope="col" role="columnheader"><span class="coordinator-sr-only">Acciones</span></th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody role="rowgroup">
+                            @foreach($requests as $item)
+                                @php($sentAt = $item->created_at?->timezone(SchedulePlanner::TIMEZONE))
+                                <tr role="row" wire:key="request-row-{{ $item->id }}">
+                                    <td class="requests-establishment" role="cell">
+                                        <div class="requests-establishment-info">
+                                            <x-coordinator.record-name :name="$item->establishmentTitle()" :locality="$item->establishmentLocality() ?: 'Ubicación sin registrar'" class="requests-row-title" />
+                                            <x-coordinator.request-badge :value="$item->type" />
+                                        </div>
+                                    </td>
+                                    <td class="requests-sender" role="cell">
+                                        <strong>{{ $item->promoter?->name ?? 'Promotora sin registrar' }}</strong>
+                                        @if(filled($item->reasonLabel()))<p>{{ $item->reasonLabel() }}</p>@endif
+                                    </td>
+                                    <td class="requests-date" role="cell">
+                                        @if($sentAt)<time datetime="{{ $sentAt->toAtomString() }}"><span>{{ $sentAt->format('d/m/Y') }}</span><small>{{ $sentAt->format('H:i') }}</small></time>
+                                        @else<span>Sin fecha</span>@endif
+                                    </td>
+                                    <td class="requests-row-status" role="cell"><x-coordinator.request-badge :value="$item->status" /></td>
+                                    <td class="requests-row-action" role="cell">
+                                        <a class="requests-action" href="{{ route('coordinator.requests.show', ['requestId' => $item->id] + $queueParameters) }}">
+                                            {{ $item->status === PharmacyRequest::PENDING ? 'Revisar' : 'Ver detalle' }}
+                                            <x-promoter.icon name="arrow" /><span class="coordinator-sr-only"> {{ $item->establishmentTitle() }}</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             @endif
-            @if($requests->hasPages())<div class="requests-pagination">{{ $requests->links() }}</div>@endif
+            {{ $requests->onEachSide(1)->links('livewire.coordinator.pagination', ['record' => 'solicitud', 'records' => 'solicitudes']) }}
         </section>
     @endunless
 </div>
