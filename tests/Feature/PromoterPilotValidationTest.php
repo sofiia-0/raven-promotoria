@@ -189,7 +189,8 @@ class PromoterPilotValidationTest extends TestCase
         $oldVisit = $old->fresh()->getAttributes();
         $catalog = new OfficialVisitChecklist;
         $p = $catalog->preview();
-        $this->assertSame($oldNames, ChecklistItem::active()->pluck('name')->all());
+        $this->assertSame($oldNames, ChecklistItem::query()->where('is_active', true)->orderBy('sort_order')->pluck('name')->all());
+        $this->assertSame(array_values(array_diff($oldNames, ChecklistItem::OBSOLETE_NAMES)), ChecklistItem::active()->pluck('name')->all());
         $this->assertCount(3, array_filter($p['actions'], fn ($action) => $action['action'] === 'create'));
         $this->assertCount(2, array_filter($p['actions'], fn ($action) => $action['action'] === 'retire'));
         $directory = sys_get_temp_dir().'/raven-pilot-checklist-'.bin2hex(random_bytes(8));

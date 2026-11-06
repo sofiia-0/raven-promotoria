@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Coordinator\FollowUp;
+use App\Livewire\Coordinator\PendingNotice;
 use App\Livewire\Coordinator\Requests\Index;
 use App\Livewire\Promoter\PharmacyRequests\Index as PromoterRequests;
 use App\Models\AuditLog;
@@ -256,5 +258,61 @@ class CoordinatorPharmacyRequestsTest extends TestCase
             ->call('select', $alta->id)
             ->assertSee('Posibles duplicados')
             ->assertViewHas('duplicates', fn ($d) => $d->pluck('name')->all() === ['Farmacia Nueva Esperanza Sur']);
+    }
+
+    public function test_detail_preserves_filter_context_and_page(): void
+    {
+        $this->actingAs($this->coordinator);
+        for ($i = 0; $i < 16; $i++) {
+            $request = $this->alta();
+        }
+        $context = ['estado' => '', 'tipo' => 'alta', 'q' => 'Ana Promotora', 'periodo' => '2026-10', 'page' => 2];
+        $target = route('coordinator.requests.show', ['requestId' => $request->id] + $context);
+
+        $this->get($target)->assertOk()->assertSee('Farmacia Nueva Esperanza')
+            ->assertSee(route('coordinator.requests.index', $context))
+            ->assertDontSee('Filtrar solicitudes');
+
+        $this->get(route('coordinator.requests.index', $context))->assertOk()
+            ->assertSee(route('coordinator.requests.show', ['requestId' => PharmacyRequest::min('id')] + $context));
+    }
+
+    public function test_review_updates_summary_and_retains_historical_reason_and_review(): void
+    {
+        $request = $this->alta(['reason_category' => ['label' => 'Apertura de sucursal']]);
+        $pending = $this->alta(['name' => 'Farmacia pendiente de prueba']);
+
+        $this->actingAs($this->coordinator)->get(route('coordinator.requests.show', $request->id))
+            ->assertOk()->assertSee('Motivo de alta')->assertSee('Apertura de sucursal')
+            ->assertSee('Observaciones de la promotora')->assertSee('Establecimiento nuevo en la zona');
+
+        Livewire::actingAs($this->coordinator)->test(Index::class)
+            ->assertViewHas('counts', fn ($counts) => (int) $counts->get('pending') === 2)
+            ->call('select', $request->id)->set('reviewNote', 'Documentación verificada.')
+            ->call('approve')->assertHasNoErrors()->assertDispatched('coordinator-request-reviewed')
+            ->assertViewHas('counts', fn ($counts) => (int) $counts->get('pending') === 1 && (int) $counts->get('approved') === 1)
+            ->assertViewHas('requests', fn ($items) => $items->total() === 1 && $items->first()->id === $pending->id);
+
+        Livewire::actingAs($this->coordinator)->test(PendingNotice::class)->assertViewHas('pending', 1);
+        Livewire::actingAs($this->coordinator)->test(FollowUp::class)
+            ->assertViewHas('counts', fn ($counts) => $counts['requests'] === 1);
+        $this->get(route('coordinator.requests.show', $request->id))->assertOk()
+            ->assertSee('Historial de revisión')->assertSee('Documentación verificada.')
+            ->assertSee($this->coordinator->name)->assertDontSee('Aprobar alta')->assertDontSee('Rechazar');
+    }
+
+    public function test_standalone_review_redirects_to_its_filtered_queue(): void
+    {
+        $request = $this->alta();
+        $context = ['q' => 'Ana Promotora'];
+
+        Livewire::actingAs($this->coordinator)->withQueryParams($context)
+            ->test(Index::class, ['requestId' => $request->id])
+            ->set('reviewNote', 'Motivo suficiente de prueba.')
+            ->call('reject')
+            ->assertRedirect(route('coordinator.requests.index', $context))
+            ->assertNotDispatched('coordinator-request-reviewed');
+
+        $this->assertSame(PharmacyRequest::REJECTED, $request->fresh()->status);
     }
 }

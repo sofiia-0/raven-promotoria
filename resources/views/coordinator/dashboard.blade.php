@@ -4,11 +4,6 @@
 @section('section', 'Inicio')
 
 @section('content')
-    <header class="raven-page-header">
-        <div>
-            <h1 class="raven-page-title">Panel de Coordinación</h1>
-            <p class="raven-page-description">Solicitudes, asignaciones y avance de planificación y visitas del equipo.</p>
-        </div>
-    </header>
-    <livewire:coordinator.dashboard />
+    <link rel="stylesheet" href="{{ asset('css/coordinator-insights.css') }}">
+    <livewire:coordinator.metrics />
 @endsection

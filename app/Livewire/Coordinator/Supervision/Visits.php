@@ -40,6 +40,9 @@ class Visits extends Component
     #[Url(as: 'q')]
     public string $search = '';
 
+    #[Url(as: 'departamento')]
+    public string $department = '';
+
     #[Url(as: 'establecimiento')]
     public string $pharmacyId = '';
 
@@ -62,14 +65,14 @@ class Visits extends Component
 
     public function updated(string $property): void
     {
-        if (in_array($property, ['promoter', 'from', 'to', 'status', 'origin', 'search', 'pharmacyId'], true)) {
+        if (in_array($property, ['promoter', 'from', 'to', 'status', 'origin', 'search', 'department', 'pharmacyId'], true)) {
             $this->resetPage();
         }
     }
 
     public function clearFilters(): void
     {
-        $this->reset(['promoter', 'status', 'origin', 'search', 'pharmacyId']);
+        $this->reset(['promoter', 'status', 'origin', 'search', 'department', 'pharmacyId']);
         $this->from = SchedulePlanner::today()->startOfMonth()->toDateString();
         $this->to = SchedulePlanner::today()->toDateString();
         $this->resetPage();
@@ -101,8 +104,13 @@ class Visits extends Component
         } elseif ($this->origin === 'fuera') {
             $query->whereNull('planned_activity_id');
         }
-        if (($term = trim($this->search)) !== '') {
-            $query->whereHas('pharmacy', fn (Builder $q) => EstablishmentSearch::apply($q, $term));
+        if ($this->department !== '') {
+            $query->whereHas('pharmacy', fn (Builder $q) => $q->where('department', $this->department));
+        }
+        foreach (EstablishmentSearch::terms($this->search) as $term) {
+            $query->where(fn (Builder $q) => $q
+                ->whereHas('pharmacy', fn (Builder $pharmacy) => EstablishmentSearch::apply($pharmacy, $term))
+                ->orWhereHas('promoter', fn (Builder $promoter) => EstablishmentSearch::applyExpressions($promoter, $term, ["COALESCE(users.name, '')"])));
         }
 
         $summary = (clone $query)
@@ -116,6 +124,7 @@ class Visits extends Component
                 ->orderByDesc('visited_at')->orderByDesc('id')->paginate(20),
             'summary' => $summary,
             'statuses' => VisitStatus::cases(),
+            'departments' => Pharmacy::query()->whereNotNull('department')->where('department', '<>', '')->distinct()->orderBy('department')->pluck('department'),
             'selectedPharmacy' => ctype_digit($this->pharmacyId) ? Pharmacy::find((int) $this->pharmacyId) : null,
             'promoters' => User::query()->where('role', UserRole::PROMOTER)->orderBy('name')->get(['id', 'name', 'is_active']),
         ]);

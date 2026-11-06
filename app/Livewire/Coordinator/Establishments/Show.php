@@ -22,12 +22,17 @@ class Show extends Component
     #[Locked]
     public string $expected;
 
+    #[Locked]
+    public ?int $changeId = null;
+
     public array $form = [];
 
     public function mount(int $pharmacyId): void
     {
         $this->coordinator();
         $this->pharmacyId = $pharmacyId;
+        $change = request()->query('cambio');
+        $this->changeId = is_string($change) && ctype_digit($change) ? (int) $change : null;
         $this->loadForm();
     }
 
@@ -65,6 +70,12 @@ class Show extends Component
     {
         $this->coordinator();
         $pharmacy = Pharmacy::with(['assignments.promoter', 'changes' => fn ($q) => $q->with('actor:id,name')->latest()->limit(30)])->findOrFail($this->pharmacyId);
+        if ($this->changeId !== null && ! $pharmacy->changes->contains('id', $this->changeId)) {
+            $change = $pharmacy->changes()->with('actor:id,name')->find($this->changeId);
+            if ($change !== null) {
+                $pharmacy->changes->push($change);
+            }
+        }
         $options = [
             'department' => NicaraguaGeography::departments(),
             'city' => NicaraguaGeography::municipalities((string) $this->form['department']),

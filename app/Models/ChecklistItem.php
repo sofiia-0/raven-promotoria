@@ -11,6 +11,8 @@ class ChecklistItem extends Model
 {
     use HasFactory;
 
+    public const OBSOLETE_NAMES = ['Capacitación o revisión de plan de exhibición', 'Entrega de Plan paciente'];
+
     protected $fillable = ['name', 'description', 'sort_order', 'is_active'];
 
     protected function casts(): array
@@ -23,6 +25,6 @@ class ChecklistItem extends Model
 
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('is_active', true)->orderBy('sort_order')->orderBy('name');
+        return $query->where('is_active', true)->whereNotIn('name', self::OBSOLETE_NAMES)->orderBy('sort_order')->orderBy('name');
     }
 }

@@ -12,17 +12,27 @@
 <body class="coordinator-shell">
     <a href="#coordinator-content" class="coordinator-skip-link">Ir al contenido principal</a>
     <div class="raven-app">
-        <aside class="raven-sidebar">
+        <aside class="raven-sidebar" x-data="{ menuOpen: false }" @keydown.escape="if (menuOpen) { menuOpen = false; $refs.menu.focus() }">
             <a href="{{ route('coordinator.dashboard') }}" class="raven-brand" aria-label="Raven — Inicio de Coordinación">
                 <img src="{{ asset('images/raven-logo.png') }}" alt="Raven">
             </a>
             <p class="coordinator-nav-label">Coordinación</p>
-            <nav class="raven-nav" aria-label="Navegación de coordinación">
+            <button type="button" class="coordinator-menu-toggle raven-button raven-button-secondary" x-ref="menu"
+                    @click="menuOpen = !menuOpen" :aria-expanded="menuOpen.toString()" aria-controls="coordinator-navigation">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg> Menú
+            </button>
+            <nav id="coordinator-navigation" class="raven-nav" :class="{'is-open': menuOpen}" aria-label="Navegación de coordinación">
                 <a href="{{ route('coordinator.dashboard') }}"
                    class="raven-nav-link {{ request()->routeIs('coordinator.dashboard') ? 'is-active' : '' }}"
                    @if(request()->routeIs('coordinator.dashboard')) aria-current="page" @endif>
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></span>
                     Inicio
+                </a>
+                <a href="{{ route('coordinator.follow-up') }}"
+                   @class(['raven-nav-link', 'is-active' => request()->routeIs('coordinator.follow-up')])
+                   @if(request()->routeIs('coordinator.follow-up')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><x-promoter.icon name="clock" /></span>
+                    <span>Seguimiento</span>
                 </a>
                 <a href="{{ route('coordinator.requests.index') }}"
                    class="raven-nav-link {{ request()->routeIs('coordinator.requests.*') ? 'is-active' : '' }}"
@@ -64,7 +74,7 @@
         <div class="raven-main">
             <header class="raven-topbar">
                 <div class="raven-topbar-context">
-                    <p class="raven-topbar-title">Coordinación <span aria-hidden="true">/</span> <span class="coordinator-topbar-section">@yield('section', 'Inicio')</span></p>
+                    <p class="raven-topbar-title"><span class="coord-crumb-root">Coordinación</span> <span class="coord-crumb-divider" aria-hidden="true">/</span> <span class="coordinator-topbar-section">@yield('section', 'Inicio')</span></p>
                     <p class="raven-topbar-subtitle">Laboratorio Raven</p>
                 </div>
                 <div class="raven-user">
@@ -76,7 +86,7 @@
                     </div>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="raven-logout">Salir</button>
+                        <button type="submit" class="raven-logout" aria-label="Cerrar sesión"><x-access.icon name="logout" /><span>Cerrar sesión</span></button>
                     </form>
                 </div>
             </header>

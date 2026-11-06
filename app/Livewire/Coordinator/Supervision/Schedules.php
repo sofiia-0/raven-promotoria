@@ -24,6 +24,9 @@ class Schedules extends Component
     #[Url(as: 'mes')]
     public string $period = '';
 
+    #[Url(as: 'estado')]
+    public string $status = '';
+
     public function mount(): void
     {
         $this->coordinator();
@@ -58,12 +61,14 @@ class Schedules extends Component
 
         $schedules = MonthlySchedule::query()
             ->where('year', $month->year)->where('month', $month->month)
+            ->when($this->status === 'borrador', fn ($query) => $query->attentionDrafts())
             ->with(['activities.visits:id,planned_activity_id,attempt,status'])
             ->get()->keyBy('promoter_id');
 
         // Promotoras activas y, además, las inactivas que sí tuvieron cronograma ese mes.
         $promoters = User::query()->where('role', UserRole::PROMOTER)
             ->where(fn ($q) => $q->where('is_active', true)->orWhereIn('id', $schedules->keys()))
+            ->when($this->status === 'borrador', fn ($query) => $query->whereIn('id', $schedules->keys()))
             ->orderBy('name')->get(['id', 'name', 'is_active']);
 
         $unplanned = Visit::query()->whereNull('planned_activity_id')

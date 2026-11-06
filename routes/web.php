@@ -44,6 +44,8 @@ Route::middleware([
             return view('coordinator.dashboard');
         })->name('dashboard');
 
+        Route::view('/follow-up', 'coordinator.follow-up')->name('follow-up');
+
         Route::view('/catalogs', 'coordinator.catalogs')->name('catalogs.index');
 
         Route::view('/establishments', 'coordinator.establishments')->name('establishments.index');
@@ -56,6 +58,9 @@ Route::middleware([
         Route::get('/requests', function () {
             return view('coordinator.requests');
         })->name('requests.index');
+
+        Route::get('/requests/{requestId}', fn (int $requestId) => view('coordinator.requests', ['requestId' => $requestId]))
+            ->whereNumber('requestId')->name('requests.show');
 
         Route::get('/assignments', function () {
             return view('coordinator.assignments');

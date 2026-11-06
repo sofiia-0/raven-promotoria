@@ -140,13 +140,13 @@ class PharmacyAssignmentService
         });
     }
 
-    public function cover(User $actor, int $pharmacyId, User $promoter, string $startsOn, string $endsOn): PharmacyAssignment
+    public function cover(User $actor, int $pharmacyId, User $promoter, string $startsOn, string $endsOn, ?string $reason = null): PharmacyAssignment
     {
         $this->ensureManager($actor);
         $this->ensurePromoter($promoter);
-        Validator::make(['coverageStartsOn' => $startsOn, 'coverageEndsOn' => $endsOn], ['coverageStartsOn' => ['required', 'date_format:Y-m-d'], 'coverageEndsOn' => ['required', 'date_format:Y-m-d', 'after_or_equal:coverageStartsOn']], ['coverageStartsOn.*' => 'Indique una fecha de inicio válida.', 'coverageEndsOn.*' => 'Indique una fecha final igual o posterior al inicio.'])->validate();
+        Validator::make(['coverageStartsOn' => $startsOn, 'coverageEndsOn' => $endsOn, 'coverageReason' => $reason], ['coverageStartsOn' => ['required', 'date_format:Y-m-d'], 'coverageEndsOn' => ['required', 'date_format:Y-m-d', 'after_or_equal:coverageStartsOn'], 'coverageReason' => ['nullable', 'string', 'max:500']], ['coverageStartsOn.*' => 'Indique una fecha de inicio válida.', 'coverageEndsOn.*' => 'Indique una fecha final igual o posterior al inicio.'])->validate();
 
-        return DB::transaction(function () use ($actor, $pharmacyId, $promoter, $startsOn, $endsOn): PharmacyAssignment {
+        return DB::transaction(function () use ($actor, $pharmacyId, $promoter, $startsOn, $endsOn, $reason): PharmacyAssignment {
             $pharmacy = $this->lockActive([$pharmacyId])->sole();
             $relations = $pharmacy->assignments()->where('promoter_id', $promoter->id)->whereNull('ended_at')->lockForUpdate()->get();
             foreach ($relations as $relation) {
@@ -161,7 +161,7 @@ class PharmacyAssignmentService
                 }
             }
             $assignment = $pharmacy->assignments()->create(['promoter_id' => $promoter->id, 'assigned_at' => now(), 'assignment_kind' => 'coverage', 'coverage_starts_on' => $startsOn, 'coverage_ends_on' => $endsOn, 'created_by' => $actor->id]);
-            $this->audit->record($actor, 'coverage.created', $pharmacy, ['assignment_id' => $assignment->id, 'promoter_id' => $promoter->id, 'starts_on' => $startsOn, 'ends_on' => $endsOn]);
+            $this->audit->record($actor, 'coverage.created', $pharmacy, ['assignment_id' => $assignment->id, 'promoter_id' => $promoter->id, 'starts_on' => $startsOn, 'ends_on' => $endsOn] + (filled($reason) ? ['reason' => trim($reason)] : []));
 
             return $assignment;
         });

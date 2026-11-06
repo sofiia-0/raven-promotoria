@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\EstablishmentPresentation;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -28,6 +30,36 @@ class PharmacyRequest extends Model
             'data' => 'array',
             'reviewed_at' => 'datetime',
         ];
+    }
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('status', self::PENDING);
+    }
+
+    public function scopeReviewQueue(Builder $query): Builder
+    {
+        return $query->pending()->with(['promoter:id,name', 'pharmacy:id,name,department,city'])
+            ->oldest()->oldest('id');
+    }
+
+    public function establishmentTitle(): string
+    {
+        return $this->type === self::TYPE_ALTA
+            ? EstablishmentPresentation::title($this->data['name'] ?? 'Nuevo establecimiento', $this->data['department'] ?? null)
+            : ($this->pharmacy?->display_name ?? 'Establecimiento');
+    }
+
+    public function establishmentLocality(): string
+    {
+        return $this->type === self::TYPE_ALTA
+            ? EstablishmentPresentation::locality($this->data['department'] ?? null, $this->data['city'] ?? null)
+            : ($this->pharmacy?->display_locality ?? '');
+    }
+
+    public function reasonLabel(): string
+    {
+        return $this->data['reason_category']['label'] ?? $this->reason ?? '';
     }
 
     public function promoter(): BelongsTo

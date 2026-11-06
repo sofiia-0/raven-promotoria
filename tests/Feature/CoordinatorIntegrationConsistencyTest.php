@@ -55,8 +55,11 @@ class CoordinatorIntegrationConsistencyTest extends TestCase
         $old = ChecklistItem::factory()->create(['name' => 'Capacitación o revisión de plan de exhibición', 'sort_order' => 1]);
         $checked = ChecklistItem::factory()->create(['name' => 'Actividad histórica marcada', 'sort_order' => 2]);
         $visit = (new VisitRecorder)->register($promoter, ['idempotency_key' => (string) Str::uuid(), 'status' => 'REALIZADA', 'pharmacy_id' => $pharmacy->id, 'checklist' => [$checked->id => true]]);
+        $this->assertFalse($visit->checklist()->where('checklist_item_id', $old->id)->exists());
+        $visit->checklist()->create(['checklist_item_id' => $old->id, 'checked' => false]);
         $before = $visit->checklist()->orderBy('id')->get()->toJson();
-        $response = $this->actingAs($coordinator)->get('/coordinator/visits/'.$visit->id)->assertOk()->assertSee('Capacitación o revisión de plan de exhibición');
+        $this->assertFalse(ChecklistItem::active()->whereKey($old->id)->exists());
+        $response = $this->actingAs($coordinator)->get('/coordinator/visits/'.$visit->id)->assertOk()->assertSee('Capacitación o revisión de plan de exhibición')->assertSee('Opción histórica');
         $dom = new \DOMDocument;
         @$dom->loadHTML('<?xml encoding="utf-8" ?>'.$response->getContent());
         $xpath = new \DOMXPath($dom);

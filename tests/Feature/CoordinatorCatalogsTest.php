@@ -34,12 +34,25 @@ class CoordinatorCatalogsTest extends TestCase
         $coordinator = User::factory()->coordinator()->create();
         $promoter = User::factory()->promoter()->create();
         $service = app(CoordinatorCatalogs::class);
-        $record = $service->save($coordinator, 'category', null, ['name' => 'Categoría verificada', 'sort_order' => 2, 'is_active' => true]);
-        $this->assertSame(['Categoría verificada'], PromoterCatalogOptions::values($promoter, 'category')->all());
-        $service->save($coordinator, 'category', $record->id, ['name' => $record->name, 'sort_order' => 1, 'is_active' => false], $service->fingerprint($record));
-        $this->assertCount(0, PromoterCatalogOptions::values($promoter, 'category'));
-        $this->assertSame(['value' => 'Valor histórico', 'proposed' => false], PromoterCatalogOptions::resolveCommercial($promoter, 'category', 'VALOR HISTORICO', 'Valor histórico'));
+        $record = $service->save($coordinator, 'client_type', null, ['name' => 'Tipo verificado', 'sort_order' => 2, 'is_active' => true]);
+        $this->assertSame(['Tipo verificado'], PromoterCatalogOptions::values($promoter, 'client_type')->all());
+        $service->save($coordinator, 'client_type', $record->id, ['name' => $record->name, 'sort_order' => 1, 'is_active' => false], $service->fingerprint($record));
+        $this->assertCount(0, PromoterCatalogOptions::values($promoter, 'client_type'));
+        $this->assertSame(['value' => 'Valor histórico', 'proposed' => false], PromoterCatalogOptions::resolveCommercial($promoter, 'client_type', 'VALOR HISTORICO', 'Valor histórico'));
         $this->assertSame(2, AuditLog::where('actor_id', $coordinator->id)->count());
+    }
+
+    public function test_commercial_categories_are_fixed_even_for_a_coordinator(): void
+    {
+        $actor = User::factory()->coordinator()->create();
+
+        Livewire::actingAs($actor)->test(Index::class)
+            ->set('domain', 'category')->assertSee('No aplica')->assertDontSee('Añadir opción')
+            ->call('startNew')->assertForbidden();
+        Livewire::actingAs($actor)->test(Index::class)
+            ->set('domain', 'category')->set('name', 'Categoría libre')
+            ->call('save')->assertForbidden();
+        $this->assertDatabaseCount('commercial_catalog_options', 0);
     }
 
     public function test_duplicate_names_ignore_accents_and_case(): void
@@ -124,10 +137,6 @@ class CoordinatorCatalogsTest extends TestCase
         $this->assertDatabaseCount('commercial_catalog_options', 0);
 
         $this->assertSame(1, $service->adoptCommercial($actor, 'client_type', ['farmacia'], CanonicalData::hash($observed)));
-        $numeric = $service->observedCommercial($actor, 'category');
-        $this->assertSame(['1'], array_column($numeric, 'key'));
-        $this->assertSame(1, $service->adoptCommercial($actor, 'category', ['1'], CanonicalData::hash($numeric)));
-
         $this->assertSame($before, [$first->fresh()->getRawOriginal(), $second->fresh()->getRawOriginal()]);
         $this->assertDatabaseCount('pharmacy_changes', 0);
         $this->assertSame(['Farmacia'], PromoterCatalogOptions::values(User::factory()->promoter()->create(), 'client_type')->all());

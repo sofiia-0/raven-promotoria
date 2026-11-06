@@ -22,6 +22,9 @@ class PendingNotice extends Component
     {
         $this->coordinator();
 
-        return view('livewire.coordinator.pending-notice', ['pending' => PharmacyRequest::where('status', PharmacyRequest::PENDING)->count()]);
+        return view('livewire.coordinator.pending-notice', [
+            'pending' => PharmacyRequest::query()->pending()->count(),
+            'oldestRequests' => PharmacyRequest::query()->reviewQueue()->limit(5)->get(),
+        ]);
     }
 }

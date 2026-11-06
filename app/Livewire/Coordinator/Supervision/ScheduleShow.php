@@ -32,6 +32,7 @@ class ScheduleShow extends Component
                 'weeks.activities.pharmacy',
                 'weeks.activities.visits:id,planned_activity_id,attempt,status,visited_at',
                 'weeks.activities.reschedules.reason:id,name',
+                'weeks.activities.visits.objective',
             ])->findOrFail($this->scheduleId),
         ]);
     }

@@ -21,6 +21,8 @@ use Illuminate\Validation\ValidationException;
 /** Catálogos operativos. No actualiza respuestas ni ejecuta sincronizaciones iniciales. */
 class CoordinatorCatalogs
 {
+    public const FIXED_CATEGORIES = ['A', 'AA', 'AAA', 'No aplica'];
+
     public const LABELS = [
         'checklist' => 'Actividades del checklist',
         'visit_reason' => 'Motivos de visita no realizada',
@@ -46,6 +48,7 @@ class CoordinatorCatalogs
     public function save(User $actor, string $domain, ?int $id, array $input, ?string $expected = null): Model
     {
         abort_unless($actor->role === UserRole::COORDINATOR && $actor->is_active, 403);
+        abort_if($domain === 'category', 403);
         $data = Validator::make($input, [
             'name' => ['required', 'string', 'max:'.match ($domain) {
                 'category' => 20, 'client_type' => 80, 'visit_reason' => 120, default => 150
@@ -56,6 +59,13 @@ class CoordinatorCatalogs
             'is_provisional' => ['sometimes', 'boolean'],
         ])->validate();
         $data['name'] = PromoterCatalogOptions::clean($data['name']);
+        if ($domain === 'checklist' && $data['is_active'] && in_array(
+            PromoterCatalogOptions::commercialKey($data['name']),
+            array_map(PromoterCatalogOptions::commercialKey(...), ChecklistItem::OBSOLETE_NAMES),
+            true
+        )) {
+            throw ValidationException::withMessages(['name' => 'Esta denominación histórica no está disponible para visitas nuevas.']);
+        }
         if ($data['name'] === '') {
             throw ValidationException::withMessages(['name' => 'Escriba el nombre de la opción.']);
         }
@@ -126,7 +136,7 @@ class CoordinatorCatalogs
     public function observedCommercial(User $actor, string $domain): array
     {
         abort_unless($actor->role === UserRole::COORDINATOR && $actor->is_active, 403);
-        abort_unless(in_array($domain, ['client_type', 'category'], true), 422);
+        abort_unless($domain === 'client_type', 403);
         $known = $this->query($domain)->pluck('normalized_name')->all();
 
         return Pharmacy::where('is_active', true)->whereNotNull($domain)->orderBy('id')->pluck($domain)
@@ -140,6 +150,7 @@ class CoordinatorCatalogs
     public function adoptCommercial(User $actor, string $domain, array $selected, string $expected): int
     {
         abort_unless($actor->role === UserRole::COORDINATOR && $actor->is_active, 403);
+        abort_unless($domain === 'client_type', 403);
         Validator::make(['selected' => $selected], ['selected' => ['array', 'max:500'], 'selected.*' => ['string', 'max:255']])->validate();
 
         return DB::transaction(function () use ($actor, $domain, $selected, $expected) {

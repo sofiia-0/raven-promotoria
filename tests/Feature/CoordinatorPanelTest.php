@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserRole;
 use App\Enums\VisitStatus;
 use App\Livewire\Coordinator\Dashboard;
+use App\Livewire\Coordinator\Metrics;
 use App\Models\Pharmacy;
 use App\Models\PharmacyAssignment;
 use App\Models\PharmacyRequest;
@@ -50,7 +51,7 @@ class CoordinatorPanelTest extends TestCase
         $coordinator = User::factory()->coordinator()->create();
         $this->actingAs($coordinator)->get('/coordinator')
             ->assertOk()
-            ->assertSee('Panel de Coordinación')
+            ->assertSee('Rendimiento del equipo')
             ->assertSee('Coordinadora');
         $this->get('/')->assertRedirect(route('coordinator.dashboard'));
 
@@ -95,16 +96,14 @@ class CoordinatorPanelTest extends TestCase
         Livewire::actingAs($coordinator)->test(Dashboard::class)
             ->assertViewHas('pendingAlta', 1)
             ->assertViewHas('pendingBaja', 1)
-            ->assertViewHas('activePharmacies', 4)
             ->assertViewHas('unassigned', 3)
-            ->assertViewHas('activePromoters', 3)
             ->assertViewHas('schedulesSent', 1)
             ->assertViewHas('schedulesDraft', 1)
             ->assertViewHas('schedulesMissing', 1)
-            ->assertViewHas('visitsDone', 1)
-            ->assertViewHas('visitsNotDone', 1)
-            ->assertViewHas('visitsUnplanned', 2)
             ->assertSee('Farmacia Propuesta')
             ->assertDontSee('Rechazada');
+
+        Livewire::actingAs($coordinator)->test(Metrics::class)
+            ->assertViewHas('summary', fn (array $summary) => $summary['totalRealized'] === 1 && $summary['outsidePlan'] === 1);
     }
 }

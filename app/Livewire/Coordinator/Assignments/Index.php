@@ -7,10 +7,12 @@ use App\Livewire\Coordinator\Concerns\ResolvesCoordinator;
 use App\Models\Pharmacy;
 use App\Models\User;
 use App\Services\PharmacyAssignmentService;
-use App\Support\EstablishmentSearch;
+use App\Support\CoordinatorEstablishmentQuery;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -35,6 +37,17 @@ class Index extends Component
 
     public string $targetPromoterId = '';
 
+    public bool $batchMode = false;
+
+    #[Locked]
+    public ?int $editingPharmacyId = null;
+
+    #[Locked]
+    public string $editingOperation = 'add';
+
+    #[Locked]
+    public ?int $editingAssignmentId = null;
+
     public function mount(): void
     {
         $this->coordinator();
@@ -44,13 +57,56 @@ class Index extends Component
     {
         if (in_array($property, ['search', 'department', 'promoter'], true)) {
             $this->resetPage();
+            $this->closeEditor();
         }
+    }
+
+    public function toggleBatchMode(): void
+    {
+        $this->coordinator();
+        $this->batchMode = ! $this->batchMode;
+        if (! $this->batchMode) {
+            $this->clearSelection();
+        }
+    }
+
+    public function openEditor(int $pharmacyId, string $operation, ?int $assignmentId = null): void
+    {
+        $this->coordinator();
+        abort_unless(in_array($operation, ['add', 'coverage', 'replace', 'end'], true), 404);
+        $pharmacy = Pharmacy::query()->where('is_active', true)->findOrFail($pharmacyId);
+        if (in_array($operation, ['replace', 'end'], true)) {
+            $pharmacy->assignments()->whereNull('ended_at')
+                ->when($operation === 'replace', fn (Builder $q) => $q->where('assignment_kind', 'responsible'))
+                ->findOrFail($assignmentId);
+        }
+        $this->editingPharmacyId = $pharmacyId;
+        $this->editingOperation = $operation;
+        $this->editingAssignmentId = in_array($operation, ['replace', 'end'], true) ? $assignmentId : null;
+    }
+
+    public function closeEditor(): void
+    {
+        $this->reset(['editingPharmacyId', 'editingOperation', 'editingAssignmentId']);
+    }
+
+    #[On('coordinator-assignment-saved')]
+    public function refreshAssignments(): void
+    {
+        $this->coordinator();
+    }
+
+    public function endRelation(int $pharmacyId, int $assignmentId, PharmacyAssignmentService $assignments): void
+    {
+        $assignments->end($this->coordinator(), $pharmacyId, $assignmentId);
+        session()->flash('success', 'Se finalizó la relación seleccionada.');
     }
 
     public function clearFilters(): void
     {
         $this->reset(['search', 'department', 'promoter']);
         $this->resetPage();
+        $this->closeEditor();
     }
 
     public function clearSelection(): void
@@ -115,13 +171,13 @@ class Index extends Component
 
     public function render(): View
     {
-        $this->coordinator();
-        $query = Pharmacy::query()->where('is_active', true)
-            ->with('activeAssignments.promoter:id,name,is_active')
-            ->when($this->department !== '', fn (Builder $q) => $q->where('department', $this->department))
-            ->when($this->promoter === 'none', fn (Builder $q) => $q->whereDoesntHave('assignments', fn (Builder $a) => $a->operational()))
-            ->when(ctype_digit($this->promoter), fn (Builder $q) => $q->whereHas('assignments', fn (Builder $a) => $a->operational()->where('promoter_id', (int) $this->promoter)));
-        EstablishmentSearch::apply($query, $this->search);
+        $actor = $this->coordinator();
+        $query = CoordinatorEstablishmentQuery::for($actor, [
+            'status' => 'active',
+            'search' => $this->search,
+            'department' => $this->department,
+            'promoter' => $this->promoter === 'none' ? 'without-responsible' : $this->promoter,
+        ])->with('activeAssignments.promoter:id,name,is_active');
         $promoters = User::query()->where('role', UserRole::PROMOTER)->where('is_active', true)
             ->withCount(['pharmacyAssignments as active_pharmacies' => fn (Builder $q) => $q->select(DB::raw('COUNT(DISTINCT pharmacy_id)'))->operational()
                 ->whereHas('pharmacy', fn (Builder $p) => $p->where('is_active', true))])
@@ -130,8 +186,8 @@ class Index extends Component
         return view('livewire.coordinator.assignments.index', [
             'pharmacies' => $query->orderBy('name')->orderBy('id')->paginate(25),
             'promoters' => $promoters,
-            'unassignedCount' => Pharmacy::query()->where('is_active', true)
-                ->whereDoesntHave('assignments', fn (Builder $q) => $q->operational())->count(),
+            'unassignedCount' => CoordinatorEstablishmentQuery::for($actor, ['status' => 'active', 'promoter' => 'without-responsible'])->count(),
+            'distinctCount' => Pharmacy::query()->where('is_active', true)->count(),
             'departments' => Pharmacy::query()->where('is_active', true)->whereNotNull('department')
                 ->distinct()->orderBy('department')->pluck('department'),
             'batchLimit' => PharmacyAssignmentService::BATCH_LIMIT,
