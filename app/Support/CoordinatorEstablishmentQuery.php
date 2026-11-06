@@ -23,6 +23,10 @@ class CoordinatorEstablishmentQuery
         }
         if (($filters['promoter'] ?? '') === 'none') {
             $query->whereDoesntHave('assignments', fn ($q) => $q->operational());
+        } elseif (($filters['promoter'] ?? '') === 'without-responsible') {
+            $query->whereDoesntHave('activeAssignments', fn (Builder $assignments) => $assignments
+                ->where('assignment_kind', 'responsible')
+                ->whereHas('promoter', fn (Builder $people) => $people->where('role', UserRole::PROMOTER)->where('is_active', true)));
         } elseif (ctype_digit((string) ($filters['promoter'] ?? ''))) {
             $query->whereHas('assignments', fn ($q) => $q->operational()->where('promoter_id', (int) $filters['promoter']));
         }

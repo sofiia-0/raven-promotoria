@@ -44,6 +44,8 @@ Route::middleware([
             return view('coordinator.dashboard');
         })->name('dashboard');
 
+        Route::view('/follow-up', 'coordinator.follow-up')->name('follow-up');
+
         Route::view('/catalogs', 'coordinator.catalogs')->name('catalogs.index');
 
         Route::view('/establishments', 'coordinator.establishments')->name('establishments.index');

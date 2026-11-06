@@ -5,6 +5,14 @@
         <button type="button" class="raven-button raven-button-secondary" wire:click="nextMonth" aria-label="Mes siguiente"><span class="coord-month-label">Mes siguiente</span><span aria-hidden="true">›</span></button>
     </section>
 
+    <label class="raven-field">
+        <span class="raven-label">Estado del listado</span>
+        <select class="raven-select" wire:model.live="status">
+            <option value="">Todos los estados</option>
+            <option value="borrador">Borradores de promotoras activas</option>
+        </select>
+    </label>
+
     <div class="coordinator-schedule-totals" aria-label="Resumen del período">
         <span><strong>{{ $sent = $rows->filter(fn ($row) => $row['schedule'] && ! $row['schedule']->isDraft())->count() }}</strong> {{ $sent === 1 ? 'enviado' : 'enviados' }}</span>
         <span><strong>{{ $drafts = $rows->filter(fn ($row) => $row['schedule']?->isDraft())->count() }}</strong> {{ $drafts === 1 ? 'borrador' : 'borradores' }}</span>
@@ -14,7 +22,7 @@
 
     <section class="raven-card">
         @if($rows->isEmpty() || $rows->whereNotNull('schedule')->isEmpty())
-            <x-coordinator.empty kind="calendar" :title="$rows->isEmpty() ? 'No hay promotoras activas' : 'No hay cronogramas para este período'" description="Seleccione otro mes para consultar su planificación." />
+            <x-coordinator.empty kind="calendar" :title="$status === 'borrador' ? 'No hay borradores para este período' : ($rows->isEmpty() ? 'No hay promotoras activas' : 'No hay cronogramas para este período')" description="Seleccione otro mes para consultar su planificación." />
         @endif
         @if($rows->isNotEmpty())
             <x-coordinator.table :label="'Cronogramas de '.$monthLabel" variant="schedules">

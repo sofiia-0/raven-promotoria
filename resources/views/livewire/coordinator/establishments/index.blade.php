@@ -6,7 +6,7 @@
         <x-promoter.searchable-select model="city" label="Municipio" :value="$city" :options="$cities" :disabled="$department === ''" clearable />
         <x-promoter.searchable-select model="category" label="Categoría" :value="$category" :options="$categories" :labels="['N/A' => 'No aplica']" clearable />
         <label class="raven-field">Estado<select class="raven-select" wire:model.live="status"><option value="">Todos</option><option value="active">Activo</option><option value="inactive">Inactivo</option></select></label>
-        <label class="raven-field">Promotora<select class="raven-select" wire:model.live="promoter"><option value="">Todas</option><option value="none">Sin asignación vigente</option>@foreach($promoters as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label>
+        <label class="raven-field">Promotora<select class="raven-select" wire:model.live="promoter"><option value="">Todas</option><option value="none">Sin asignación vigente</option><option value="without-responsible">Sin responsable vigente</option>@foreach($promoters as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label>
     </div></x-coordinator.filters>
     <section class="raven-card"><div class="coordinator-section-head"><h2 class="raven-section-title">Catálogo central</h2><span>{{ $establishments->total() }} establecimientos</span></div>
         @if($establishments->isEmpty())

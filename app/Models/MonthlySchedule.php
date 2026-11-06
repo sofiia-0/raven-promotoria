@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\ScheduleStatus;
+use App\Enums\UserRole;
 use App\Services\SchedulePlanner;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,6 +45,12 @@ class MonthlySchedule extends Model
     public function activities(): HasManyThrough
     {
         return $this->hasManyThrough(PlannedActivity::class, PlannedWeek::class);
+    }
+
+    public function scopeAttentionDrafts(Builder $query): Builder
+    {
+        return $query->where('status', ScheduleStatus::BORRADOR)
+            ->whereHas('promoter', fn (Builder $people) => $people->where('role', UserRole::PROMOTER)->where('is_active', true));
     }
 
     public function isDraft(): bool

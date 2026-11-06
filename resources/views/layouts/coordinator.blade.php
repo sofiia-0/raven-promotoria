@@ -28,6 +28,12 @@
                     <span class="raven-nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg></span>
                     Inicio
                 </a>
+                <a href="{{ route('coordinator.follow-up') }}"
+                   @class(['raven-nav-link', 'is-active' => request()->routeIs('coordinator.follow-up')])
+                   @if(request()->routeIs('coordinator.follow-up')) aria-current="page" @endif>
+                    <span class="raven-nav-icon" aria-hidden="true"><x-promoter.icon name="clock" /></span>
+                    <span>Seguimiento</span>
+                </a>
                 <a href="{{ route('coordinator.requests.index') }}"
                    class="raven-nav-link {{ request()->routeIs('coordinator.requests.*') ? 'is-active' : '' }}"
                    @if(request()->routeIs('coordinator.requests.*')) aria-current="page" @endif>
