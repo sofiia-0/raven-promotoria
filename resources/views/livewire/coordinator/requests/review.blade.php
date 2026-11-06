@@ -18,9 +18,9 @@
     <header class="raven-card requests-detail-head" data-tone="{{ $selected->type }}">
         <div class="requests-detail-nav">
             @if($standalone)
-                <a href="{{ route('coordinator.requests.index', $queueParameters) }}" class="requests-back">Volver a solicitudes</a>
+                <a href="{{ route('coordinator.requests.index', $queueParameters) }}" class="raven-button raven-button-ghost requests-back">Volver a solicitudes</a>
             @else
-                <button type="button" class="requests-back" wire:click="closeReview">Cerrar revisión</button>
+                <button type="button" class="raven-button raven-button-ghost requests-back" wire:click="closeReview">Cerrar revisión</button>
             @endif
             <span class="requests-kicker">Solicitud #{{ $selected->id }}</span>
         </div>
@@ -145,7 +145,7 @@
                                 wire:confirm="{{ $isAlta ? '¿Aprobar el alta? El establecimiento se agregará al fichero.' : '¿Aprobar la baja? El establecimiento quedará inactivo.' }}">
                             <x-promoter.icon name="check" />{{ $isAlta ? 'Aprobar alta' : 'Aprobar baja' }}
                         </button>
-                        <button type="button" class="requests-reject" wire:click="reject" wire:loading.attr="disabled" wire:target="approve, reject"
+                        <button type="button" class="raven-button raven-button-danger-outline requests-reject" wire:click="reject" wire:loading.attr="disabled" wire:target="approve, reject"
                                 wire:confirm="¿Rechazar la solicitud? La promotora verá la nota de revisión."><x-promoter.icon name="remove" />Rechazar</button>
                     </div>
                 </form>
@@ -162,7 +162,7 @@
                         <div class="requests-data-wide"><dt>Nota de revisión</dt><dd class="requests-text">{{ $selected->review_note ?: 'Sin nota de revisión' }}</dd></div>
                     </dl>
                     @if($selected->status === PharmacyRequest::APPROVED && $pharmacy)
-                        <a class="requests-action" href="{{ route('coordinator.establishments.show', $pharmacy->id) }}">Ver ficha del establecimiento <x-promoter.icon name="arrow" /></a>
+                        <a class="raven-button raven-button-secondary requests-action" href="{{ route('coordinator.establishments.show', $pharmacy->id) }}">Ver ficha del establecimiento <x-promoter.icon name="arrow" /></a>
                     @endif
                 </section>
             @endif

@@ -17,7 +17,7 @@
 
     <header class="raven-card assign-detail-head">
         <div class="assign-section-head">
-            <a class="assign-secondary" href="{{ route('coordinator.assignments.index') }}">Volver a Asignaciones</a>
+            <a class="raven-button raven-button-ghost assign-secondary" href="{{ route('coordinator.assignments.index') }}">Volver a Asignaciones</a>
             <span class="raven-badge {{ $pharmacy->is_active ? 'raven-badge-success' : 'raven-badge-neutral' }}">{{ $pharmacy->is_active ? 'Activa' : 'Inactiva' }}</span>
         </div>
         <div class="assign-detail-title">
@@ -34,7 +34,7 @@
     <section class="raven-card assign-section" aria-labelledby="assignment-current-title">
         <div class="assign-section-head">
             <div><p class="assign-kicker">Relaciones de trabajo</p><h2 class="raven-section-title" id="assignment-current-title">Asignaciones actuales</h2></div>
-            @if($pharmacy->is_active)<button type="button" class="assign-secondary" wire:click="openEditor('coverage')"><x-promoter.icon name="calendar" /> Cobertura temporal</button>@endif
+            @if($pharmacy->is_active)<button type="button" class="raven-button raven-button-ghost assign-secondary" wire:click="openEditor('coverage')"><x-promoter.icon name="calendar" /> Cobertura temporal</button>@endif
         </div>
         <div class="assign-current">
             @foreach($groups as $kind => [$title, $empty])
@@ -48,7 +48,7 @@
                         @empty
                             <p class="assign-hint">{{ $empty }}</p>
                         @endforelse
-                        @if($kind === 'responsible' && $pharmacy->is_active)<button type="button" class="assign-add" wire:click="openEditor('add')"><x-promoter.icon name="add" /> Añadir promotora</button>@endif
+                        @if($kind === 'responsible' && $pharmacy->is_active)<button type="button" class="raven-button raven-button-secondary coord-action-add assign-add" wire:click="openEditor('add')"><x-promoter.icon name="add" /> Añadir promotora</button>@endif
                     </div>
                 </div>
             @endforeach
@@ -105,7 +105,7 @@
                         <li><a href="{{ route('coordinator.visits.show', $visit->id) }}">{{ $visit->promoter?->name ?? 'Promotora sin identificar' }}</a><p>{{ $formatDate($visit->visited_at) }} · {{ $visit->status->label() }}</p></li>
                     @empty<li class="assign-hint">No hay visitas registradas.</li>@endforelse
                 </ul>
-                <a class="assign-secondary" href="{{ route('coordinator.visits.index', ['establecimiento' => $pharmacy->id]) }}">Consultar todas las visitas</a>
+                <a class="raven-button raven-button-ghost assign-secondary" href="{{ route('coordinator.visits.index', ['establecimiento' => $pharmacy->id]) }}">Consultar todas las visitas</a>
             </section>
         </div>
     </div>

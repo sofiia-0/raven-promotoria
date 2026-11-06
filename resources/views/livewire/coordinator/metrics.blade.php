@@ -173,7 +173,8 @@
             <h2 id="ci-team-title" class="raven-section-title">Cumplimiento por promotora</h2>
             @if($team->isNotEmpty())
                 <p class="raven-card-description">Actividades del plan completadas y visitas totales.</p>
-                <table class="ci-team" role="table">
+                <div class="coord-record-frame ci-team-frame">
+                <table class="ci-team" role="table" aria-labelledby="ci-team-title">
                     <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Promotora</th><th scope="col" role="columnheader">Cumplimiento</th><th scope="col" role="columnheader">Planificadas</th><th scope="col" role="columnheader">Realizadas</th><th scope="col" role="columnheader">Cobertura</th></tr></thead>
                     <tbody role="rowgroup">
                         @foreach($team as $person)
@@ -187,6 +188,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             @else
                 <p class="ci-empty-copy">Sin actividad para los filtros seleccionados.</p>
             @endif

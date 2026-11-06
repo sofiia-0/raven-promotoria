@@ -14,6 +14,12 @@
     --coord-violet-soft: #eee8f5;
     --coord-radius: 16px;
     --coord-gap: 18px;
+    --coord-action-radius: 12px;
+    --coord-action-ink: #2d527f;
+    --coord-action-fill: #f8faff;
+    --coord-action-border: #d1dceb;
+    --coord-action-hover: #edf3fc;
+    --coord-danger: #963447;
     background: var(--coord-bg);
     color: var(--coord-ink);
     font-size: 15px;
@@ -56,15 +62,34 @@
 .coordinator-shell :is(.raven-page-description,.raven-card-description,.raven-field-help,.coordinator-list-meta,.coordinator-muted) { color: var(--coord-muted); font-size: 14px; line-height: 1.5; }
 .coordinator-shell .raven-stack { gap: var(--coord-gap); }
 .coordinator-shell .raven-card { padding: clamp(15px,2vw,24px); background: var(--coord-paper); border: 1px solid var(--coord-line); border-radius: var(--coord-radius); box-shadow: none; overflow-wrap: break-word; }
-.coordinator-shell .raven-button { min-height: 44px; border-radius: 10px; font-size: 14px; line-height: 1.35; gap: 7px; white-space: normal; }
-.coordinator-shell .raven-button-primary { background: var(--coord-aqua); border-color: var(--coord-aqua); color: white; }
-.coordinator-shell .raven-button-primary:hover { background: #185756; }
-.coordinator-shell .raven-button-secondary { color: var(--coord-blue); border-color: #c7d8e6; background: white; }
-.coordinator-shell .raven-button-secondary:hover { background: var(--coord-blue-soft); }
-.coordinator-shell .raven-button-ghost { color: var(--coord-blue); }
-.coordinator-shell .raven-button-danger { color: white; background: #a33243; border-color: #a33243; }
-.coordinator-shell .raven-button-danger:hover { background: #872537; }
+.coordinator-shell .raven-button {
+    min-height: 44px; max-width: 100%; padding: 8px 13px; border-radius: var(--coord-action-radius);
+    gap: 7px; font-family: inherit; font-size: 14px; font-weight: 750; line-height: 1.35;
+    text-align: center; text-decoration: none; white-space: normal; box-shadow: none;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.coordinator-shell .raven-button:hover { transform: none; }
+.coordinator-shell .raven-button-primary { background: var(--coord-aqua); border-color: var(--coord-aqua); color: #fff; }
+.coordinator-shell .raven-button-primary:hover { background: #185756; border-color: #185756; }
+.coordinator-shell .raven-button-secondary { color: var(--coord-action-ink); border-color: var(--coord-action-border); background: var(--coord-action-fill); }
+.coordinator-shell .raven-button-secondary:hover { background: var(--coord-action-hover); border-color: #a9bdd8; }
+.coordinator-shell .raven-button-ghost { color: var(--coord-action-ink); }
+.coordinator-shell .raven-button-ghost:hover { background: var(--coord-action-hover); color: var(--coord-action-ink); }
+.coordinator-shell .raven-button-danger { color: #fff; background: var(--coord-danger); border-color: var(--coord-danger); }
+.coordinator-shell .raven-button-danger:hover { background: #7d2639; border-color: #7d2639; }
+.coordinator-shell .raven-button-danger-outline { color: var(--coord-danger); background: #fff8fa; border-color: #e5c6ce; }
+.coordinator-shell .raven-button-danger-outline:hover { background: #f9eaf0; border-color: #c994a2; }
+.coordinator-shell .raven-button:is([aria-pressed="true"],[aria-expanded="true"],details[open] > summary) {
+    background: var(--coord-aqua-soft); color: #175c59; border-color: #92bdb9;
+}
+.coordinator-shell .raven-button:disabled { background: #f2f5f8; color: #5a6d81; border-color: #dce5ec; opacity: 1; cursor: default; }
+.coordinator-shell .raven-button.coord-action-add { background: var(--coord-blue-soft); }
+.coordinator-shell .raven-button.coord-action-add:hover { background: #e0ebf8; }
+.coordinator-shell .raven-button.coord-action-add[aria-expanded="true"] { background: var(--coord-aqua-soft); }
 .coordinator-shell :is(.raven-button,.raven-logout,.coord-record-locality) svg { width: 17px; height: 17px; flex: none; }
+@media (prefers-reduced-motion: reduce) {
+    .coordinator-shell .raven-button { transition: none; }
+}
 .coordinator-shell .raven-badge { font-size: 12px; line-height: 1.35; font-weight: 750; white-space: normal; }
 .coordinator-shell :is(.raven-input,.raven-select,.raven-textarea) { width: 100%; min-width: 0; max-width: 100%; min-height: 44px; background: var(--coord-soft); border-color: #cdd9e4; border-radius: 10px; color: var(--coord-ink); font-size: 16px; }
 .coordinator-shell :is(.raven-label,label.raven-field) { font-weight: 750; font-size: 14px; }
@@ -98,12 +123,13 @@
 .coordinator-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding-block: 10px 4px; }
 .coordinator-pager-summary { margin: 0; color: #495f76; font-size: 13px; }
 .coordinator-pager-controls,.coordinator-pager-steps,.coordinator-pager-numbers { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.coordinator-pager :is(button,.coordinator-pager-current) { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; min-height: 44px; padding: 4px 8px; border: 1px solid #d5e1eb; border-radius: 10px; background: #fff; color: #315878; font: inherit; font-size: 13px; font-weight: 750; font-variant-numeric: tabular-nums; }
-.coordinator-pager button { cursor: pointer; }
-.coordinator-pager button:disabled { color: #627387; background: #f3f6f9; cursor: default; }
-.coordinator-pager button:not(:disabled):hover { background: #edf5fa; border-color: #8aa7c0; }
-.coordinator-pager button:focus-visible { outline: 2px solid #315f98; outline-offset: 2px; }
-.coordinator-pager .coordinator-pager-current { background: #dceef1; color: #234d59; border-color: #79a3ac; }
+.coordinator-shell .coordinator-pager .raven-button { padding-inline: 9px; }
+.coordinator-shell .coordinator-pager .coord-page-number,.coordinator-pager-current { min-width: 36px; font-variant-numeric: tabular-nums; }
+.coordinator-pager-current {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding-inline: 9px;
+    border: 1px solid #92bdb9; border-radius: var(--coord-action-radius); background: var(--coord-aqua-soft);
+    color: #175c59; font-size: 14px; font-weight: 800;
+}
 .coordinator-pager-gap { min-width: 15px; text-align: center; color: #495f76; }
 @media (max-width: 600px) {
     .coordinator-pager-controls { display: grid; width: 100%; gap: 6px; }
@@ -116,7 +142,6 @@
 .coordinator-master-export summary::-webkit-details-marker { display: none; }
 .coordinator-master-export summary::after { content: '+'; font-size: 1.1em; }
 .coordinator-master-export[open] summary::after { content: '−'; }
-.coordinator-master-export summary svg { width: 16px; height: 16px; flex: none; }
 .coordinator-master-body { max-width: 64rem; color: #495f76; font-size: 13px; }
 .coordinator-master-body p { margin-block: 10px; }
 .coordinator-master-actions { display: flex; flex-wrap: wrap; gap: 10px 16px; padding-bottom: 3px; }
@@ -140,6 +165,13 @@
 .coordinator-shell .promoter-location p { margin: 3px 0; overflow-wrap: anywhere; }
 
 /* Directorios y tablas */
+.coord-record-frame {
+    min-width: 0; overflow: hidden; border: 1px solid var(--coord-line);
+    border-radius: var(--coord-radius); background: var(--coord-paper);
+}
+.coord-record-frame thead { background: var(--coord-soft); }
+.coord-record-frame thead th { color: var(--coord-muted); }
+.coord-record-frame :is(a,button):focus-visible { outline-offset: -3px; }
 .coord-table-region,.coordinator-table-wrap { min-width: 0; overflow-x: auto; overscroll-behavior-inline: contain; }
 .coord-table,.coordinator-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .coord-table :is(th,td),.coordinator-table :is(th,td) { padding: 13px 12px; text-align: left; vertical-align: middle; border-bottom: 1px solid var(--coord-line); overflow-wrap: break-word; }
@@ -154,7 +186,7 @@
 .coord-record-locality { display: inline-flex; gap: 5px; align-items: flex-start; color: var(--coord-aqua); font-size: 13px; font-weight: 750; }
 .coord-record-address { font-size: 13px; line-height: 1.5; color: var(--coord-muted); }
 .coord-table-directory td:first-child { width: 38%; }
-.coordinator-table-wrap .raven-table { min-width: 520px; }
+.coordinator-table-wrap .raven-table { min-width: 520px; margin: 0; }
 .coordinator-directory-toolbar { display: flex; justify-content: flex-end; }
 
 /* Inicio, avisos y solicitudes */

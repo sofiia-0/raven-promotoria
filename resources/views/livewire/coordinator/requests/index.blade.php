@@ -68,7 +68,7 @@
             @if($requests->isEmpty())
                 <x-coordinator.empty kind="inbox" title="No hay solicitudes con estos filtros" description="Cambie el estado o ajuste la búsqueda para ampliar los resultados." />
             @else
-                <div class="requests-table-frame">
+                <div class="coord-record-frame">
                     <table class="requests-list" role="table" aria-label="Solicitudes de alta y baja">
                         <thead role="rowgroup">
                             <tr role="row">
@@ -99,7 +99,7 @@
                                     </td>
                                     <td class="requests-row-status" role="cell"><x-coordinator.request-badge :value="$item->status" /></td>
                                     <td class="requests-row-action" role="cell">
-                                        <a class="requests-action" href="{{ route('coordinator.requests.show', ['requestId' => $item->id] + $queueParameters) }}">
+                                        <a class="raven-button raven-button-secondary requests-action" href="{{ route('coordinator.requests.show', ['requestId' => $item->id] + $queueParameters) }}">
                                             {{ $item->status === PharmacyRequest::PENDING ? 'Revisar' : 'Ver detalle' }}
                                             <x-promoter.icon name="arrow" /><span class="coordinator-sr-only"> {{ $item->establishmentTitle() }}</span>
                                         </a>

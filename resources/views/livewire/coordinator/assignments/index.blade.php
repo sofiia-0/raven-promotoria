@@ -3,8 +3,8 @@
         <div class="raven-alert raven-alert-success" role="status">{{ session('success') }}</div>
     @endif
 
-    <header class="assign-heading">
-        <div><p class="assign-kicker">Distribución del equipo</p><h1 class="raven-page-title">Asignaciones de establecimientos</h1>
+    <header class="assign-heading" aria-labelledby="assign-page-title">
+        <div><p class="assign-kicker">Distribución del equipo</p><h1 class="raven-page-title" id="assign-page-title">Asignaciones de establecimientos</h1>
             <p>Consulte la carga del equipo y gestione responsables y coberturas.</p></div>
         <x-coordinator.team-motif />
     </header>
@@ -35,7 +35,7 @@
         @if($promoter !== '')
             <div class="assign-workload-selection">
                 <span>Filtro de promotora: <strong>{{ $promoter === 'none' ? 'Sin responsable vigente' : ($promoters->firstWhere('id', $promoter)?->name ?? 'Promotora seleccionada') }}</strong></span>
-                <button type="button" wire:click="$set('promoter', '')">Quitar filtro de promotora</button>
+                <button type="button" class="raven-button raven-button-ghost" wire:click="$set('promoter', '')">Quitar filtro de promotora</button>
             </div>
         @endif
         <p class="assign-hint">La carga individual incluye coberturas vigentes. Los establecimientos compartidos cuentan una vez en el total.</p>
@@ -108,7 +108,7 @@
             <x-coordinator.empty kind="search" title="No hay establecimientos con estos filtros" description="Ajuste la búsqueda o limpie los filtros." />
         </section>
     @else
-        <ul class="raven-card assign-directory" aria-labelledby="assignment-directory-title">
+        <ul class="coord-record-frame assign-directory" aria-labelledby="assignment-directory-title">
             @foreach($pharmacies as $pharmacy)
                 <li class="assign-directory-item" wire:key="assignment-row-{{ $pharmacy->id }}">
                     <div class="assign-row">
@@ -133,18 +133,18 @@
                                 @empty
                                     <span class="assign-hint">Sin relaciones vigentes</span>
                                 @endforelse
-                                <button type="button" class="assign-add" wire:click="openEditor({{ $pharmacy->id }}, 'add')" aria-expanded="{{ $editingPharmacyId === $pharmacy->id && $editingOperation === 'add' ? 'true' : 'false' }}"><x-promoter.icon name="add" /> Añadir promotora</button>
+                                <button type="button" class="raven-button raven-button-secondary coord-action-add assign-add" wire:click="openEditor({{ $pharmacy->id }}, 'add')" aria-expanded="{{ $editingPharmacyId === $pharmacy->id && $editingOperation === 'add' ? 'true' : 'false' }}"><x-promoter.icon name="add" /> Añadir promotora</button>
                             </div>
                         </div>
 
                         <div class="assign-row-actions">
-                            <button type="button" class="assign-secondary" wire:click="openEditor({{ $pharmacy->id }}, 'coverage')" aria-expanded="{{ $editingPharmacyId === $pharmacy->id && $editingOperation === 'coverage' ? 'true' : 'false' }}"><x-promoter.icon name="calendar" /> Cobertura temporal</button>
-                            <a class="assign-secondary" href="{{ route('coordinator.assignments.show', $pharmacy->id) }}#assignment-history-title"><x-promoter.icon name="history" /> Historial<span class="coordinator-sr-only"> de {{ $pharmacy->display_name }}</span></a>
+                            <button type="button" class="raven-button raven-button-ghost assign-secondary" wire:click="openEditor({{ $pharmacy->id }}, 'coverage')" aria-expanded="{{ $editingPharmacyId === $pharmacy->id && $editingOperation === 'coverage' ? 'true' : 'false' }}"><x-promoter.icon name="calendar" /> Cobertura temporal</button>
+                            <a class="raven-button raven-button-ghost assign-secondary" href="{{ route('coordinator.assignments.show', $pharmacy->id) }}#assignment-history-title"><x-promoter.icon name="history" /> Historial<span class="coordinator-sr-only"> de {{ $pharmacy->display_name }}</span></a>
                         </div>
                     </div>
                     @if($editingPharmacyId === $pharmacy->id)
                         <div class="assign-editor-wrap">
-                            <button type="button" class="assign-secondary" wire:click="closeEditor">Cerrar formulario</button>
+                            <button type="button" class="raven-button raven-button-ghost assign-secondary" wire:click="closeEditor">Cerrar formulario</button>
                             <livewire:coordinator.assignments.show :pharmacy-id="$pharmacy->id" :compact="true" :initial-operation="$editingOperation" :assignment-id="$editingAssignmentId" :key="'assignment-editor-'.$pharmacy->id.'-'.$editingOperation.'-'.$editingAssignmentId" />
                         </div>
                     @endif

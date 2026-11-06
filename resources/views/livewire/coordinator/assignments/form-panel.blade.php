@@ -16,7 +16,7 @@
             <h3 id="assignment-editor-title" class="raven-section-title" tabindex="-1" x-ref="heading">{{ $heading }}</h3>
         </div>
         @unless($compact)
-            <button type="button" class="assign-secondary" wire:click="closeEditor">Cerrar formulario</button>
+            <button type="button" class="raven-button raven-button-ghost assign-secondary" wire:click="closeEditor">Cerrar formulario</button>
         @endunless
     </div>
     @error('selection')<p class="raven-field-error" role="alert">{{ $message }}</p>@enderror

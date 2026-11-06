@@ -5,7 +5,7 @@
                 <h3 id="oldest-requests-title" class="raven-section-title">Solicitudes en espera</h3>
                 <p class="raven-card-description">{{ $pendingAlta }} de alta · {{ $pendingBaja }} de baja</p>
             </div>
-            <a class="coordinator-text-link" href="{{ route('coordinator.requests.index') }}">Ver todas</a>
+            <a class="raven-button raven-button-ghost coordinator-text-link" href="{{ route('coordinator.requests.index') }}">Ver todas</a>
         </div>
         @if($oldestRequests->isEmpty())
             <x-coordinator.empty kind="inbox" title="No hay solicitudes pendientes" description="Las nuevas solicitudes aparecerán en esta bandeja." />

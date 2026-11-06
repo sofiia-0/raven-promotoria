@@ -18,11 +18,11 @@
     </summary>
     <div class="assign-relation-menu">
         @if($replaceAction)
-            <button type="button" @click="$refs.trigger.focus(); $el.closest('details').open = false" wire:click="{{ $replaceAction }}">Sustituir responsable</button>
+            <button type="button" class="raven-button raven-button-ghost" @click="$refs.trigger.focus(); $el.closest('details').open = false" wire:click="{{ $replaceAction }}">Sustituir responsable</button>
         @endif
         @if($endAction)
-            <button type="button" @click="$refs.trigger.focus(); $el.closest('details').open = false" wire:click="{{ $endAction }}">{{ $coverage ? 'Finalizar cobertura' : 'Retirar responsable' }}</button>
+            <button type="button" class="raven-button raven-button-ghost" @click="$refs.trigger.focus(); $el.closest('details').open = false" wire:click="{{ $endAction }}">{{ $coverage ? 'Finalizar cobertura' : 'Retirar responsable' }}</button>
         @endif
-        <a href="{{ route('coordinator.assignments.show', $relation->pharmacy_id) }}#assignment-{{ $relation->id }}">Ver en el historial</a>
+        <a class="raven-button raven-button-ghost" href="{{ route('coordinator.assignments.show', $relation->pharmacy_id) }}#assignment-{{ $relation->id }}">Ver en el historial</a>
     </div>
 </details>

@@ -48,7 +48,7 @@
             @if($items->isEmpty())
                 <x-coordinator.empty kind="calendar" title="No hay pendientes para este filtro" description="Seleccione otro tipo para consultar la bandeja." />
             @else
-                <ol class="follow-queue">
+                <ol class="coord-record-frame follow-queue">
                     @foreach($items as $item)
                         @continue($item->record === null)
                         @php
@@ -81,7 +81,7 @@
                                 <span class="follow-badge">{{ $status }}</span>
                                 @if($date)<time datetime="{{ $date->toAtomString() }}">{{ $dateLabel }} {{ $date->format('d/m/Y') }}</time>@endif
                             </div>
-                            <a class="follow-action" href="{{ $url }}" aria-describedby="follow-pending-{{ $item->kind }}-{{ $item->id }}">{{ $action }} <x-promoter.icon name="arrow" /></a>
+                            <a class="raven-button raven-button-secondary follow-action" href="{{ $url }}" aria-describedby="follow-pending-{{ $item->kind }}-{{ $item->id }}">{{ $action }} <x-promoter.icon name="arrow" /></a>
                         </li>
                     @endforeach
                 </ol>
@@ -114,7 +114,7 @@
             @if($events->isEmpty())
                 <x-coordinator.empty kind="calendar" title="Sin actividad en este período" description="Cambie el período o el tipo de evento para ampliar la consulta." />
             @else
-                <ol class="follow-timeline">
+                <ol class="coord-record-frame follow-timeline">
                     @foreach($events as $event)
                         @continue($event->record === null)
                         @php
