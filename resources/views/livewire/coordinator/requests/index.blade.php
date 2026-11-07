@@ -36,7 +36,7 @@
                     </button>
                 @endforeach
                 <button type="button" class="requests-state requests-state-all" aria-pressed="{{ $status === '' ? 'true' : 'false' }}" wire:click="$set('status', '')">
-                    <span class="requests-icon"><x-promoter.icon name="file" /></span><span>Todas</span>
+                    <span class="requests-icon"><x-promoter.icon name="file" /></span><span>Todas</span><strong>{{ number_format($counts->sum(), 0, ',', '.') }}</strong>
                 </button>
             </div>
             <div class="requests-filters">
@@ -56,13 +56,21 @@
                     <span>Período de envío</span>
                     <input id="requests-period" class="raven-input" type="month" wire:model.live="period">
                 </label>
+                <button type="button" class="raven-button raven-button-secondary requests-clear" wire:click="clearFilters"
+                        @disabled($search === '' && $type === '' && $period === '')>Limpiar filtros</button>
             </div>
         </section>
 
         <section class="raven-card requests-results" aria-labelledby="requests-results-title">
             <header class="requests-results-head">
-                <h2 id="requests-results-title">{{ $requests->total() }} {{ $requests->total() === 1 ? 'solicitud' : 'solicitudes' }}</h2>
-                <p>{{ $status === PharmacyRequest::PENDING ? 'En orden de llegada' : 'Más recientes primero' }}</p>
+                <div class="requests-results-identity">
+                    <span class="requests-results-icon" aria-hidden="true"><x-promoter.icon name="identity" /></span>
+                    <div>
+                        <h2 id="requests-results-title">{{ $requests->total() }} {{ $requests->total() === 1 ? 'solicitud' : 'solicitudes' }}</h2>
+                        <p>{{ $status === PharmacyRequest::PENDING ? 'Pendientes por revisar' : 'Resultados de la bandeja' }}</p>
+                    </div>
+                </div>
+                <p>{{ $status === PharmacyRequest::PENDING ? 'Más antiguas primero' : 'Más recientes primero' }}</p>
             </header>
 
             @if($requests->isEmpty())
@@ -73,10 +81,11 @@
                         <thead role="rowgroup">
                             <tr role="row">
                                 <th scope="col" role="columnheader">Establecimiento</th>
+                                <th scope="col" role="columnheader">Solicitud</th>
                                 <th scope="col" role="columnheader">Promotora y motivo</th>
                                 <th scope="col" role="columnheader">Envío</th>
                                 <th scope="col" role="columnheader">Estado</th>
-                                <th scope="col" role="columnheader"><span class="coordinator-sr-only">Acciones</span></th>
+                                <th scope="col" role="columnheader">Acción</th>
                             </tr>
                         </thead>
                         <tbody role="rowgroup">
@@ -85,21 +94,22 @@
                                 <tr role="row" wire:key="request-row-{{ $item->id }}">
                                     <td class="requests-establishment" role="cell">
                                         <div class="requests-establishment-info">
+                                            <span class="requests-place-icon" aria-hidden="true"><x-promoter.icon name="pharmacy" /></span>
                                             <x-coordinator.record-name :name="$item->establishmentTitle()" :locality="$item->establishmentLocality() ?: 'Ubicación sin registrar'" class="requests-row-title" />
-                                            <x-coordinator.request-badge :value="$item->type" />
                                         </div>
                                     </td>
+                                    <td class="requests-type" role="cell"><x-coordinator.request-badge :value="$item->type" /></td>
                                     <td class="requests-sender" role="cell">
                                         <strong>{{ $item->promoter?->name ?? 'Promotora sin registrar' }}</strong>
                                         @if(filled($item->reasonLabel()))<p>{{ $item->reasonLabel() }}</p>@endif
                                     </td>
                                     <td class="requests-date" role="cell">
-                                        @if($sentAt)<time datetime="{{ $sentAt->toAtomString() }}"><span>{{ $sentAt->format('d/m/Y') }}</span><small>{{ $sentAt->format('H:i') }}</small></time>
+                                        @if($sentAt)<time datetime="{{ $sentAt->toAtomString() }}"><span><x-promoter.icon name="calendar" />{{ $sentAt->format('d/m/Y') }}</span><small><x-promoter.icon name="clock" />{{ $sentAt->format('H:i') }}</small></time>
                                         @else<span>Sin fecha</span>@endif
                                     </td>
                                     <td class="requests-row-status" role="cell"><x-coordinator.request-badge :value="$item->status" /></td>
                                     <td class="requests-row-action" role="cell">
-                                        <a class="raven-button raven-button-secondary requests-action" href="{{ route('coordinator.requests.show', ['requestId' => $item->id] + $queueParameters) }}">
+                                        <a class="raven-button {{ $item->status === PharmacyRequest::PENDING ? 'requests-action-review' : 'raven-button-secondary' }} requests-action" href="{{ route('coordinator.requests.show', ['requestId' => $item->id] + $queueParameters) }}">
                                             {{ $item->status === PharmacyRequest::PENDING ? 'Revisar' : 'Ver detalle' }}
                                             <x-promoter.icon name="arrow" /><span class="coordinator-sr-only"> {{ $item->establishmentTitle() }}</span>
                                         </a>

@@ -73,6 +73,27 @@ class CoordinatorPharmacyRequestsTest extends TestCase
         ]);
     }
 
+    public function test_clearing_inbox_filters_keeps_the_selected_state_and_returns_to_first_page(): void
+    {
+        $request = $this->alta();
+
+        Livewire::actingAs($this->coordinator)->test(Index::class)
+            ->set('status', '')
+            ->set('search', 'Sin coincidencias')
+            ->set('type', PharmacyRequest::TYPE_BAJA)
+            ->set('period', '2026-09')
+            ->call('gotoPage', 2)
+            ->call('clearFilters')
+            ->assertSet('status', '')
+            ->assertSet('search', '')
+            ->assertSet('type', '')
+            ->assertSet('period', '')
+            ->assertSee('Mostrando 1 de 1')
+            ->assertSee('Farmacia Nueva Esperanza');
+
+        $this->assertSame(PharmacyRequest::PENDING, $request->fresh()->status);
+    }
+
     /** RF-AB: aprobar un alta crea la ficha y la asigna a la promotora solicitante. */
     public function test_approving_an_alta_creates_and_assigns_the_pharmacy(): void
     {

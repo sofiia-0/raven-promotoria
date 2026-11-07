@@ -1,4 +1,4 @@
-@props(['person', 'selected'])
+@props(['person', 'selected', 'total'])
 
 @php
     $active = $selected === (string) $person->id;
@@ -8,4 +8,6 @@
 <button type="button" class="assign-load" wire:key="workload-{{ $person->id }}" wire:click="$set('promoter', '{{ $active ? '' : $person->id }}')" aria-pressed="{{ $active ? 'true' : 'false' }}">
     <span class="assign-avatar" aria-hidden="true">{{ mb_strtoupper($initials) }}</span>
     <span>{{ $person->name }}</span><strong>{{ $person->active_pharmacies }}</strong>
+    <span class="assign-load-bar" aria-hidden="true"><span style="width: {{ $total ? min(100, 100 * $person->active_pharmacies / $total) : 0 }}%"></span></span>
+    <span class="coordinator-sr-only">de {{ $total }} establecimientos activos</span>
 </button>

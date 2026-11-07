@@ -65,6 +65,13 @@ class Index extends Component
         }
     }
 
+    public function clearFilters(): void
+    {
+        $this->coordinator();
+        $this->reset(['search', 'type', 'period']);
+        $this->resetPage();
+    }
+
     public function select(int $requestId): void
     {
         $this->coordinator();
